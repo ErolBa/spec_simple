@@ -157,7 +157,6 @@ module inputlist
   LOGICAL :: Wpackab  = .false.
   LOGICAL :: Wtr00ab  = .false.
   LOGICAL :: Wcurent  = .false.
-  LOGICAL :: Wdf00ab  = .false.
   LOGICAL :: Wlforce  = .false.
   LOGICAL :: Wintghs  = .false.
   LOGICAL :: Wmtrxhs  = .false.
@@ -344,7 +343,6 @@ module inputlist
  Wpackab , &
  Wtr00ab , &
  Wcurent , &
- Wdf00ab , &
  Wlforce , &
  Wintghs , &
  Wmtrxhs , &

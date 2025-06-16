@@ -35,7 +35,6 @@ function(preprocess_m4 outvar)
 endfunction()
 
 set(unprocessed_src_files
-    manual.f90
     rzaxis.f90
     packxi.f90
     volume.f90
@@ -50,7 +49,6 @@ set(unprocessed_src_files
     packab.f90
     tr00ab.f90
     curent.f90
-    df00ab.f90
     lforce.f90
     intghs.f90
     lbpol.f90
@@ -60,7 +58,6 @@ set(unprocessed_src_files
     dforce.f90
     jo00aa.f90
     bfield.f90
-    stzxyz.f90
     ra00aa.f90
     numrec.f90
     preset.f90
@@ -154,7 +151,7 @@ target_compile_options(spec3p
         # $<$<Fortran_COMPILER_ID:Intel>:-r8>
 )
 
-set(ALLFILES  manual rzaxis packxi volume coords basefn memory metrix ma00aa matrix mp00ac ma02aa packab tr00ab curent df00ab lforce intghs lbpol brcast dfp100 dfp200 dforce jo00aa bfield stzxyz ra00aa numrec dcuhre minpack iqpack rksuite i1mach d1mach ilut iters sphdf5 preset global xspech)
+set(ALLFILES  rzaxis packxi volume coords basefn memory metrix ma00aa matrix mp00ac ma02aa packab tr00ab curent lforce intghs lbpol brcast dfp100 dfp200 dforce jo00aa bfield ra00aa numrec dcuhre minpack iqpack rksuite i1mach d1mach ilut iters sphdf5 preset global xspech)
 string(REPLACE ";" " " ALLFILES_STR "${ALLFILES}")
 
 # Build spec executable

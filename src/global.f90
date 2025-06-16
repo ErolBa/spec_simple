@@ -68,24 +68,6 @@ module fileunits
   INTEGER :: vunit = 15 !< for examination of adaptive quadrature; used in casing:.ext.vcint;
 
   contains
-    subroutine mute(action)
-      implicit none
-
-      INTEGER,intent(in) :: action
-      INTEGER, parameter :: iopen = 1, iclose = 0, null = 37
-      INTEGER            :: ios
-      character(len=*), parameter :: nullfile="/dev/null"
-
-      if (action == iopen) then
-        ounit = null
-        open(ounit, file=nullfile, status="unknown", action="write", iostat=ios) ! create a scratch file?
-        if (ios.ne.0) print *, "something wrong with open a tmp file in focuspy.mute. IOSTAT=", ios
-      else
-        close(ounit)
-        ounit = 6 ! recover to screen output
-      endif
-      return
-    end subroutine mute
 
 end module fileunits
 
@@ -106,7 +88,6 @@ module cputiming
   REAL    :: Tpackab = 0.0, packabT = 0.0
   REAL    :: Ttr00ab = 0.0, tr00abT = 0.0
   REAL    :: Tcurent = 0.0, curentT = 0.0
-  REAL    :: Tdf00ab = 0.0, df00abT = 0.0
   REAL    :: Tlforce = 0.0, lforceT = 0.0
   REAL    :: Tforce_real = 0.0, force_realT = 0.0
   REAL    :: Tforce_real_helper = 0.0, force_real_helperT = 0.0
