@@ -12,10 +12,6 @@ subroutine xspech
                        ext
   use inputlist, only: initialize_inputs, Wxspech
   use fileunits, only: ounit
-  use sphdf5,    only: init_outfile, &
-                       mirror_input_to_outfile, &
-                       init_convergence_output, &
-                       hdfint, finish_outfile, write_grid
   use cputiming, only: Txspech
 
   LOCALS
@@ -61,35 +57,19 @@ subroutine xspech
 
   call preset()
 
-  call init_outfile()
-
-  call mirror_input_to_outfile()
-
-
 
   if ( myid .eq. 0 ) then ! save restart file;
     call wrtend() ! write initial restart file
   endif
 
-  call init_convergence_output()
-
-
   call spec()
 
   call final_diagnostics()
-
-  call write_grid()
 
   if( myid.eq.0 ) then
 
     call wrtend()
   endif
-
-  call hdfint()
-
-  call finish_outfile()
-
-  call ending()
 
   call MPI_Barrier(MPI_COMM_SPEC, ierr)
 
@@ -455,57 +435,3 @@ endif
   enddo ! end of do vvol = 1, Mvol; 01 Jul 14;
 
 end subroutine final_diagnostics
-
-subroutine ending
-
-  use constants, only : zero
-
-  use fileunits, only : ounit
-
-  use inputlist, only : Wmacros, Wxspech, Ltiming
-
-  use cputiming
-
-  use allglobal, only : myid, cpus, mn, MPI_COMM_SPEC, ext
-
-
-  LOCALS
-
-  REAL      :: Ttotal, dcpu, ecpu
-  CHARACTER :: date*8, time*10
-
-
-
-  cpui = GETTIME ; cpuo = cpui ! see macro expansion for begin; 11 Aug 14;
-
-  cput = GETTIME
-
-
-  cput = GETTIME ; dcpu = cput-cpus
-
-  if( Ltiming .and. myid.eq.0 ) then
-
-   Ttotal = zero
-
-   write(ounit,'("ending : ",f10.2," : time spent in wrtend =",f10.2," ;")') dcpu, Twrtend ; Ttotal = Ttotal + Twrtend
-   write(ounit,'("ending : ",f10.2," : time spent in readin =",f10.2," ;")') dcpu, Treadin ; Ttotal = Ttotal + Treadin
-
-   ecpu = Ttotal-dcpu ! error in actual cpu time and calculated cpu time;  7 Mar 13;
-
-   write(ounit,'("ending : ",f10.2," : Ttotal =",f10.2," s = "f8.2" m = "f6.2" h ; Timing Error = ",f10.2,"s = ",f10.2,"%")') &
-dcpu, Ttotal / (/ 1, 60, 3600 /), ecpu, 100*ecpu/dcpu
-
-  endif ! end of if( Ltiming .and. myid.eq.0 ) then; 01 Jul 14;
-
-  if( myid.eq.0 ) then
-   call date_and_time(date,time)
-   write(ounit,'("ending : ", 10x ," : ")')
-   write(ounit,1000) dcpu, myid, dcpu / (/ 1, 60, 60*60, 24*60*60 /), date(1:4), date(5:6), date(7:8), time(1:2), time(3:4), time(5:6), ext
-   write(ounit,'("ending : ", 10x ," : ")')
-  endif ! end of if( myid.eq.0 ) ; 14 Jan 15;
-
-1000 format("ending : ",f10.2," : myid=",i3," ; completion ; time=",f10.2,"s = "f8.2"m = "f6.2"h = "f5.2"d ; date= "&
-  a4"/"a2"/"a2" ; time= "a2":"a2":"a2" ; ext = "a60)
-
-end subroutine ending
-

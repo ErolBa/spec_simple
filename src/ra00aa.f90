@@ -15,10 +15,6 @@ subroutine ra00aa( writeorread )
 
   use allglobal, only : myid, ncpu, cpus, MPI_COMM_SPEC, ext, Mvol, mn, im, in, Ate, Aze, Ato, Azo
 
-  use sphdf5,    only : write_vector_potential
-
-
-
   LOCALS
 
   CHARACTER, intent(in) :: writeorread
@@ -66,8 +62,6 @@ subroutine ra00aa( writeorread )
    enddo ! end of do vvol;  6 Feb 13;
 
    sumLrad = sum(Lrad(1:Mvol)+1)
-
-   WCALL( ra00aa, write_vector_potential, (sumLrad, allAte, allAze, allAto, allAzo) )
 
    deallocate(allAte)
    deallocate(allAze)

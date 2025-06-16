@@ -93,8 +93,8 @@ else()
         )
     message(STATUS "Exit code from awk: ${AWK_EXITCODE}")
 endif()
-preprocess_m4(sphdf5_src ${SPHDF5_AWK_FILE})
-message(STATUS "sphdf5_src is ${sphdf5_src}")
+#preprocess_m4(sphdf5_src ${SPHDF5_AWK_FILE})
+#message(STATUS "sphdf5_src is ${sphdf5_src}")
 
 #set(srcs)
 #foreach(f ${unprocessed_src_files})
@@ -151,7 +151,7 @@ target_compile_options(spec3p
         # $<$<Fortran_COMPILER_ID:Intel>:-r8>
 )
 
-set(ALLFILES  rzaxis packxi volume coords basefn memory metrix ma00aa matrix mp00ac ma02aa packab tr00ab curent lforce intghs lbpol brcast dfp100 dfp200 dforce jo00aa bfield ra00aa numrec dcuhre minpack iqpack rksuite i1mach d1mach ilut iters sphdf5 preset global xspech)
+set(ALLFILES  rzaxis packxi volume coords basefn memory metrix ma00aa matrix mp00ac ma02aa packab tr00ab curent lforce intghs lbpol brcast dfp100 dfp200 dforce jo00aa bfield ra00aa numrec dcuhre minpack iqpack rksuite i1mach d1mach ilut iters preset global xspech)
 string(REPLACE ";" " " ALLFILES_STR "${ALLFILES}")
 
 # Build spec executable
