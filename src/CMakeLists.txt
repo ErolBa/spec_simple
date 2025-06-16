@@ -53,9 +53,10 @@ set(unprocessed_src_files
     tr00ab.f90
     curent.f90
     df00ab.f90
+    spsint.f90
+    spsmat.f90
     lforce.f90
     intghs.f90
-    mtrxhs.f90
     lbpol.f90
     brcast.f90
     dfp100.f90
@@ -64,8 +65,6 @@ set(unprocessed_src_files
     casing.f90
     bnorml.f90
     jo00aa.f90
-    pp00aa.f90
-    pp00ab.f90
     bfield.f90
     stzxyz.f90
     ra00aa.f90
@@ -163,7 +162,7 @@ target_compile_options(spec3p
         # $<$<Fortran_COMPILER_ID:Intel>:-r8>
 )
 
-set(ALLFILES  manual rzaxis packxi volume coords basefn memory metrix ma00aa matrix spsmat spsint mp00ac ma02aa packab tr00ab curent df00ab lforce intghs mtrxhs lbpol brcast dfp100 dfp200 dforce casing bnorml jo00aa pp00aa pp00ab bfield stzxyz ra00aa numrec dcuhre minpack iqpack rksuite i1mach d1mach ilut iters sphdf5 preset global xspech)
+set(ALLFILES  manual rzaxis packxi volume coords basefn memory metrix ma00aa matrix spsmat spsint mp00ac ma02aa packab tr00ab curent df00ab lforce intghs lbpol brcast dfp100 dfp200 dforce casing bnorml jo00aa bfield stzxyz ra00aa numrec dcuhre minpack iqpack rksuite i1mach d1mach ilut iters sphdf5 preset global xspech)
 string(REPLACE ";" " " ALLFILES_STR "${ALLFILES}")
 
 # Build spec executable

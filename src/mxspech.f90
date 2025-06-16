@@ -37,7 +37,6 @@ subroutine xspech
 
   CHARACTER            :: ldate*8, ltime*10, arg*100
 
-
   call MPI_INIT( ierr )
 
   BEGIN(xspech)
@@ -58,7 +57,7 @@ subroutine xspech
 
     ! screen output header
     write(ounit,'("xspech : ", 10x ," : version = "F5.2)') version
-    write(ounit,*)"      :  compiled  : date    = Mon 16 Jun 2025 01:50:06 PM CEST ; "
+    write(ounit,*)"      :  compiled  : date    = Mon 16 Jun 2025 02:37:15 PM CEST ; "
     write(ounit,*)"      :            : srcdir  = /home/balkovic/codes/spec_simple ; "
     write(ounit,*)"      :            : macros  = /home/balkovic/codes/spec_simple/src/macros ; "
     write(ounit,*)"      :            : fc      = /home/balkovic/anaconda3/envs/spec_wrapper/bin/mpif90 ; "
@@ -837,9 +836,6 @@ endif
    endif ! myid.eq.modulo(vvol-1,ncpu)
   enddo ! end of do vvol = 1, Mvol; ! end of parallel diagnostics loop; 03 Apr 13;
 
-  if( nPpts .gt.0 ) then
-    call pp00aa() ! do Poincare plots in all volumes; has its own paralellization over volumes internally
-  endif
 
 1002 format("xspech : ",f10.2," :":" myid=",i3," ; vvol=",i3," ; IBeltrami="L2" ; construction of Beltrami field failed ;")
 
@@ -905,7 +901,6 @@ subroutine ending
    SUMTIME(df00ab)
    SUMTIME(lforce)
    SUMTIME(intghs)
-   SUMTIME(mtrxhs)
    SUMTIME(lbpol)
    SUMTIME(brcast)
    SUMTIME(dfp100)
@@ -914,8 +909,6 @@ subroutine ending
    SUMTIME(casing)
    SUMTIME(bnorml)
    SUMTIME(jo00aa)
-   SUMTIME(pp00aa)
-   SUMTIME(pp00ab)
    SUMTIME(bfield)
    SUMTIME(stzxyz)
    SUMTIME(ra00aa)
@@ -960,7 +953,6 @@ subroutine ending
    PRTTIME(df00ab)
    PRTTIME(lforce)
    PRTTIME(intghs)
-   PRTTIME(mtrxhs)
    PRTTIME(lbpol)
    PRTTIME(brcast)
    PRTTIME(dfp100)
@@ -969,8 +961,6 @@ subroutine ending
    PRTTIME(casing)
    PRTTIME(bnorml)
    PRTTIME(jo00aa)
-   PRTTIME(pp00aa)
-   PRTTIME(pp00ab)
    PRTTIME(bfield)
    PRTTIME(stzxyz)
    PRTTIME(ra00aa)

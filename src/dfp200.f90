@@ -796,7 +796,6 @@ subroutine get_perturbed_solution(vvol, oBI, NN)
 
   WCALL( dfp200, intghs, ( Iquad(vvol), mn, vvol, ll, 0 ) )
 
-  WCALL( dfp200, mtrxhs, ( vvol, mn, ll, dVA, dVD, 0) )
 
   rhs(0)    = zero
   rhs(1:NN) = -dVA(1:NN)

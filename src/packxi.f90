@@ -112,8 +112,6 @@ subroutine packxi( NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpa
 
       idof = idof + 1
 
-f
-
       select case( packorunpack )
 
       case( 'P' ) !   pack vector of unknowns;

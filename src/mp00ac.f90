@@ -510,10 +510,6 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
    packorunpack = 'U'
    WCALL( mp00ac, packab, ( packorunpack, lvol, NN, solution(1:NN,ideriv), ideriv ) ) ! unpacking; this assigns oAt, oAz through common;
 
-   if (ideriv .eq. 0 .and. .not. NOTMatrixFree) then
-      call intghs(Iquad(lvol), mn, lvol, Lrad(lvol), 0) ! compute the integrals of B_lower
-      call mtrxhs(lvol, mn, Lrad(lvol), Adotx, Ddotx, 0) ! construct a.x from the integral
-   endif
 
   enddo ! do ideriv = 0, 2;
 
@@ -893,7 +889,6 @@ subroutine matvec(n, x, ax, a, mu, vvol)
     packorunpack = 'U'
     call packab(packorunpack, vvol, n, x, ideriv)          ! unpack solution to construct a.x
     call intghs(Iquad(vvol), mn, vvol, Lrad(vvol), ideriv) ! compute the integrals of B_lower
-    call mtrxhs(vvol, mn, Lrad(vvol), dax, ddx, ideriv)    ! construct a.x from the integral
     ax = dax(1:n) - mu * ddx(1:n)                          ! put in the mu factor
   endif
 
