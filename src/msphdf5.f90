@@ -621,7 +621,7 @@ subroutine hdfint
                         TT, &
                         beltramierror, &
                         IPDt, dlambdaout, lmns, &
-                        force_final, hessian, NGdof
+                        force_final, NGdof
 
   LOCALS
 
@@ -701,12 +701,6 @@ subroutine hdfint
   endif
 
   HWRITEIV( grpOutput, 1, lmns, (/ lmns /))
-
-
-  if( Lcheck.eq.7 ) then
-    HWRITERV(grpOutput, NGdof+1, force_final, force_final(0:NGdof))
-    HWRITERA( grpOutput, NGdof, NGdof, force_final_grad, hessian(1:NGdof,1:NGdof) )
-  end if
   
   HCLOSEGRP( grpOutput )
 
@@ -731,57 +725,57 @@ subroutine finish_outfile
 
  if (myid.eq.0 .and. .not.skip_write) then
 
-  H5CALL( sphdf5, h5tclose_f, (dt_nDcalls_id, hdfier)    , sphdf5.f90, 734)
-  H5CALL( sphdf5, h5tclose_f, (dt_Energy_id, hdfier)     , sphdf5.f90, 735)
-  H5CALL( sphdf5, h5tclose_f, (dt_ForceErr_id, hdfier)   , sphdf5.f90, 736)
-  H5CALL( sphdf5, h5tclose_f, (dt_iRbc_id, hdfier)       , sphdf5.f90, 737)
-  H5CALL( sphdf5, h5tclose_f, (dt_iZbs_id, hdfier)       , sphdf5.f90, 738)
-  H5CALL( sphdf5, h5tclose_f, (dt_iRbs_id, hdfier)       , sphdf5.f90, 739)
-  H5CALL( sphdf5, h5tclose_f, (dt_iZbc_id, hdfier)       , sphdf5.f90, 740)
-  H5CALL( sphdf5, h5dclose_f, (iteration_dset_id, hdfier), sphdf5.f90, 741) ! End access to the dataset and release resources used by it.
-  H5CALL( sphdf5, h5pclose_f, (plist_id, hdfier)         , sphdf5.f90, 742) ! close plist used for 'preserve' flag (does not show up in obj_count below)
+  H5CALL( sphdf5, h5tclose_f, (dt_nDcalls_id, hdfier)    , sphdf5.f90, 728)
+  H5CALL( sphdf5, h5tclose_f, (dt_Energy_id, hdfier)     , sphdf5.f90, 729)
+  H5CALL( sphdf5, h5tclose_f, (dt_ForceErr_id, hdfier)   , sphdf5.f90, 730)
+  H5CALL( sphdf5, h5tclose_f, (dt_iRbc_id, hdfier)       , sphdf5.f90, 731)
+  H5CALL( sphdf5, h5tclose_f, (dt_iZbs_id, hdfier)       , sphdf5.f90, 732)
+  H5CALL( sphdf5, h5tclose_f, (dt_iRbs_id, hdfier)       , sphdf5.f90, 733)
+  H5CALL( sphdf5, h5tclose_f, (dt_iZbc_id, hdfier)       , sphdf5.f90, 734)
+  H5CALL( sphdf5, h5dclose_f, (iteration_dset_id, hdfier), sphdf5.f90, 735) ! End access to the dataset and release resources used by it.
+  H5CALL( sphdf5, h5pclose_f, (plist_id, hdfier)         , sphdf5.f90, 736) ! close plist used for 'preserve' flag (does not show up in obj_count below)
 
-  H5CALL( sphdf5, h5fget_obj_count_f, (file_id, ior(H5F_OBJ_GROUP_F, ior(H5F_OBJ_DATASET_F, H5F_OBJ_DATATYPE_F)), obj_count, hdfier), sphdf5.f90, 744 )
+  H5CALL( sphdf5, h5fget_obj_count_f, (file_id, ior(H5F_OBJ_GROUP_F, ior(H5F_OBJ_DATASET_F, H5F_OBJ_DATATYPE_F)), obj_count, hdfier), sphdf5.f90, 738 )
 
   if (obj_count.gt.0) then
     write(*,'("There are still ",i3," hdf5 objects open")') obj_count
     allocate(obj_ids(1:obj_count))
 
-    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_GROUP_F, obj_count, obj_ids, hdfier, num_objs), sphdf5.f90, 750) ! get for open objects
+    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_GROUP_F, obj_count, obj_ids, hdfier, num_objs), sphdf5.f90, 744) ! get for open objects
     if (num_objs.gt.0) then
       write(*,'("There are still ",i3," HDF5 groups open:")') num_objs
       do iObj=1,num_objs
         openLength=0
-        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), dummyName, dummySize, openLength, hdfier), sphdf5.f90, 755)
+        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), dummyName, dummySize, openLength, hdfier), sphdf5.f90, 749)
         allocate(character(len=openLength+1) :: openName)
-        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), openName, openLength, openLength, hdfier), sphdf5.f90, 757)
+        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), openName, openLength, openLength, hdfier), sphdf5.f90, 751)
         write(*,*) openName
         deallocate(openName)
 
-        H5CALL( sphdf5, h5gclose_f, (obj_ids(iObj), hdfier), sphdf5.f90, 761)
+        H5CALL( sphdf5, h5gclose_f, (obj_ids(iObj), hdfier), sphdf5.f90, 755)
       enddo
     endif
 
-    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_DATASET_F, obj_count, obj_ids, hdfier, num_objs), sphdf5.f90, 765) ! get for open objects
+    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_DATASET_F, obj_count, obj_ids, hdfier, num_objs), sphdf5.f90, 759) ! get for open objects
     if (num_objs.gt.0) then
       write(*,'("There are still ",i3," HDF5 datasets open:")') num_objs
       do iObj=1,num_objs
         openLength=0
-        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), dummyName, dummySize, openLength, hdfier), sphdf5.f90, 770)
+        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), dummyName, dummySize, openLength, hdfier), sphdf5.f90, 764)
         allocate(character(len=openLength+1) :: openName)
-        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), openName, openLength, openLength, hdfier), sphdf5.f90, 772)
+        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), openName, openLength, openLength, hdfier), sphdf5.f90, 766)
         write(*,*) openName(1:openLength)
         deallocate(openName)
 
-        H5CALL( sphdf5, h5dclose_f, (obj_ids(iObj), hdfier), sphdf5.f90, 776)
+        H5CALL( sphdf5, h5dclose_f, (obj_ids(iObj), hdfier), sphdf5.f90, 770)
       enddo
     endif
 
-    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_DATATYPE_F, obj_count, obj_ids, hdfier, num_objs), sphdf5.f90, 780) ! get for open objects
+    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_DATATYPE_F, obj_count, obj_ids, hdfier, num_objs), sphdf5.f90, 774) ! get for open objects
     if (num_objs.gt.0) then
       write(*,'("There are still ",i3," HDF5 datatypes open:")') num_objs
       do iObj=1,num_objs
-        H5CALL( sphdf5, h5tget_class_f, (obj_ids(iObj), typeClass, hdfier), 784, sphdf5.f90) ! determine class of open datatype
+        H5CALL( sphdf5, h5tget_class_f, (obj_ids(iObj), typeClass, hdfier), 778, sphdf5.f90) ! determine class of open datatype
         if      (typeClass.eq.H5T_NO_CLASS_F ) then ; write(*,*) "H5T_NO_CLASS_F"
         else if (typeClass.eq.H5T_INTEGER_F  ) then ; write(*,*) "H5T_INTEGER_F"
         else if (typeClass.eq.H5T_FLOAT_F    ) then ; write(*,*) "H5T_FLOAT_F"
@@ -796,15 +790,15 @@ subroutine finish_outfile
         else ; write(*,*) "UNKNOWN TYPE!"
         endif
 
-        H5CALL( sphdf5, h5tclose_f, (obj_ids(iObj), hdfier), sphdf5.f90, 799)
+        H5CALL( sphdf5, h5tclose_f, (obj_ids(iObj), hdfier), sphdf5.f90, 793)
       enddo
     endif
 
     deallocate(obj_ids)
   endif ! (obj_count.gt.0)
 
-  H5CALL( sphdf5, h5fclose_f, ( file_id, hdfier ), sphdf5.f90, 806 ) ! terminate access on output file;
-  H5CALL( sphdf5, h5close_f,  ( hdfier ),          sphdf5.f90, 807 ) ! close Fortran interface to the HDF5 library;
+  H5CALL( sphdf5, h5fclose_f, ( file_id, hdfier ), sphdf5.f90, 800 ) ! terminate access on output file;
+  H5CALL( sphdf5, h5close_f,  ( hdfier ),          sphdf5.f90, 801 ) ! close Fortran interface to the HDF5 library;
 
  endif ! myid.eq.0
 

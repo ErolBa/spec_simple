@@ -45,16 +45,12 @@ set(unprocessed_src_files
     metrix.f90
     ma00aa.f90
     matrix.f90
-    spsmat.f90
-    spsint.f90
     mp00ac.f90
     ma02aa.f90
     packab.f90
     tr00ab.f90
     curent.f90
     df00ab.f90
-    spsint.f90
-    spsmat.f90
     lforce.f90
     intghs.f90
     lbpol.f90
@@ -62,18 +58,14 @@ set(unprocessed_src_files
     dfp100.f90
     dfp200.f90
     dforce.f90
-    casing.f90
-    bnorml.f90
     jo00aa.f90
     bfield.f90
     stzxyz.f90
     ra00aa.f90
     numrec.f90
     preset.f90
-    #sphdf5.f90
     global.f90
     inputlist.f90
-    #${CMAKE_CURRENT_SOURCE_DIR}/xspech.f90
 ) # below assumes the .f files are double precision; the CFLAGS = -r8 option is not required;
 
 set(f_src_files
@@ -162,7 +154,7 @@ target_compile_options(spec3p
         # $<$<Fortran_COMPILER_ID:Intel>:-r8>
 )
 
-set(ALLFILES  manual rzaxis packxi volume coords basefn memory metrix ma00aa matrix spsmat spsint mp00ac ma02aa packab tr00ab curent df00ab lforce intghs lbpol brcast dfp100 dfp200 dforce casing bnorml jo00aa bfield stzxyz ra00aa numrec dcuhre minpack iqpack rksuite i1mach d1mach ilut iters sphdf5 preset global xspech)
+set(ALLFILES  manual rzaxis packxi volume coords basefn memory metrix ma00aa matrix mp00ac ma02aa packab tr00ab curent df00ab lforce intghs lbpol brcast dfp100 dfp200 dforce jo00aa bfield stzxyz ra00aa numrec dcuhre minpack iqpack rksuite i1mach d1mach ilut iters sphdf5 preset global xspech)
 string(REPLACE ";" " " ALLFILES_STR "${ALLFILES}")
 
 # Build spec executable

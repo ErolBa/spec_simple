@@ -101,8 +101,6 @@ module cputiming
   REAL    :: Tmetrix = 0.0, metrixT = 0.0
   REAL    :: Tma00aa = 0.0, ma00aaT = 0.0
   REAL    :: Tmatrix = 0.0, matrixT = 0.0
-  REAL    :: Tspsmat = 0.0, spsmatT = 0.0
-  REAL    :: Tspsint = 0.0, spsintT = 0.0
   REAL    :: Tmp00ac = 0.0, mp00acT = 0.0
   REAL    :: Tma02aa = 0.0, ma02aaT = 0.0
   REAL    :: Tpackab = 0.0, packabT = 0.0
@@ -126,9 +124,6 @@ module cputiming
   REAL    :: Tdfp100 = 0.0, dfp100T = 0.0
   REAL    :: Tdfp200 = 0.0, dfp200T = 0.0
   REAL    :: Tdforce = 0.0, dforceT = 0.0
-  REAL    :: Tnewton = 0.0, newtonT = 0.0
-  REAL    :: Tcasing = 0.0, casingT = 0.0
-  REAL    :: Tbnorml = 0.0, bnormlT = 0.0
   REAL    :: Tjo00aa = 0.0, jo00aaT = 0.0
   REAL    :: Tpp00aa = 0.0, pp00aaT = 0.0
   REAL    :: Tpp00ab = 0.0, pp00abT = 0.0
@@ -562,18 +557,8 @@ module allglobal
 
 
 
-  LOGICAL              :: Lhessianallocated !< flag to indicate that force gradient matrix is allocated (?)
-  REAL,    allocatable :: hessian(:,:)      !<               force gradient matrix (?)
   REAL,    allocatable :: freal_jac_full(:,:)
   REAL,    allocatable :: dessian(:,:)      !< derivative of force gradient matrix (?)
-
-  LOGICAL              :: Lhessian2Dallocated !< flag to indicate that 2D Hessian matrix is allocated (?)
-  REAL,    allocatable :: hessian2D(:,:) !< Hessian 2D
-  REAL,    allocatable :: dessian2D(:,:) !< derivative Hessian 2D
-
-  LOGICAL              :: Lhessian3Dallocated !< flag to indicate that 2D Hessian matrix is allocated (?)
-  REAL,    allocatable :: hessian3D(:,:) !< Hessian 3D
-  REAL,    allocatable :: dessian3D(:,:) !< derivative Hessian 3D
 
   REAL,    allocatable :: force_final(:) !< Final force on the interfaces [inface*mode]
 

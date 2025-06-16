@@ -405,17 +405,6 @@ endif
   SALLOCATE( ImagneticOK, (1:Mvol), .false. )
 
 
-
-
-
-  Lhessianallocated = .false.
-
-
-
-
-
-
-
   SALLOCATE( ki, (1:mn,0:1), 0 )
   SALLOCATE( kija, (1:mn,1:mn,0:1), 0 )
   SALLOCATE( kijs, (1:mn,1:mn,0:1), 0 )

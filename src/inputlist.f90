@@ -152,8 +152,6 @@ module inputlist
   LOGICAL :: Wmetrix  = .false.
   LOGICAL :: Wma00aa  = .false.
   LOGICAL :: Wmatrix  = .false.
-  LOGICAL :: Wspsmat  = .false.
-  LOGICAL :: Wspsint  = .false.
   LOGICAL :: Wmp00ac  = .false.
   LOGICAL :: Wma02aa  = .false.
   LOGICAL :: Wpackab  = .false.
@@ -170,7 +168,6 @@ module inputlist
   LOGICAL :: Wdforce  = .false.
   LOGICAL :: Wnewton  = .false.
   LOGICAL :: Wcasing  = .false.
-  LOGICAL :: Wbnorml  = .false.
   LOGICAL :: Wjo00aa  = .false.
   LOGICAL :: Wpp00aa  = .false.
   LOGICAL :: Wpp00ab  = .false.
@@ -342,8 +339,6 @@ module inputlist
  Wmetrix , &
  Wma00aa , &
  Wmatrix , &
- Wspsmat , &
- Wspsint , &
  Wmp00ac , &
  Wma02aa , &
  Wpackab , &
@@ -360,7 +355,6 @@ module inputlist
  Wdforce , &
  Wnewton , &
  Wcasing , &
- Wbnorml , &
  Wjo00aa , &
  Wpp00aa , &
  Wpp00ab , &

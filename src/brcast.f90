@@ -20,8 +20,7 @@ subroutine brcast( lvol )
                         Ate, Aze, Ato, Azo, &
                         Bemn, Bomn, Iomn, Iemn, Somn, Semn, Pomn, Pemn, &
                         ImagneticOK, &
-                        Lhessianallocated, LGdof, dFFdRZ, dBBdmp, dmupfdx, &
-                        denergydrr,denergydzr,Lhessian3Dallocated, &
+                        LGdof, dFFdRZ, dBBdmp, dmupfdx, &
                         lBBintegral, lABintegral, &
                         vvolume, &
                         NOTstellsym, LocalConstraint, &
@@ -61,35 +60,6 @@ subroutine brcast( lvol )
 
   RlBCAST( diotadxup(0:1,-1:2,lvol), 8, llmodnp )
   RlBCAST( dItGpdxtp(0:1,-1:2,lvol), 8, llmodnp )
-
-
-
-  if( Lhessianallocated ) then
-
-
-   if( LocalConstraint ) then
- 	  Nbc =             LGdof*       2*  LGdof*  2
- 	  RlBCAST( dFFdRZ(1:LGdof,0:1,1:LGdof,0:1,lvol), Nbc, llmodnp )
-    
-
-	  Nbc =             LGdof*       2*  2
-	  RlBCAST( dBBdmp(1:LGdof,lvol,0:1,1:2), Nbc, llmodnp )
-
-	  Nbc =                   2*  LGdof*  2
-	  RlBCAST( dmupfdx(lvol,1:1   ,1:2,1:LGdof,0:1), Nbc, llmodnp ) ! why is this broadcast; 02 Sep 14;
-   endif
-
-
-  endif ! end of if( Lhessianallocated ) ; 12 Sep 16;
-
-  if (Lhessian3Dallocated) then
-
-      Nbc =             LGdof*       2*  LGdof*  2
-      RlBCAST(denergydrr(1:LGdof,lvol,0:1,1:LGdof,0:1), Nbc, llmodnp )
-      RlBCAST(denergydzr(1:LGdof,lvol,0:1,1:LGdof,0:1), Nbc, llmodnp )
-  endif
-  
-
 
   LlBCAST( ImagneticOK(lvol), 1, llmodnp )
 

@@ -219,7 +219,7 @@ subroutine spec
                         dMA, dMB, dMD, dMG, MBpsi, solution, IPDt, &
                         version, &
                         MPI_COMM_SPEC, &
-                        force_final, Lhessianallocated, LocalConstraint, hessian, dBBdmp, dFFdRZ, dmupfdx, &
+                        force_final, LocalConstraint, dBBdmp, dFFdRZ, dmupfdx, &
                         dRodR, dRodZ, dZodR, dZodZ
 
 
