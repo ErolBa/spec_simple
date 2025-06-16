@@ -31,7 +31,7 @@ subroutine ra00aa( writeorread )
   REAL   , allocatable  :: allAte(:,:), allAze(:,:), allAto(:,:), allAzo(:,:)
 
 
-  BEGIN(ra00aa)
+  
 
 
 
@@ -180,7 +180,7 @@ subroutine ra00aa( writeorread )
 
 
 
-  RETURN(ra00aa)
+
 
 
 

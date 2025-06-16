@@ -33,7 +33,7 @@ subroutine preset
 
 
 
-  BEGIN(preset)
+  
 
 
 
@@ -925,8 +925,8 @@ endif
   SALLOCATE( kjreal, (1:Ntz), zero )
   SALLOCATE( kjimag, (1:Ntz), zero )
 
-  SALLOCATE( cplxin,  (1:Nt,1:Nz,nthreads), zero )
-  SALLOCATE( cplxout, (1:Nt,1:Nz,nthreads), zero )
+  SALLOCATE( cplxin,  (1:Nt,1:Nz,1), zero )
+  SALLOCATE( cplxout, (1:Nt,1:Nz,1), zero )
 
   planf = fftw_plan_dft_2d( Nz, Nt, cplxin(:,:,1), cplxout(:,:,1), FFTW_FORWARD,  FFTW_MEASURE + FFTW_DESTROY_INPUT )
   planb = fftw_plan_dft_2d( Nz, Nt, cplxin(:,:,1), cplxout(:,:,1), FFTW_BACKWARD, FFTW_MEASURE + FFTW_DESTROY_INPUT )
@@ -1131,7 +1131,7 @@ endif
     Localconstraint = .true.
   endif
   
-  RETURN(preset)
+
 
 
 

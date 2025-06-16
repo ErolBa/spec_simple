@@ -72,7 +72,7 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
 
 
-  BEGIN(dforce)
+  
 
   if( LocalConstraint ) then
     SALLOCATE( dmupfdx, (1:Mvol,    1:1,1:2,1:LGdof,0:1), zero )
@@ -299,7 +299,7 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 4001 format("dforce : ", 10x ," : ",6x,3x,"; ",:,"    ",  12x ,"   ",:,"     ", 10x ,"  ;",:," log",a5,"=",28f6.2  ," ...")
 
 
-  RETURN(dforce)
+
 
 end subroutine dforce
 

@@ -82,7 +82,7 @@ subroutine dfp200( LcomputeDerivatives, vvol)
 
   type(MatrixLU)  :: oBI(1:Mvol)
 
-  BEGIN(dfp200)
+  
 
 
   SALLOCATE( dBB       , (1:Ntz,-1:2), zero ) ! magnetic field strength (on interfaces) in real space and derivatives;
@@ -171,6 +171,6 @@ else ! CASE SEMI GLOBAL CONSTRAINT
 
 2000 continue
 
-  RETURN(dfp200)
+
 
 end subroutine dfp200

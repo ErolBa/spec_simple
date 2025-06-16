@@ -21,7 +21,7 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
   LOGICAL, intent(in) :: LcomputeDerivatives
   INTEGER     :: NN
 
-  BEGIN(memory)
+  
 
   NN = NAdof(vvol) ! shorthand;
 
@@ -36,7 +36,7 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
   SALLOCATE( MBpsi, (1:NN), zero )
 
-  RETURN(memory)
+
 
 end subroutine allocate_Beltrami_matrices
 
@@ -59,7 +59,7 @@ subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
   LOGICAL, intent(in) :: LcomputeDerivatives
 
-  BEGIN(memory)
+  
 
   DALLOCATE(dMA)
   DALLOCATE(dMD)
@@ -72,7 +72,7 @@ subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
   DALLOCATE(MBpsi)
 
-   RETURN(memory)
+
 
 end subroutine deallocate_Beltrami_matrices
 
@@ -106,7 +106,7 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
 
   INTEGER         :: ll, lldof, jjdof, iidof
 
-  BEGIN(memory)
+  
 
   ll = Lrad(vvol)
 
@@ -179,7 +179,7 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
 
   end if !NOTstellsym
 
-  RETURN(memory)
+
 
 end subroutine allocate_geometry_matrices
 
@@ -205,7 +205,7 @@ subroutine deallocate_geometry_matrices(LcomputeDerivatives)
 
   LOGICAL, intent(in) :: LcomputeDerivatives
 
-  BEGIN(memory)
+  
 
   Lsavedguvij = .false.
   DALLOCATE(guvijsave)
@@ -262,6 +262,6 @@ subroutine deallocate_geometry_matrices(LcomputeDerivatives)
 
   endif
 
-  RETURN(memory)
+
 
 end subroutine deallocate_geometry_matrices

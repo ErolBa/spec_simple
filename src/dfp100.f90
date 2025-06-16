@@ -47,7 +47,7 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
 
 
 
-  BEGIN(dfp100)
+  
 
   dpflux(2:Mvol) = x - xoffset
 
@@ -148,6 +148,6 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
     end select
   endif
 
-  RETURN(dfp100)
+
 
 end subroutine dfp100

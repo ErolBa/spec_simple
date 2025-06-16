@@ -44,7 +44,7 @@ subroutine lbpol(lvol, Bt00, ideriv, iocons)
 
 
 
-  BEGIN(lbpol)
+  
 
 
 
@@ -88,7 +88,7 @@ subroutine lbpol(lvol, Bt00, ideriv, iocons)
 
 
 
-  RETURN(lbpol)
+
 
 
 

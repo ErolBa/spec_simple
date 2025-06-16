@@ -62,7 +62,7 @@ subroutine ma02aa( lvol, NN )
   REAL   , allocatable :: constraintfunction(:), constraintgradient(:,:), multipliers(:), objectivegradient(:), RS(:,:), RWk(:)
   CHARACTER            :: optionalparameter*33
 
-  BEGIN(ma02aa)
+  
 
 
   ivol = lvol ! various subroutines (e.g. mp00ac, df00ab) that may be called below require volume identification, but the argument list is fixed by NAG;
@@ -283,7 +283,7 @@ subroutine ma02aa( lvol, NN )
 
   endif ! end of if( LBlinear ) then;
 
-  RETURN(ma02aa)
+
 
 
 

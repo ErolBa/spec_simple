@@ -55,7 +55,7 @@ subroutine matrix( lvol, mn, lrad )
 
   REAL,allocatable     :: TTdata(:,:,:), TTMdata(:,:) ! queues to construct sparse matrices
 
-  BEGIN(matrix)
+  
 
 
   NN = NAdof(lvol) ! shorthand;
@@ -273,7 +273,7 @@ subroutine matrix( lvol, mn, lrad )
   DALLOCATE( TTdata )
   DALLOCATE( TTMdata )
 
-  RETURN(matrix)
+
 
 
 

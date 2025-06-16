@@ -643,7 +643,7 @@ subroutine build_vector_potential(lvol, iocons, aderiv, tderiv)
 
 
 
-  BEGIN(build_vector_potential)
+  
 
   efmn(1:mn) = zero ; sfmn(1:mn) = zero ; cfmn(1:mn) = zero ; ofmn(1:mn) = zero
 
@@ -898,7 +898,7 @@ subroutine check_inputs()
    INTEGER              :: vvol
    REAL                 :: xx, toroidalflux, toroidalcurrent
 
-   BEGIN(readin)
+   
 
    Mvol = Nvol + Lfreebound ! this is just for screen output and initial check; true assignment of Mvol appears outside if( myid.eq.0 ) then ;
 
@@ -1045,7 +1045,6 @@ subroutine check_inputs()
 
    write(ounit,'("readin : ", 10x ," : ")')
 
-   RETURN(readin)
 
 end subroutine ! check_inputs
 
@@ -1242,11 +1241,11 @@ subroutine wrtend
   REAL                 :: BZ !< (?)
   REAL                 :: BP !< (?)
 
-  BEGIN(wrtend)
+  
 
 
 
-  if( myid.ne.0 ) goto 9999
+  if( myid.ne.0 ) return
 
 
   open(iunit,file=trim(ext)//".sp.end",status="unknown") ! restart input file;
@@ -1478,7 +1477,7 @@ subroutine wrtend
   close(iunit)
 
 
-  RETURN(wrtend)
+
 
 
 

@@ -33,7 +33,7 @@ subroutine bfield( zeta, st, Bst )
 
   REAL               :: TT(0:Lrad(ivol),0:1) ! this is almost identical to cheby; 17 Dec 15;
 
-  BEGIN(bfield)
+  
 
 
 
@@ -49,7 +49,7 @@ subroutine bfield( zeta, st, Bst )
 
   lss = st(1) ; teta = st(2)
 
-  if( abs(lss).gt.one ) goto 9999 ! out of domain;
+  if( abs(lss).gt.one ) return ! out of domain;
 
   if( Lcoordinatesingularity ) sbar = max( ( lss + one ) * half, small )
 
@@ -124,7 +124,7 @@ subroutine bfield( zeta, st, Bst )
 
 
 
-  RETURN(bfield)
+
 
 
 

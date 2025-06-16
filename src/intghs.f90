@@ -58,7 +58,7 @@ subroutine intghs_workspace_init(lvol)
   INTEGER, INTENT(IN) :: lvol
   INTEGER             :: lquad
 
-  BEGIN(intghs)
+  
 
   lquad = Iquad(lvol)
 
@@ -78,7 +78,7 @@ subroutine intghs_workspace_init(lvol)
   SALLOCATE(wk%kjreal,    (1:mn,lquad), zero)
   SALLOCATE(wk%basis,     (0:Lrad(lvol),0:mpol,0:1, lquad), zero)
 
-  RETURN(intghs)
+
 
 end subroutine intghs_workspace_init
 
@@ -92,7 +92,7 @@ subroutine intghs_workspace_destroy()
 
   LOCALS
 
-  BEGIN(intghs)
+  
 
   DALLOCATE(wk%gBupper)
   DALLOCATE(wk%Blower)
@@ -110,6 +110,6 @@ subroutine intghs_workspace_destroy()
   DALLOCATE(wk%kjreal)
   DALLOCATE(wk%basis)
 
-  RETURN(intghs)
+
 
 end subroutine intghs_workspace_destroy

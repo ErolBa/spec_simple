@@ -34,7 +34,7 @@ subroutine brcast( lvol )
 
   INTEGER             :: llmodnp, io, iRZl, ii, ideriv, Nbc
 
-  BEGIN(brcast)
+  
 
 
 
@@ -86,7 +86,7 @@ subroutine brcast( lvol )
   endif
 
 
-  RETURN(brcast)
+
 
 
 

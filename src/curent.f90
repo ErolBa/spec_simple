@@ -33,7 +33,7 @@ subroutine curent( lvol, mn, Nt, Nz, iflag, ldItGp )
   REAL                 :: lss
   REAL                 :: Bsupt(1:Nt*Nz,-1:2), Bsupz(1:Nt*Nz,-1:2)
 
-  BEGIN(curent)
+  
 
 
 
@@ -98,7 +98,7 @@ subroutine curent( lvol, mn, Nt, Nz, iflag, ldItGp )
   enddo ! end of do ideriv; 31 Jan 13;
 
 
-  RETURN(curent)
+
 
 
 

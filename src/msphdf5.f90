@@ -86,7 +86,7 @@ subroutine init_outfile
 
   LOCALS
 
-  BEGIN( sphdf5 )
+  
 
  if (myid.eq.0 .and. .not.skip_write) then
 
@@ -113,7 +113,7 @@ subroutine mirror_input_to_outfile
   integer(hid_t) :: grpInput
   integer(hid_t) :: grpInputPhysics, grpInputNumerics, grpInputLocal, grpInputGlobal, grpInputDiagnostics
 
-  BEGIN( sphdf5 )
+  
 
  if (myid.eq.0 .and. .not.skip_write) then
 
@@ -366,7 +366,7 @@ subroutine init_convergence_output
   integer(size_t)                   :: irbc_size_template   !< size ofiRbc array in iterations logging
   integer(size_t)                   :: irbc_size            !< size ofiRbc array in iterations logging
 
-  BEGIN( sphdf5 )
+  
 
  if (myid.eq.0 .and. .not.skip_write) then
 
@@ -456,7 +456,7 @@ subroutine write_grid
   REAL                 :: lss, teta, zeta, st(1:Node), Bst(1:Node)
   REAL   , allocatable :: Rij_grid(:,:), Zij_grid(:,:), sg_grid(:,:), ijreal_grid(:,:), ijimag_grid(:,:), jireal_grid(:,:)
 
-  BEGIN(sphdf5)
+  
 
  if (myid.eq.0 .and. .not.skip_write) then
 
@@ -571,7 +571,7 @@ subroutine write_grid
 
   HCLOSEGRP( grpGrid )
 
-  RETURN(sphdf5)
+
 
  endif ! myid.eq.0
 
@@ -587,7 +587,7 @@ subroutine write_vector_potential(sumLrad, allAte, allAze, allAto, allAzo)
   REAL, intent(in)    :: allAte(:,:), allAze(:,:), allAto(:,:), allAzo(:,:)
   integer(hid_t)      :: grpVectorPotential
 
-  BEGIN( sphdf5 )
+  
 
  if (myid.eq.0 .and. .not.skip_write) then
 
@@ -630,7 +630,7 @@ subroutine hdfint
 
   integer(hid_t)                 :: grpOutput
 
-  BEGIN( sphdf5 )
+  
 
  if (myid.eq.0 .and. .not.skip_write) then
 
@@ -721,7 +721,7 @@ subroutine finish_outfile
   character(len=dummySize+1)               :: dummyName
   integer                                  :: typeClass
 
-  BEGIN( sphdf5 )
+  
 
  if (myid.eq.0 .and. .not.skip_write) then
 

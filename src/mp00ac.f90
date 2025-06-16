@@ -79,7 +79,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
   REAL, allocatable    :: wk(:)
   INTEGER,allocatable  :: jw(:), iperm(:)
 
-  BEGIN(mp00ac)
+  
 
 
 
@@ -283,7 +283,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
    iflag = -1 ! this value will be returned by C05PCF to ma02aa;
 
-   goto 9999
+   return
 
   else
 
@@ -461,7 +461,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
 
 
-  RETURN(mp00ac)
+
 
 
 

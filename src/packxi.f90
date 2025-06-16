@@ -32,7 +32,7 @@ subroutine packxi( NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpa
 
   INTEGER                :: lvol, jj, kk, irz, issym, idof, ifail, ivol
 
-  BEGIN(packxi)
+  
 
 
 
@@ -108,7 +108,7 @@ subroutine packxi( NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpa
   end select
 
 
-  RETURN(packxi)
+
 
 
 

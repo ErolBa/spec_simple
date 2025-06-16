@@ -41,7 +41,7 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
   REAL                :: zeta, teta, st(2), Bst(2)
 
-  BEGIN(jo00aa)
+  
 
 
   itype = 1 ; aa = -one ; bb = +one ; cc = zero ; dd = zero ; twolquad = 2 * lquad
@@ -339,7 +339,7 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
 
 
-  RETURN(jo00aa)
+
 
 
 end subroutine jo00aa

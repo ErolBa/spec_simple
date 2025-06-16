@@ -42,7 +42,7 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
   REAL                 :: dAs(1:Ntz)!, dRdt(-1:1,0:1), dZdt(-1:1,0:1)
   REAL                 :: lgvuij(1:Ntz,1:3,1:3) ! local workspace; 13 Sep 13;
 
-  BEGIN(lforce)
+  
 
   dAt(1:Ntz, -1:2) = zero ! initialize intent out; 01 Jul 14;
   dAz(1:Ntz, -1:2) = zero ! initialize intent out; 01 Jul 14;
@@ -98,7 +98,7 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
 
   ijreal(1:Ntz) = adiabatic(lvol) * pscale / vvolume(lvol)**gamma + dBB(1:Ntz, 0) ! p + B^2/2; 13 Sep 13;
 
-  if( iflag .eq. 1 ) goto 9999 ! iflag = 1 indicates the derivatives of the force are to be calculated; derivatives of magnetic field calculated above;
+  if( iflag .eq. 1 ) return ! iflag = 1 indicates the derivatives of the force are to be calculated; derivatives of magnetic field calculated above;
 
 
 
@@ -178,7 +178,7 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
 
 
 
-  RETURN(lforce)
+
 
 
 

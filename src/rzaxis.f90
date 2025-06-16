@@ -50,7 +50,7 @@ subroutine rzaxis( Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivativ
 
 
 
-  BEGIN(rzaxis)
+  
 
   write(*,*) "Calling rzaxis"
 
@@ -317,7 +317,7 @@ subroutine rzaxis( Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivativ
 
 
 
-  RETURN(rzaxis)
+
 
 end subroutine rzaxis
 

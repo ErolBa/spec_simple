@@ -59,7 +59,7 @@ subroutine ma00aa( lquad, mn, lvol, lrad )
   REAL                :: sbar
   REAL, allocatable   :: basis(:,:,:,:)
 
-  BEGIN( ma00aa )
+  
 
 
   mn2_max = mn*mn
@@ -311,7 +311,7 @@ subroutine ma00aa( lquad, mn, lvol, lrad )
 
 
 
-  RETURN( ma00aa )
+
 
 
 

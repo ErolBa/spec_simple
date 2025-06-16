@@ -37,7 +37,7 @@ subroutine metrix( lquad, lvol )
 
   INTEGER             :: Lcurvature, ifail, ideriv, jquad
 
-  BEGIN( metrix )
+  
 
 
 
@@ -78,7 +78,7 @@ subroutine metrix( lquad, lvol )
   enddo
 
 
-  RETURN( metrix )
+
 
 
 

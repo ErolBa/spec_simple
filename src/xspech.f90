@@ -24,7 +24,7 @@ subroutine xspech
 
   call MPI_INIT( ierr )
 
-  BEGIN(xspech)
+  
 
   call set_mpi_comm(MPI_COMM_WORLD)
 
@@ -42,7 +42,7 @@ subroutine xspech
     write(ounit,1000) cput-cpus, ldate(1:4), ldate(5:6), ldate(7:8), ltime(1:2), ltime(3:4), ltime(5:6), machprec, vsmall, small
 
     write(ounit,'("xspech : ", 10x ," : ")')
-    write(ounit,'("xspech : ",f10.2," : parallelism : ncpu=",i3," ; nthreads=",i3," ;")') cput-cpus, ncpu, nthreads
+    write(ounit,'("xspech : ",f10.2," : parallelism : ncpu=",i3," ; nthreads=",i3," ;")') cput-cpus, ncpu,1
 
     call read_command_args()
 

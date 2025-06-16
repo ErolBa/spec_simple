@@ -38,7 +38,7 @@ subroutine coords( lvol, lss, Lcurvature, Ntz, mn )
   REAL                :: Dij(1:Ntz,0:3), dguvij(1:Ntz,1:3,1:3), DRxij(1:Ntz,0:3), DZxij(1:Ntz,0:3)
   
 
-  BEGIN(coords)
+  
 
 
 
@@ -120,7 +120,7 @@ subroutine coords( lvol, lss, Lcurvature, Ntz, mn )
 
 
 
-  if( Lcurvature.eq.0 ) goto 9999 ! only the coordinates are required;
+  if( Lcurvature.eq.0 ) return ! only the coordinates are required;
 
 
 
@@ -248,7 +248,7 @@ subroutine coords( lvol, lss, Lcurvature, Ntz, mn )
 
 
 
-  if( Lcurvature.le.1 ) goto 9999
+  if( Lcurvature.le.1 ) return
 
 
 
@@ -578,12 +578,6 @@ Nt, Nz, Rij(1:Ntz,3,3), Zij(1:Ntz,3,3) ) ! maps to real space;
 
    endif ! end of if( Lcurvature.eq.5 ) ; 13 Jan 20;
   end select ! matches select case( Lcurvature ) ; 10 Mar 13;
-
-
-
-
-  RETURN(coords)
-
 
 
 end subroutine coords

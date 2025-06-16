@@ -66,7 +66,7 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
   REAL   , allocatable :: smatrix(:,:), srhs(:,:), slambda(:,:), swork(:)
   CHARACTER            :: duplicate*1, zeros*1, method*8, precon*1, trans*1, check*1 ! logical control of sparse routines; 20 Apr 13;
 
-  BEGIN(tr00ab)
+  
 
 
   do innout = 0, 1 ! loop over inner and outer interfaces;
@@ -368,7 +368,7 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
 
 
-  RETURN(tr00ab)
+
 
 
 

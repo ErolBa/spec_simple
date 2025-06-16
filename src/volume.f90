@@ -39,14 +39,14 @@ subroutine volume( lvol, vflag )
 
   REAL                :: AA, BB, CC, DD, lss
 
-  BEGIN(volume)
+  
 
 
 
 
 
 
-  if( lvol.gt.Nvol ) then ; vvolume(lvol) = one ; dvolume = zero ; goto 9999 ! this can only be the vacuum region; provide default value; 13 Sep 13;
+  if( lvol.gt.Nvol ) then ; vvolume(lvol) = one ; dvolume = zero ; return ! this can only be the vacuum region; provide default value; 13 Sep 13;
   endif
 
 
@@ -225,7 +225,7 @@ subroutine volume( lvol, vflag )
 
 
 
-  RETURN(volume)
+
 
 
 
