@@ -14,7 +14,10 @@ subroutine xspech
   use fileunits, only: ounit
   use cputiming, only: Txspech
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   CHARACTER            :: ldate*8, ltime*10, arg*100
 
@@ -79,7 +82,7 @@ subroutine xspech
    write(ounit,'("xspech : ",f10.2," : myid=",i3," : time="f8.2"m = "f6.2"h = "f5.2"d ;")') cput-cpus, myid, (cput-cpus) / (/ 60, 60*60, 24*60*60 /)
   endif
 
-  MPIFINALIZE
+  call MPI_FINALIZE(ierr) 
 
   stop
 
@@ -93,7 +96,10 @@ subroutine read_command_args
   use inputlist, only: Wreadin
   use allglobal, only: cpus, myid, ext, MPI_COMM_SPEC, write_spec_namelist
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   LOGICAL              :: Lspexist
   INTEGER              :: iargc, iarg, numargs, extlen, sppos
@@ -204,7 +210,10 @@ subroutine spec
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   LOGICAL              :: LComputeDerivatives, LContinueFreeboundaryIterations, exist, LupdateBn, LComputeAxis
   INTEGER              :: imn, lmn, lNfp, lim, lin, ii, ideriv, stat
@@ -234,8 +243,8 @@ subroutine spec
 
    pack = 'P'
    LComputeAxis = .true.
-   WCALL( xspech, packxi, ( NGdof, position(0:NGdof), Mvol, mn, iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), &
-                            iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol), pack, .false., LComputeAxis ) )
+   call packxi( NGdof, position(0:NGdof), Mvol, mn, iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), &
+                            iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol), pack, .false., LComputeAxis )
 
   endif
 
@@ -244,9 +253,11 @@ subroutine spec
 
   do vvol = 1, Mvol
 
-   LREGION(vvol)
+  if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif
    vflag = 0
-   WCALL( xspech, volume, ( vvol, vflag ) ) ! compute volume;
+   call volume( vvol, vflag  ) ! compute volume;
    
    if( Ladiabatic.eq.0 ) adiabatic(vvol) = pressure(vvol) * vvolume(vvol)**gamma ! initialize adiabatic constants using supplied pressure profile;
 
@@ -272,7 +283,7 @@ subroutine spec
     LComputeDerivatives = .false.
     LComputeAxis = .true.
 
-    WCALL( xspech, dforce, ( NGdof, position(0:NGdof), force_final(0:NGdof), LComputeDerivatives, LComputeAxis) )
+    call dforce( NGdof, position(0:NGdof), force_final(0:NGdof), LComputeDerivatives, LComputeAxis)
 
 1000 format("xspech : ",f10.2," : #freeits=",i3," ; ":"|f|="es12.5" ; ":"time=",f10.2,"s ;":" log"a5,:"="28f6.2" ...")
 1001 format("xspech : ", 10x ," :          ",3x," ; ":"    "  12x "   ":"     ", 10x ,"  ;":" log"a5,:"="28f6.2" ...")
@@ -290,10 +301,10 @@ subroutine spec
   pflux(1:Mvol) = pflux(1:Mvol) * pi2 / phiedge
 
 
-  WCALL( xspech, ra00aa, ('W') ) ! this writes vector potential to file;
+  call ra00aa('W' ) ! this writes vector potential to file;
 
   if( myid.eq.0 ) then ! write restart file; note that this is inside free-boundary iteration loop; 11 Aug 14;
-   WCALL( xspech, wrtend ) ! write restart file; save initial input;
+   call wrtend() ! write restart file; save initial input;
   endif
 
 end subroutine spec
@@ -314,7 +325,10 @@ subroutine final_diagnostics
                        dlambdaout, diotadxup
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   integer              :: iocons, llmodnp, vvol, iflag, cpu_id
   real                 :: sumI
@@ -339,7 +353,9 @@ if( Ltransform ) then
       FATAL( xspech, .true., Unassociated volume )
     endif
 
-    LREGION( vvol )
+    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif
 
     call tr00ab( vvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2, vvol) ) ! stores lambda in a global variable.
   enddo
@@ -359,7 +375,9 @@ endif
 
   do vvol = 1, Mvol
 
-    LREGION(vvol)
+    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif
 
     do iocons = 0, 1
 	  if( Lcoordinatesingularity .and. iocons.eq.0 ) cycle
@@ -377,7 +395,7 @@ endif
     IPDt(vvol) = pi2 * (Bt00(vvol+1, 0, 0) - Bt00(vvol, 1, 0))
   enddo
 
-  DALLOCATE( Bt00 )
+  deallocate(Bt00 ,stat=astat)
 
   sumI = 0
   do vvol = 1, Mvol
@@ -402,7 +420,9 @@ endif
 
   do vvol = 1, Mvol
 
-   LREGION(vvol)
+    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif
 
    if( myid.eq.modulo(vvol-1,ncpu) .and. myid.lt.Mvol) then ! the following is in parallel; 20 Jun 14;
 

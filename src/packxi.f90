@@ -21,7 +21,10 @@ subroutine packxi( NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpa
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   LOGICAL, intent(in)    :: LComputeDerivatives ! indicates whether derivatives are to be calculated;
   LOGICAL, intent(in)    :: LComputeAxis        ! if to recompute the axis

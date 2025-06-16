@@ -25,7 +25,10 @@ subroutine volume( lvol, vflag )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lvol
 
@@ -139,7 +142,7 @@ subroutine volume( lvol, vflag )
       Lcurvature = 1
 
       lss = innout * two - one
-      WCALL( volume, coords, ( lvol, lss, Lcurvature, Ntz, mn ) )
+      call coords( lvol, lss, Lcurvature, Ntz, mn  )
 
       vint = Rij(1:Ntz,0,0) * (Zij(1:Ntz,0,0)*Rij(1:Ntz,2,0) - Zij(1:Ntz,2,0)*Rij(1:Ntz,0,0))
       vol(innout) = four * sum(vint) / float(Ntz)

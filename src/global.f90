@@ -433,8 +433,8 @@ module allglobal
   INTEGER      , allocatable :: Fse(:,:) !< what is this?
 
   LOGICAL                    :: Lcoordinatesingularity !< set by \c LREGION macro; true if inside the innermost volume
-  LOGICAL                    :: Lplasmaregion          !< set by \c LREGION macro; true if inside the plasma region
-  LOGICAL                    :: Lvacuumregion          !< set by \c LREGION macro; true if inside the vacuum region
+  LOGICAL                    :: Lplasmaregion  = .true.        !< set by \c LREGION macro; true if inside the plasma region
+  LOGICAL                    :: Lvacuumregion  = .false.     !< set by \c LREGION macro; true if inside the vacuum region
   LOGICAL                    :: Lsavedguvij            !< flag used in matrix free
   LOGICAL                    :: Localconstraint        !< what is this?
 
@@ -630,7 +630,10 @@ subroutine build_vector_potential(lvol, iocons, aderiv, tderiv)
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER              :: aderiv    ! Derivative of A. -1: w.r.t geometrical degree of freedom
   INTEGER              :: tderiv    ! Derivative of Chebyshev polynomialc. 0: no derivatives
@@ -706,7 +709,10 @@ subroutine read_inputlists_from_file()
    use ifport ! for fseek, ftell with Intel compiler
 #endif
 
-   LOCALS
+   use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
    LOGICAL              :: Lspexist
    integer :: filepos, seek_status, cpfile, instat, idx_mode
@@ -845,7 +851,7 @@ subroutine read_inputlists_from_file()
        read(iunit,*,iostat=instat) mmRZRZ(idx_mode), nnRZRZ(idx_mode), allRZRZ(1:4,1:Nvol, idx_mode)
      enddo
 
-     DALLOCATE(RZRZ)
+     deallocate(RZRZ,stat=astat)
 
     end if ! Linitialize .le. 0
 
@@ -862,7 +868,10 @@ subroutine write_spec_namelist()
   use fileunits
   use inputlist
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   LOGICAL :: exist
   CHARACTER(LEN=100), PARAMETER :: example = 'example.sp'
@@ -893,7 +902,10 @@ subroutine check_inputs()
    use inputlist
    use cputiming, only: Treadin
 
-   LOCALS
+   use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
    INTEGER              :: vvol
    REAL                 :: xx, toroidalflux, toroidalcurrent
@@ -1055,9 +1067,12 @@ subroutine broadcast_inputs
   use fileunits
   use inputlist
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
-  ClBCAST( ext        ,     100, 0 )
+  call MPI_BCAST(ext,100,MPI_CHARACTER,0,MPI_COMM_SPEC,ierr)
 
 
 
@@ -1220,7 +1235,10 @@ subroutine wrtend
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER              :: vvol !< iteration variable over all nested volumes
   INTEGER              :: imn  !< iteration variable for all Fourier harmonics
@@ -1487,7 +1505,10 @@ end subroutine wrtend
 
 subroutine IsMyVolume(vvol)
 
-LOCALS
+use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
 INTEGER, intent(in) :: vvol
 
@@ -1506,7 +1527,10 @@ end subroutine IsMyVolume
 
 subroutine WhichCpuID(vvol, cpu_id)
 
-LOCALS
+use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
 INTEGER            :: vvol, cpu_id
 

@@ -27,7 +27,10 @@ subroutine rzaxis( Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivativ
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   LOGICAL, intent(in)  :: LComputeDerivatives ! indicates whether derivatives are to be calculated;
 
@@ -182,7 +185,7 @@ subroutine rzaxis( Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivativ
     idRs = 2 * Ntoraxis + 1
     idZc = 3 * Ntoraxis + 2
 
-    WCALL( rzaxis, coords, (1, one, Lcurvature, Ntz, mn ))
+    call coords(1, one, Lcurvature, Ntz, mn )
 
     jacbase = sg(1:Ntz,0) / Rij(1:Ntz,0,0)  ! extract the baseline 2D jacobian, note the definition here does not have the R factor
 
@@ -301,11 +304,11 @@ subroutine rzaxis( Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivativ
       inZbc(1:Ntoraxis+1,jvol) = inZbc(1:Ntoraxis+1,ivol) - solution(idZc:idZc+Ntoraxis)
     endif ! YESstellsym
 
-    DALLOCATE( jacrhs )
-    DALLOCATE( jacmat )
-    DALLOCATE( LU )
-    DALLOCATE( solution )
-    DALLOCATE( ipiv )
+    deallocate(jacrhs ,stat=astat)
+    deallocate(jacmat ,stat=astat)
+    deallocate(LU ,stat=astat)
+    deallocate(solution ,stat=astat)
+    deallocate(ipiv ,stat=astat)
 
 
 

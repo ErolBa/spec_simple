@@ -26,7 +26,10 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: lvol, mn, NN, Nt, Nz, iflag
 
@@ -279,7 +282,7 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
       SALLOCATE( work, (1:Lwork), zero )
       if (allocated(iwork)) then
-        DALLOCATE(iwork)
+        deallocate(iwork,stat=astat)
       endif
       SALLOCATE( iwork, (1:Liwork), zero )
 
@@ -325,7 +328,7 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
       end select ! end of select case( jderiv) ; 02 Sep 14;
 
-      DALLOCATE(work)
+      deallocate(work,stat=astat)
 
       cput = GETTIME
 
@@ -356,9 +359,9 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
 
    if( Lsparse.eq.0 .or. Lsparse.eq.3 ) then
-     DALLOCATE( dmatrix )
-     DALLOCATE( omatrix )
-     DALLOCATE( FAA )
+     deallocate(dmatrix ,stat=astat)
+     deallocate(omatrix ,stat=astat)
+     deallocate(FAA ,stat=astat)
    endif
 
 

@@ -19,7 +19,10 @@ subroutine preset
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER   :: innout, idof, jk, ll, ii, ifail, ideriv, vvol, mi, ni, mj, nj, mk, nk, mimj, ninj, mkmj, nknj, jj, kk, lvol, mm, nn, imn
   INTEGER   :: lquad, igauleg, maxIquad, Mrad, jquad, Lcurvature, zerdof, iret, work1, work2
@@ -522,7 +525,9 @@ endif
 
   do vvol = 1, Mvol
 
-   LREGION(vvol)
+    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif
 
    if( Nquad.gt.0 ) then ;            Iquad(vvol) =                         Nquad
    else
@@ -616,10 +621,15 @@ endif
   SALLOCATE( NdMASmax, (1:Mvol       ), 0 ) ! The maximum size of sparse matrix for GMRES preconditioning;
   SALLOCATE( NdMAS   , (1:Mvol       ), 0 ) ! The actual size of sparse matrix for GMRES preconditioning;
 
-  NALLOCATE( Ate  , (1:Mvol,-2:2,1:mn)    ) ! recall that this is type:sub-grid; 31 Jan 13;
-  NALLOCATE( Aze  , (1:Mvol,-2:2,1:mn)    ) ! -2 : for use of matrix-free solver ; -1 : for use of force gradient
-  NALLOCATE( Ato  , (1:Mvol,-2:2,1:mn)    ) !  0 : normal data
-  NALLOCATE( Azo  , (1:Mvol,-2:2,1:mn)    ) ! 1:2: use to compute derivative w.r.t. fluxes
+  if( allocated( Ate ) ) deallocate( Ate )
+  allocate(Ate(1:Mvol,-2:2,1:mn) ,stat=astat)
+  if( allocated( Aze ) ) deallocate( Aze )
+  allocate(Aze(1:Mvol,-2:2,1:mn) ,stat=astat)
+  if( allocated( Ato ) ) deallocate( Ato )
+  allocate(Ato(1:Mvol,-2:2,1:mn) ,stat=astat)
+  if( allocated( Azo ) ) deallocate( Azo )
+  allocate(Azo(1:Mvol,-2:2,1:mn) ,stat=astat)
+
 
   SALLOCATE( Fso  , (1:Mvol,     1:mn), 0 ) ! these will become redundant if/when Lagrange multipliers are used to enforce bounday constraints; 26 Jan 16;
   SALLOCATE( Fse  , (1:Mvol,     1:mn), 0 )
@@ -644,7 +654,9 @@ endif
 
   do vvol = 1, Mvol
 
-   LREGION(vvol)
+    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif
 
    if( Lcoordinatesingularity ) then
     zerdof = 0                                       ! count Zernike degree of freedom 30 Jun 19
@@ -842,7 +854,7 @@ endif
 
 
 
-  if( Linitgues.eq.2 ) then ; WCALL( preset, ra00aa, ('R') )  ! read initial guess for Beltrami field from file; 02 Jan 15;
+  if( Linitgues.eq.2 ) then ; call ra00aa('R' )  ! read initial guess for Beltrami field from file; 02 Jan 15;
   endif
 
 
@@ -977,7 +989,7 @@ endif
    case(   2 ) ; vvol = Mvol
    end select
 
-   WCALL( preset, rzaxis, ( Mvol, mn, iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol), vvol, .false. ) ) ! set coordinate axis; 19 Jul 16;
+   call rzaxis( Mvol, mn, iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol), vvol, .false. )  ! set coordinate axis; 19 Jul 16;
 
   endif ! end of if( Igeometry.eq.3 ) then ; 19 Jul 16;
 

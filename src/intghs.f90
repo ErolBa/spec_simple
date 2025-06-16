@@ -53,7 +53,10 @@ subroutine intghs_workspace_init(lvol)
   use allglobal, only : Ntz, mn, Iquad, myid, ncpu, cpus, MPI_COMM_SPEC
   use intghs_module
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, INTENT(IN) :: lvol
   INTEGER             :: lquad
@@ -90,25 +93,28 @@ subroutine intghs_workspace_destroy()
   use allglobal, only : myid, ncpu, cpus, MPI_COMM_SPEC
   use intghs_module
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   
 
-  DALLOCATE(wk%gBupper)
-  DALLOCATE(wk%Blower)
-  DALLOCATE(wk%Bloweremn)
-  DALLOCATE(wk%Bloweromn)
-  DALLOCATE(wk%efmn)
-  DALLOCATE(wk%ofmn)
-  DALLOCATE(wk%evmn)
-  DALLOCATE(wk%odmn)
-  DALLOCATE(wk%cfmn)
-  DALLOCATE(wk%sfmn)
-  DALLOCATE(wk%ijreal)
-  DALLOCATE(wk%jkreal)
-  DALLOCATE(wk%jireal)
-  DALLOCATE(wk%kjreal)
-  DALLOCATE(wk%basis)
+  deallocate(wk%gBupper,stat=astat)
+  deallocate(wk%Blower,stat=astat)
+  deallocate(wk%Bloweremn,stat=astat)
+  deallocate(wk%Bloweromn,stat=astat)
+  deallocate(wk%efmn,stat=astat)
+  deallocate(wk%ofmn,stat=astat)
+  deallocate(wk%evmn,stat=astat)
+  deallocate(wk%odmn,stat=astat)
+  deallocate(wk%cfmn,stat=astat)
+  deallocate(wk%sfmn,stat=astat)
+  deallocate(wk%ijreal,stat=astat)
+  deallocate(wk%jkreal,stat=astat)
+  deallocate(wk%jireal,stat=astat)
+  deallocate(wk%kjreal,stat=astat)
+  deallocate(wk%basis,stat=astat)
 
 
 

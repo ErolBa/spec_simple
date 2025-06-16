@@ -15,7 +15,10 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
   use cputiming
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: vvol
   LOGICAL, intent(in) :: LcomputeDerivatives
@@ -55,22 +58,25 @@ subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
   use cputiming
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   LOGICAL, intent(in) :: LcomputeDerivatives
 
   
 
-  DALLOCATE(dMA)
-  DALLOCATE(dMD)
+  deallocate(dMA,stat=astat)
+  deallocate(dMD,stat=astat)
 
-  DALLOCATE(dMB)
+  deallocate(dMB,stat=astat)
 
-  DALLOCATE(dMG)
+  deallocate(dMG,stat=astat)
 
-  DALLOCATE(solution)
+  deallocate(solution,stat=astat)
 
-  DALLOCATE(MBpsi)
+  deallocate(MBpsi,stat=astat)
 
 
 
@@ -98,7 +104,10 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER         :: vvol
 
@@ -201,64 +210,67 @@ subroutine deallocate_geometry_matrices(LcomputeDerivatives)
 
   use cputiming
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   LOGICAL, intent(in) :: LcomputeDerivatives
 
   
 
   Lsavedguvij = .false.
-  DALLOCATE(guvijsave)
+  deallocate(guvijsave,stat=astat)
 
-  DALLOCATE(DToocc)
-  DALLOCATE(TTssss)
-  DALLOCATE(TDstsc)
-  DALLOCATE(TDszsc)
-  DALLOCATE(DDttcc)
-  DALLOCATE(DDtzcc)
-  DALLOCATE(DDzzcc)
+  deallocate(DToocc,stat=astat)
+  deallocate(TTssss,stat=astat)
+  deallocate(TDstsc,stat=astat)
+  deallocate(TDszsc,stat=astat)
+  deallocate(DDttcc,stat=astat)
+  deallocate(DDtzcc,stat=astat)
+  deallocate(DDzzcc,stat=astat)
 
-  DALLOCATE(Tss)
-  DALLOCATE(Dtc)
-  DALLOCATE(Dzc)
-  DALLOCATE(Ttc)
-  DALLOCATE(Tzc)
+  deallocate(Tss,stat=astat)
+  deallocate(Dtc,stat=astat)
+  deallocate(Dzc,stat=astat)
+  deallocate(Ttc,stat=astat)
+  deallocate(Tzc,stat=astat)
 
   if (NOTstellsym) then
 
-    DALLOCATE(DToocs)
-    DALLOCATE(DToosc)
-    DALLOCATE(DTooss)
+    deallocate(DToocs,stat=astat)
+    deallocate(DToosc,stat=astat)
+    deallocate(DTooss,stat=astat)
 
-    DALLOCATE(TTsscc)
-    DALLOCATE(TTsscs)
-    DALLOCATE(TTsssc)
+    deallocate(TTsscc,stat=astat)
+    deallocate(TTsscs,stat=astat)
+    deallocate(TTsssc,stat=astat)
 
-    DALLOCATE(TDstcc)
-    DALLOCATE(TDstcs)
-    DALLOCATE(TDstss)
+    deallocate(TDstcc,stat=astat)
+    deallocate(TDstcs,stat=astat)
+    deallocate(TDstss,stat=astat)
 
-    DALLOCATE(TDszcc)
-    DALLOCATE(TDszcs)
-    DALLOCATE(TDszss)
+    deallocate(TDszcc,stat=astat)
+    deallocate(TDszcs,stat=astat)
+    deallocate(TDszss,stat=astat)
 
-    DALLOCATE(DDttcs)
-    DALLOCATE(DDttsc)
-    DALLOCATE(DDttss)
+    deallocate(DDttcs,stat=astat)
+    deallocate(DDttsc,stat=astat)
+    deallocate(DDttss,stat=astat)
 
-    DALLOCATE(DDtzcs)
-    DALLOCATE(DDtzsc)
-    DALLOCATE(DDtzss)
+    deallocate(DDtzcs,stat=astat)
+    deallocate(DDtzsc,stat=astat)
+    deallocate(DDtzss,stat=astat)
 
-    DALLOCATE(DDzzcs)
-    DALLOCATE(DDzzsc)
-    DALLOCATE(DDzzss)
+    deallocate(DDzzcs,stat=astat)
+    deallocate(DDzzsc,stat=astat)
+    deallocate(DDzzss,stat=astat)
 
-    DALLOCATE(Tsc)
-    DALLOCATE(Dts)
-    DALLOCATE(Dzs)
-    DALLOCATE(Tts)
-    DALLOCATE(Tzs)
+    deallocate(Tsc,stat=astat)
+    deallocate(Dts,stat=astat)
+    deallocate(Dzs,stat=astat)
+    deallocate(Tts,stat=astat)
+    deallocate(Tzs,stat=astat)
 
   endif
 

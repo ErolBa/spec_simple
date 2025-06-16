@@ -22,7 +22,10 @@ subroutine bfield( zeta, st, Bst )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   REAL, intent(in)   :: zeta,  st(1:Node)
   REAL, intent(out)  ::       Bst(1:Node)

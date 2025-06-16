@@ -33,7 +33,10 @@ subroutine matrix( lvol, mn, lrad )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
 
 
@@ -268,10 +271,10 @@ subroutine matrix( lvol, mn, lrad )
    enddo ! end of do ii ;
   endif ! end of if( YESstellsym ) ;
 
-  WCALL( matrix, matrixBG, ( lvol, mn, lrad ) )
+  call matrixBG( lvol, mn, lrad  )
 
-  DALLOCATE( TTdata )
-  DALLOCATE( TTMdata )
+  deallocate(TTdata ,stat=astat)
+  deallocate(TTMdata ,stat=astat)
 
 
 

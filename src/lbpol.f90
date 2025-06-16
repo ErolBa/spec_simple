@@ -31,7 +31,10 @@ subroutine lbpol(lvol, Bt00, ideriv, iocons)
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
   
   INTEGER                :: Lcurvature, ideriv, ii, ll, ifail, lvol, mi, ni, iocons
   REAL                   :: lss, Bt00(1:Mvol, 0:1, -1:2)
@@ -53,7 +56,7 @@ subroutine lbpol(lvol, Bt00, ideriv, iocons)
 
 
   Lcurvature = 1
-  WCALL( lbpol, coords, (lvol, lss, Lcurvature, Ntz, mn ) ) ! get guvij and sg
+  call coords(lvol, lss, Lcurvature, Ntz, mn  ) ! get guvij and sg
   
   call build_vector_potential(lvol, iocons, ideriv, 1)
 
@@ -66,7 +69,7 @@ subroutine lbpol(lvol, Bt00, ideriv, iocons)
   if( ideriv.eq.-1 ) then
 
     Lcurvature = 3
-    WCALL( lbpol, coords, (lvol, lss, Lcurvature, Ntz, mn ) ) ! get sg times d/dx (g_mu,nu / sg)
+    call coords(lvol, lss, Lcurvature, Ntz, mn  ) ! get sg times d/dx (g_mu,nu / sg)
 
     call build_vector_potential(lvol, iocons, 0, 1)
 

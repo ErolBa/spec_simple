@@ -44,7 +44,10 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, parameter   :: NB = 3 ! optimal workspace block size for LAPACK:DSYSVX;
 
@@ -83,8 +86,8 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
   packorunpack = 'U' ! unpack geometrical degrees-of-freedom;
 
 
-  WCALL( dforce, packxi,( NGdof, position(0:NGdof), Mvol, mn, iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), &
-                          iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol), packorunpack, LcomputeDerivatives, LComputeAxis ) )
+  call packxi( NGdof, position(0:NGdof), Mvol, mn, iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), &
+                          iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol), packorunpack, LcomputeDerivatives, LComputeAxis )
 
 
 
@@ -98,9 +101,9 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
     Xdof(1:Mvol-1) = dpflux(2:Mvol) + xoffset
 
     dBdX%L = LComputeDerivatives
-    WCALL(dforce, dfp100, (Ndofgl, Xdof, Fvec, dfp100_logical) )
+    call dfp100(Ndofgl, Xdof, Fvec, dfp100_logical )
 
-    DALLOCATE( Fvec )
+    deallocate(Fvec,stat=astat)
 
   else
 
@@ -114,7 +117,7 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
     dfp100_logical = .FALSE.
 
-    WCALL(dforce, dfp100, (Ndofgl, Xdof(1:Mvol-1), Fvec(1:Ndofgl), dfp100_logical))
+    call dfp100(Ndofgl, Xdof(1:Mvol-1), Fvec(1:Ndofgl), dfp100_logical)
 
     SALLOCATE(dpfluxout, (1:Ndofgl), zero )
     if ( myid .eq. 0 ) then
@@ -129,7 +132,7 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
     RlBCAST(dpflux(1:Mvol)   , Mvol, 0)
     do vvol = 2, Mvol
 
-      WCALL(dforce, IsMyVolume, (vvol))
+      call IsMyVolume(vvol)
 
       if( IsMyVolumeValue .EQ. 0 ) then
           cycle
@@ -142,21 +145,21 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
       SALLOCATE( solution, (1:NN, 0:2), zero)
 
       packorunpack = 'P'
-      WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,0), 0 ) ) ! packing;
-      WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,2), 2 ) ) ! packing;
+      call packab( packorunpack, vvol, NN, solution(1:NN,0), 0 ) ! packing;
+      call packab( packorunpack, vvol, NN, solution(1:NN,2), 2 ) ! packing;
 
       solution(1:NN, 0) = solution(1:NN, 0) - dpfluxout(vvol-1) * solution(1:NN, 2)
 
 
       packorunpack = 'U'
-      WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,0), 0 ) ) ! unpacking;
+      call packab( packorunpack, vvol, NN, solution(1:NN,0), 0  ) ! unpacking;
 
-      DALLOCATE( solution )
+      deallocate(solution ,stat=astat)
 
     enddo ! end of do vvol = 1, Mvol
 
-    DALLOCATE(Fvec)
-    DALLOCATE(dpfluxout)
+    deallocate(Fvec,stat=astat)
+    deallocate(dpfluxout,stat=astat)
 
 
   endif !matches if( LocalConstraint )
@@ -189,14 +192,16 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
 
 
-  WCALL(dforce, dfp200, ( LcomputeDerivatives, vvol) )
+  call dfp200( LcomputeDerivatives, vvol )
 
 
 
   do vvol = 1, Mvol
 
-    LREGION( vvol )
-    WCALL( dforce, brcast, ( vvol ) )
+    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif
+    call brcast( vvol  )
 
   enddo
 
@@ -216,7 +221,9 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
   do vvol = 1, Mvol-1
 
-    LREGION(vvol)
+    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif
 
     tdoc = (vvol-1) * LGdof
 

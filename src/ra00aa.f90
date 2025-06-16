@@ -15,7 +15,10 @@ subroutine ra00aa( writeorread )
 
   use allglobal, only : myid, ncpu, cpus, MPI_COMM_SPEC, ext, Mvol, mn, im, in, Ate, Aze, Ato, Azo
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   CHARACTER, intent(in) :: writeorread
 
@@ -131,15 +134,15 @@ subroutine ra00aa( writeorread )
 
      enddo ! end of do jj; 26 Feb 13;
 
-     DALLOCATE(oldAte)
-     DALLOCATE(oldAze)
-     DALLOCATE(oldAto)
-     DALLOCATE(oldAzo)
+     deallocate(oldAte,stat=astat)
+     deallocate(oldAze,stat=astat)
+     deallocate(oldAto,stat=astat)
+     deallocate(oldAzo,stat=astat)
 
     enddo ! end of do vvol; 26 Feb 13;
 
-    DALLOCATE(oldim)
-    DALLOCATE(oldin)
+    deallocate(oldim,stat=astat)
+    deallocate(oldin,stat=astat)
 
 9997 continue
 

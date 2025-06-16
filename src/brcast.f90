@@ -28,7 +28,10 @@ subroutine brcast( lvol )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lvol
 

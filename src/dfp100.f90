@@ -37,7 +37,10 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
                         dMA, dMB, dMD, dMG, MBpsi, solution, &
                         Nt, Nz, Lsavedguvij, guvijsave, izbs
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER              :: vvol, Ndofgl, iflag, cpu_send_one, cpu_send_two, ll, NN, ideriv, iocons
   INTEGER              :: status(MPI_STATUS_SIZE), request1, request2
@@ -53,7 +56,9 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
 
   do vvol = 1, Mvol
 
-    LREGION(vvol) ! assigns Lcoordinatesingularity, Lplasmaregion, etc. ;
+    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif
     ImagneticOK(vvol) = .false.
     
 
@@ -75,13 +80,13 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
     dBdX%L = .false. ! No need to take derivatives of matrices w.r.t geometry.
 
     ideriv = 0 ; Lcurvature = 1
-    WCALL( dfp100, compute_guvijsave, (Iquad(vvol), vvol, ideriv, Lcurvature) )
+    call compute_guvijsave(Iquad(vvol), vvol, ideriv, Lcurvature)
     Lsavedguvij = .true.
 
-    WCALL( dfp100, ma00aa, ( Iquad(vvol), mn, vvol, ll ) ) ! compute volume integrals of metric elements;
-    WCALL( dfp100, matrix, ( vvol, mn, ll ) )
+    call ma00aa( Iquad(vvol), mn, vvol, ll )  ! compute volume integrals of metric elements;
+    call matrix( vvol, mn, ll  )
 
-    WCALL( dfp100, ma02aa, ( vvol, NN ) )
+    call ma02aa( vvol, NN  )
 
     Lsavedguvij = .false.
 
@@ -96,10 +101,10 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
         if( ( Lcoordinatesingularity .and. iocons.eq.0 ) .or. ( Lvacuumregion .and. iocons.eq.1 ) ) cycle
 
         ideriv = 0
-        WCALL( dfp100, lbpol, (vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons) ) !Compute field at interface for global constraint
+        call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons ) !Compute field at interface for global constraint
 
         ideriv = 2
-        WCALL( dfp100, lbpol, (vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons) ) !Compute field at interface for global constraint, d w.r.t. pflux
+        call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons) !Compute field at interface for global constraint, d w.r.t. pflux
       enddo
 
       if( Lvacuumregion ) then
@@ -108,10 +113,10 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
 
         ideriv=1 ! derivatives of Btheta w.r.t tflux
         iocons=0 ! Only need inner side of volume derivatives
-        WCALL( dfp100, lbpol, (Mvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons) )
+        call lbpol(Mvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons )
 
         iflag=2 ! derivatives of poloidal linking current w.r.t geometry not required
-        WCALL( dfp100, curent, (Mvol, mn, Nt, Nz, iflag, ldItGp(0:1,-1:2) ) )
+        call curent(Mvol, mn, Nt, Nz, iflag, ldItGp(0:1,-1:2 ) )
       endif
     endif
   enddo

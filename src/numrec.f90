@@ -97,7 +97,7 @@ subroutine tfft( Nt, Nz, ijreal, ijimag, mn, im, in, efmn, ofmn, cfmn, sfmn, ifa
   REAL    :: arg, ca, sa
   COMPLEX(C_DOUBLE_COMPLEX) :: z1, z2, z3
 
-  GETTHREAD
+  ithread = 1
 
   do jj = 1, Nz ; cplxin(:,jj,ithread) = CMPLX( ijreal((jj-1)*Nt+1:jj*Nt), ijimag((jj-1)*Nt+1:jj*Nt), KIND=C_DOUBLE_COMPLEX )
   enddo
@@ -167,7 +167,7 @@ subroutine invfft( mn, im, in, efmn, ofmn, cfmn, sfmn, Nt, Nz, ijreal, ijimag )
   
   INTEGER              :: imn, jj, mm, nn, ithread
 
-  GETTHREAD
+  ithread = 1
 
   cplxin(:,:,ithread) = zero
 

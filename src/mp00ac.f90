@@ -37,7 +37,10 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: Ndof, Ldfjac
   REAL   , intent(in)  :: Xdof(1:Ndof)
@@ -253,7 +256,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
    if( iflag.eq.1 .and. ideriv.gt.0 ) cycle
 
    packorunpack = 'U'
-   WCALL( mp00ac, packab, ( packorunpack, lvol, NN, solution(1:NN,ideriv), ideriv ) ) ! unpacking; this assigns oAt, oAz through common;
+   call packab( packorunpack, lvol, NN, solution(1:NN,ideriv), ideriv ) ! unpacking; this assigns oAt, oAz through common;
 
 
   enddo ! do ideriv = 0, 2;
@@ -263,13 +266,13 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
    lABintegral(lvol) = half * sum( solution(1:NN,0) * matmul( dMD(1:NN,1:NN), solution(1:NN,0) ) ) !
 
-  DALLOCATE( matrix )
-  DALLOCATE( rhs    )
-  DALLOCATE( RW )
-  DALLOCATE( RD )
-  DALLOCATE( LU )
-  DALLOCATE( ipiv )
-  DALLOCATE( Iwork )
+  deallocate(matrix ,stat=astat)
+  deallocate(rhs    ,stat=astat)
+  deallocate(RW ,stat=astat)
+  deallocate(RD ,stat=astat)
+  deallocate(LU ,stat=astat)
+  deallocate(ipiv ,stat=astat)
+  deallocate(Iwork ,stat=astat)
 
 
 
@@ -309,7 +312,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
    if( Lplasmaregion ) then
 
     if( Wtr00ab ) then ! compute rotational transform only for diagnostic purposes;
-     WCALL( mp00ac, tr00ab, ( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol) ) )
+     call tr00ab( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol ) )
     endif
 
     Fdof(1:Ndof       ) = zero ! provide dummy intent out; Lconstraint=-1 indicates no iterations over mu   , dpflux are required;
@@ -318,11 +321,11 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
    else ! Lvacuumregion
 
     if( Wtr00ab ) then ! compute rotational transform only for diagnostic purposes;
-     WCALL( mp00ac, tr00ab, ( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol) ) )
+     call tr00ab( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol ) )
     endif
 
     if( Wcurent ) then ! compute enclosed currents    only for diagnostic purposes;
-     WCALL( mp00ac, curent,( lvol, mn, Nt, Nz, iflag, dItGpdxtp(0:1,-1:2,lvol) ) )
+     call curent( lvol, mn, Nt, Nz, iflag, dItGpdxtp(0:1,-1:2,lvol ) )
      curtor = dItGpdxtp(0,0,lvol) ! icurrent(0) ! update input variables;
      curpol = dItGpdxtp(1,0,lvol) ! gcurrent(0)
     endif
@@ -337,7 +340,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
    if( Lplasmaregion ) then
 
     if( Wtr00ab ) then ! compute rotational transform only for diagnostic purposes;
-     WCALL( mp00ac, tr00ab, ( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol) ) )
+     call tr00ab( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol ) )
     endif
 
     Fdof(1:Ndof       ) = zero ! provide dummy intent out; Lconstraint= 0 indicates no iterations over mu, dpflux are required;
@@ -345,7 +348,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
    else ! Lvacuumregion
 
-    WCALL( mp00ac, curent,( lvol, mn, Nt, Nz, iflag, dItGpdxtp(0:1,-1:2,lvol) ) )
+    call curent( lvol, mn, Nt, Nz, iflag, dItGpdxtp(0:1,-1:2,lvol ) )
 
     if( iflag.eq.1 ) Fdof(1:2  ) = (/ dItGpdxtp(0,0,lvol) - curtor, dItGpdxtp(1,0,lvol) - curpol /)
     if( iflag.eq.2 ) Ddof(1:2,1) = (/ dItGpdxtp(0,1,lvol)         , dItGpdxtp(1,1,lvol)          /)
@@ -355,7 +358,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
   case(  1 ) ! Lconstraint= 1;
 
-   WCALL( mp00ac, tr00ab,( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol) ) ) ! required for both plasma and vacuum region;
+   call tr00ab( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol ) ) ! required for both plasma and vacuum region;
 
    if( Lplasmaregion ) then
 
@@ -372,7 +375,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
    else ! Lvacuumregion
 
-    WCALL( mp00ac, curent, ( lvol, mn,     Nt, Nz, iflag, dItGpdxtp(0:1,-1:2,lvol) ) )
+    call curent( lvol, mn,     Nt, Nz, iflag, dItGpdxtp(0:1,-1:2,lvol ) )
 
     curtor = dItGpdxtp(0,0,lvol) ! update input variables; 08 Jun 16;
 
@@ -395,7 +398,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
    if( Lplasmaregion ) then
 
     if( Wtr00ab ) then ! compute rotational transform only for diagnostic purposes;
-     WCALL( mp00ac, tr00ab, ( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol) ) )
+     call tr00ab( lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2,lvol ) )
     endif
 
     Fdof(1:Ndof       ) = zero ! provide dummy intent out; no iteration other mu and psip locally

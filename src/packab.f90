@@ -21,7 +21,10 @@ subroutine packab( packorunpack, lvol, NN, solution, ideriv )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   CHARACTER, intent(in) :: packorunpack
   INTEGER  , intent(in) :: lvol, NN, ideriv

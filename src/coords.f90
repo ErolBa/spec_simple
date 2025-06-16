@@ -27,7 +27,10 @@ subroutine coords( lvol, lss, Lcurvature, Ntz, mn )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lvol, Lcurvature, Ntz, mn
   REAL   , intent(in) :: lss

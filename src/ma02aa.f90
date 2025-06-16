@@ -29,7 +29,10 @@ subroutine ma02aa( lvol, NN )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: lvol, NN
 
@@ -114,7 +117,7 @@ subroutine ma02aa( lvol, NN )
 
    packorunpack = 'P'
 
-   CALL( ma02aa, packab, ( packorunpack, lvol, NN, xi(1:NN), ideriv ) )
+   call packab( packorunpack, lvol, NN, xi(1:NN), ideriv )
 
    SALLOCATE( NEEDC, (1:NNonLinearConstraints), 0 )
 
@@ -136,22 +139,22 @@ subroutine ma02aa( lvol, NN )
 
 
 
-   DALLOCATE(RWk)
-   DALLOCATE(IWk)
-   DALLOCATE(NEEDC)
-   DALLOCATE(RS)
-   DALLOCATE(objectivegradient)
-   DALLOCATE(multipliers)
-   DALLOCATE(constraintgradient)
-   DALLOCATE(constraintfunction)
-   DALLOCATE(Istate)
-   DALLOCATE(LowerBound)
-   DALLOCATE(UpperBound)
-   DALLOCATE(LinearConstraintMatrix)
+   deallocate(RWk,stat=astat)
+   deallocate(IWk,stat=astat)
+   deallocate(NEEDC,stat=astat)
+   deallocate(RS,stat=astat)
+   deallocate(objectivegradient,stat=astat)
+   deallocate(multipliers,stat=astat)
+   deallocate(constraintgradient,stat=astat)
+   deallocate(constraintfunction,stat=astat)
+   deallocate(Istate,stat=astat)
+   deallocate(LowerBound,stat=astat)
+   deallocate(UpperBound,stat=astat)
+   deallocate(LinearConstraintMatrix,stat=astat)
 
 
    packorunpack = 'U'
-   CALL( ma02aa, packab ( packorunpack, lvol, NN, xi(1:NN), ideriv ) )
+   call packab( packorunpack, lvol, NN, xi(1:NN), ideriv )
 
    lBBintegral(lvol) = half * sum( xi(1:NN) * matmul( dMA(1:NN,1:NN), xi(1:NN) ) ) + sum( xi(1:NN) * MBpsi(1:NN) ) ! + psiMCpsi
    lABintegral(lvol) = half * sum( xi(1:NN) * matmul( dMD(1:NN,1:NN), xi(1:NN) ) ) ! + sum( xi(1:NN) * MEpsi(1:NN) ) ! + psiMFpsi
@@ -205,7 +208,7 @@ subroutine ma02aa( lvol, NN )
 
     ;         ; Ndof = 1     ; Ldfjac = Ndof ; nfev = 1 ; njev = 0 ; ihybrj = 1;  ! provide dummy values for consistency;
 
-    WCALL( ma02aa, mp00ac, ( Ndof, Xdof(1:Ndof), Fdof(1:Ndof), Ddof(1:Ldfjac,1:Ndof), Ldfjac, iflag ) )
+    call mp00ac( Ndof, Xdof(1:Ndof), Fdof(1:Ndof), Ddof(1:Ldfjac,1:Ndof), Ldfjac, iflag )
 
     helicity(lvol) = lABintegral(lvol) ! this was computed in mp00ac;
 
@@ -218,9 +221,9 @@ subroutine ma02aa( lvol, NN )
 
     FATAL( ma02aa, Ndof.gt.2, illegal )
 
-    WCALL( ma02aa, hybrj2, ( mp00ac, Ndof, Xdof(1:Ndof), Fdof(1:Ndof), Ddof(1:Ldfjac,1:Ndof), Ldfjac, tol, &
+    call hybrj2( mp00ac, Ndof, Xdof(1:Ndof), Fdof(1:Ndof), Ddof(1:Ldfjac,1:Ndof), Ldfjac, tol, &
                              maxfev, diag(1:Ndof), mode, factor, nprint, ihybrj, nfev, njev, RR(1:LRR), LRR, QTF(1:Ndof), &
-                 WK(1:Ndof,1), WK(1:Ndof,2), WK(1:Ndof,3), WK(1:Ndof,4) ) )
+                 WK(1:Ndof,1), WK(1:Ndof,2), WK(1:Ndof,3), WK(1:Ndof,4) )
 
     if( Lplasmaregion ) then
 
@@ -250,7 +253,7 @@ subroutine ma02aa( lvol, NN )
 
      iflag = 2 ; Ldfjac = Ndof ! call mp00ac: tr00ab/curent to ensure the derivatives of B, transform, currents, wrt mu/dtflux & dpflux are calculated;
 
-     WCALL( ma02aa, mp00ac, ( Ndof, Xdof(1:Ndof), Fdof(1:Ndof), Ddof(1:Ldfjac,1:Ndof), Ldfjac, iflag ) )
+     call mp00ac( Ndof, Xdof(1:Ndof), Fdof(1:Ndof), Ddof(1:Ldfjac,1:Ndof), Ldfjac, iflag ) 
 
     endif ! end of if( Lconstraint.eq.1 .or. ( Lvacuumregion .and. Lconstraint.eq.0 ) ) ;
 

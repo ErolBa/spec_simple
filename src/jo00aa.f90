@@ -25,7 +25,10 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lvol, Ntz, lquad, mn
 
@@ -88,7 +91,7 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
    Lcurvature = 2
 
-   WCALL( jo00aa, coords, ( lvol, lss, Lcurvature, Ntz, mn ) ) ! returns coordinates, metrics, . . .
+   call coords( lvol, lss, Lcurvature, Ntz, mn  ) ! returns coordinates, metrics, . . .
 
    if (Lcoordinatesingularity) then ! Zernike 1 Jul 2019
      call get_zernike_d2(sbar, Lrad(lvol), mpol, zernike)
@@ -294,7 +297,7 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
   do kk = 0, Nz-1 ; zeta = kk * pi2nfp / Nz
     do jj = 0, Nt-1 ; teta = jj * pi2    / Nt ; jk = 1 + jj + kk*Nt ; st(1:2) = (/ one, teta /)
 
-    WCALL( jo00aa, bfield, ( zeta, st(1:Node), Bst(1:Node) ) )
+    call bfield( zeta, st(1:Node), Bst(1:Node) )
 
     jerror(2) = max(jerror(2), abs(Bst(1) * gBzeta))
 
@@ -305,7 +308,7 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
     do kk = 0, Nz-1 ; zeta = kk * pi2nfp / Nz
       do jj = 0, Nt-1 ; teta = jj * pi2    / Nt ; jk = 1 + jj + kk*Nt ; st(1:2) = (/ -one, teta /)
 
-      WCALL( jo00aa, bfield, ( zeta, st(1:Node), Bst(1:Node) ) )
+      call bfield( zeta, st(1:Node), Bst(1:Node) )
 
       jerror(1) = max(jerror(1), abs(Bst(1) * gBzeta))
 

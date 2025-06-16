@@ -24,7 +24,10 @@ subroutine curent( lvol, mn, Nt, Nz, iflag, ldItGp )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: lvol, mn, Nt, Nz, iflag
   REAL   , intent(out) :: ldItGp(0:1,-1:2)
@@ -69,7 +72,7 @@ subroutine curent( lvol, mn, Nt, Nz, iflag, ldItGp )
   case(  2 ) ; Lcurvature = 1
   end select
 
-  WCALL( curent, coords,( lvol, lss, Lcurvature, Ntz, mn ) ) ! get "lower" metric elements evaluated on innout interface;
+  call coords( lvol, lss, Lcurvature, Ntz, mn  ) ! get "lower" metric elements evaluated on innout interface;
 
 
 

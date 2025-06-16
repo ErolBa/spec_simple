@@ -37,7 +37,10 @@ subroutine ma00aa( lquad, mn, lvol, lrad )
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lquad, mn, lvol, lrad
 
@@ -112,9 +115,9 @@ subroutine ma00aa( lquad, mn, lvol, lrad )
   endif
 
   if (.not. Lsavedguvij) then
-    WCALL( ma00aa, compute_guvijsave, (lquad, lvol, ideriv, Lcurvature) )
+    call compute_guvijsave(lquad, lvol, ideriv, Lcurvature )
   endif
-  WCALL( ma00aa, metrix,( lquad, lvol ) ) ! compute metric elements; 16 Jan 13;
+  call metrix( lquad, lvol  ) ! compute metric elements; 16 Jan 13;
 
   do jquad = 1, lquad
     lss = gaussianabscissae(jquad,lvol) ; jthweight = gaussianweight(jquad,lvol)
@@ -268,7 +271,7 @@ subroutine ma00aa( lquad, mn, lvol, lrad )
   enddo ! end of do mn
 
 
-  DALLOCATE(basis)
+  deallocate(basis,stat=astat)
 
   DToocc = DToocc * pi2pi2nfphalf
   TTssss = TTssss * pi2pi2nfphalf

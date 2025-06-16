@@ -30,7 +30,10 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: lvol, iocons, ideriv, Ntz, iflag
   REAL                 :: dAt(1:Ntz, -1:2), dAz(1:Ntz, -1:2), XX(1:Ntz), YY(1:Ntz), dRR(1:Ntz,-1:1), dZZ(1:Ntz,-1:1), DDl, MMl
@@ -55,7 +58,7 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
 
   Lcurvature = 1
 
-  WCALL( lforce, coords, ( lvol, lss, Lcurvature, Ntz, mn ) ) ! get coordinates and derivatives wrt Rj, Zj, at specific radial location;
+  call coords( lvol, lss, Lcurvature, Ntz, mn  ) ! get coordinates and derivatives wrt Rj, Zj, at specific radial location;
 
 
 
@@ -87,7 +90,7 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
 
   if( ideriv.eq.-1 ) then
     lss = two * iocons - one ; Lcurvature = 4
-    WCALL( lforce, coords, ( lvol, lss, Lcurvature, Ntz, mn ) )
+    call coords( lvol, lss, Lcurvature, Ntz, mn  )
 
     dBB(1:Ntz,id) = dBB(1:Ntz, id) + &
                     half * (        dAz(1:Ntz, 0)*dAz(1:Ntz, 0)*guvij(1:Ntz,2,2,1) &

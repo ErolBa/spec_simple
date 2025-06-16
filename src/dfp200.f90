@@ -61,7 +61,10 @@ subroutine dfp200( LcomputeDerivatives, vvol)
 
 
 
-  LOCALS
+  use mpi
+  implicit none
+  INTEGER   :: ierr, astat, ios, nthreads, ithread
+  REAL      :: cput, cpui, cpuo=0
 
   LOGICAL, intent(in)  :: LComputeDerivatives ! indicates whether derivatives are to be calculated;
   LOGICAL              :: LInnerVolume
@@ -93,7 +96,7 @@ subroutine dfp200( LcomputeDerivatives, vvol)
 
   do vvol = 1, Mvol
 
-    WCALL(dfp200, IsMyVolume, (vvol))
+    call IsMyVolume(vvol)
 
     if( IsMyVolumeValue .EQ. 0 ) then
       cycle
@@ -102,7 +105,9 @@ subroutine dfp200( LcomputeDerivatives, vvol)
     endif
 
 
-    LREGION(vvol) ! assigns Lcoordinatesingularity, Lplasmaregion, etc. ;
+    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+  else                                   ; Lcoordinatesingularity = .true.
+  endif ! assigns Lcoordinatesingularity, Lplasmaregion, etc. ;
 
     dBdX%vol = vvol  ! Label
     ll = Lrad(vvol)  ! Shorthand
@@ -111,7 +116,7 @@ subroutine dfp200( LcomputeDerivatives, vvol)
 
 
     vflag = 1
-    WCALL( dfp200, volume, ( vvol, vflag ) ) ! compute volume;
+    call volume( vvol, vflag  ) ! compute volume;
 
 
 
@@ -122,7 +127,7 @@ subroutine dfp200( LcomputeDerivatives, vvol)
 
       ideriv = 0 ; id = ideriv
       iflag = 0 ! XX & YY are returned by lforce; Bemn(1:mn,vvol,iocons), Iomn(1:mn,vvol) etc. are returned through global;
-      WCALL( dfp200, lforce, ( vvol, iocons, ideriv, Ntz, dBB(1:Ntz,id), XX(1:Ntz), YY(1:Ntz), length(1:Ntz), DDl, MMl, iflag ) )
+      call lforce( vvol, iocons, ideriv, Ntz, dBB(1:Ntz,id), XX(1:Ntz), YY(1:Ntz), length(1:Ntz), DDl, MMl, iflag )
 
     enddo ! end of do iocons = 0, 1;
 
@@ -131,7 +136,7 @@ subroutine dfp200( LcomputeDerivatives, vvol)
 else ! CASE SEMI GLOBAL CONSTRAINT
 
      do vvol = 1, Mvol
-         WCALL(dfp200, IsMyVolume, (vvol))
+         call IsMyVolume(vvol)
 
          if( IsMyVolumeValue .EQ. 0 ) then
              cycle
@@ -140,14 +145,16 @@ else ! CASE SEMI GLOBAL CONSTRAINT
          endif
 
 
-         LREGION(vvol) ! assigns Lcoordinatesingularity, Lplasmaregion, etc. ;
+         if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
+        else                                   ; Lcoordinatesingularity = .true.
+        endif ! assigns Lcoordinatesingularity, Lplasmaregion, etc. ;
          ll = Lrad(vvol)  ! Shorthand
          NN = NAdof(vvol) ! shorthand;
 
 
 
          vflag = 1
-         WCALL( dfp200, volume, ( vvol, vflag ) ) ! compute volume;
+         call volume( vvol, vflag  ) ! compute volume;
 
          do iocons = 0, 1 ! construct field magnitude on inner and outer interfaces; inside do vvol;
 
@@ -156,17 +163,17 @@ else ! CASE SEMI GLOBAL CONSTRAINT
 
              ideriv = 0 ; id = ideriv
              iflag = 0 ! dAt, dAz, XX & YY are returned by lforce; Bemn(1:mn,vvol,iocons), Iomn(1:mn,vvol) etc. are returned through global;
-             WCALL( dfp200, lforce, ( vvol, iocons, ideriv, Ntz, dBB(1:Ntz,id), XX(1:Ntz), YY(1:Ntz), length(1:Ntz), DDl, MMl, iflag ) )
+             call lforce( vvol, iocons, ideriv, Ntz, dBB(1:Ntz,id), XX(1:Ntz), YY(1:Ntz), length(1:Ntz), DDl, MMl, iflag )
 
          enddo ! end of do iocons = 0, 1;
      enddo
 
   endif ! End of if( LocalConstraint )
 
-  DALLOCATE(dBB)
-  DALLOCATE( XX) ! spectral constraints; not used;
-  DALLOCATE( YY)
-  DALLOCATE(length)
+  deallocate(dBB,stat=astat)
+  deallocate(XX,stat=astat) ! spectral constraints; not used;
+  deallocate(YY,stat=astat)
+  deallocate(length,stat=astat)
 
 
 2000 continue
