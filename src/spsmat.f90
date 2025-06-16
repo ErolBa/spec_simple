@@ -17,7 +17,7 @@ subroutine spsmat( lvol, mn, lrad )
                         im, in, &
                         NAdof, &
                         dMA, dMD, dMB, dMG, &
-                        LILUprecond, NdMASmax, NdMAS, dMAS, dMDS, idMAS, jdMAS, & ! preconditioning matrix
+                        NdMASmax, NdMAS, dMAS, dMDS, idMAS, jdMAS, & ! preconditioning matrix
                         Ate, Ato, Aze, Azo, &
                         iVns, iBns, iVnc, iBnc, &
                         Lma, Lmb, Lmc, Lmd, Lme, Lmf, Lmg, Lmh, &

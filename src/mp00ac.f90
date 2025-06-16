@@ -13,7 +13,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
   use inputlist, only : Wmacros, Wmp00ac, Wtr00ab, Wcurent, Wma02aa, &
                         mu, helicity, iota, oita, curtor, curpol, Lrad, Ntor,&
                         Lconstraint, mupftol, &
-                        Lmatsolver, NiterGMRES, epsGMRES, LGMRESprec, epsILU
+                        NiterGMRES, epsGMRES, LGMRESprec, epsILU
 
   use cputiming, only : Tmp00ac
 
@@ -33,7 +33,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
                         xoffset, &
                         ImagneticOK, &
                         Ate, Aze, Ato, Azo, Mvol, Iquad, &
-                        LILUprecond, GMRESlastsolution, ext
+                        GMRESlastsolution, ext
 
 
 
@@ -127,8 +127,6 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
   solution(1:NN,-1:2) = zero ! this is a global array allocated in dforce;
 
-  select case (Lmatsolver)
-  case (1) ! direct matrix solver
     Lwork = NB*NN
 
     SALLOCATE( RW,    (1:Lwork ),  zero )
@@ -136,30 +134,11 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
     SALLOCATE( LU,    (1:NN,1:NN), zero )
     SALLOCATE( ipiv,  (1:NN),         0 )
     SALLOCATE( Iwork, (1:NN),         0 )
-  case (2:3) ! GMRES
-    if (LILUprecond) then
-      NS = NdMAS(lvol) ! shorthand
-      SALLOCATE( matrixS, (1:NS), zero )
-
-      if (Lcoordinatesingularity) then
-        maxfil = Lrad(lvol) + 10
-        if (NOTstellsym) maxfil = maxfil + Lrad(lvol) + 10
-      else
-        maxfil = 2 * Lrad(lvol) + 10
-        if (NOTstellsym) maxfil = maxfil + 2 * Lrad(lvol) + 10
-      end if
-
-      Nbilut = (2*maxfil+2)*NN
-      SALLOCATE( bilut, (1:Nbilut), zero)
-      SALLOCATE( jbilut, (1:Nbilut), 0)
-      SALLOCATE( ibilut, (1:NN+1), 0)
-
-    endif
     nw = (NN+3)*(nrestart+2) + (nrestart+1)*nrestart
     SALLOCATE( wk, (1:nw), zero)
     SALLOCATE( jw, (1:2*NN), 0)
     SALLOCATE( iperm, (1:2*NN), 0)
-  end select
+
 
 
   idgetrf(0:1) = 0 ! error flags;
@@ -218,9 +197,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
 
 
-   select case( Lmatsolver )
-
-   case(1) ! Using direct matrix solver (LU factorization), must not be matrix free
+   
 
     select case( ideriv )
 
@@ -268,8 +245,6 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
   1010 format("mp00ac : ",f10.2," : myid=",i3," ; lvol=",i3," ; ideriv="i2" ; "a23"=",i3,' ',i3,' ',i3," ; "a34,:" time=",f10.2," ;")
 
-   end select ! Lmatsolver
-
   enddo ! end of do ideriv;
 
 
@@ -290,25 +265,12 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
   DALLOCATE( matrix )
   DALLOCATE( rhs    )
+  DALLOCATE( RW )
+  DALLOCATE( RD )
+  DALLOCATE( LU )
+  DALLOCATE( ipiv )
+  DALLOCATE( Iwork )
 
-  select case (Lmatsolver)
-  case (1) ! LU
-      DALLOCATE( RW )
-      DALLOCATE( RD )
-      DALLOCATE( LU )
-      DALLOCATE( ipiv )
-      DALLOCATE( Iwork )
-  case (2:3) ! GMRES
-    if (LILUprecond) then
-      DALLOCATE( matrixS )
-      DALLOCATE( bilut )
-      DALLOCATE( jbilut )
-      DALLOCATE( ibilut )
-    endif
-    DALLOCATE( wk )
-    DALLOCATE( jw )
-    DALLOCATE( iperm )
-  end select
 
 
   idgetrf(0:1) = abs(idgetrf(0:1)) + abs(idgetrs(0:1)) + abs(idgerfs(0:1)) + abs(idgecon(0:1))

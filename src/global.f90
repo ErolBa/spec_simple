@@ -494,8 +494,6 @@ module allglobal
 
    REAL,   allocatable :: MBpsi(:)      !< matrix vector products
 
-   LOGICAL             :: LILUprecond        !< whether to use ILU preconditioner for GMRES
-
    REAL,   allocatable :: BeltramiInverse(:,:) !< Beltrami inverse matrix
 
 
@@ -1027,17 +1025,11 @@ subroutine check_inputs()
 
    write(ounit,'("readin : ", 10x ," : ")')
 
-   if (LBeltrami .ne. 4 .and. Lmatsolver .ne.1) then
-    write(ounit,'("readin : ", 10x ," : ***Lmatsolver set to 1 for nonlinear solver***")')
-    Lmatsolver = 1
-   endif
-
    write(ounit,1030) cput-cpus, LBeltrami, Linitgues, Lmatsolver, LGMRESprec, NiterGMRES, epsGMRES, epsILU
 
 1030 format("readin : ",f10.2," : LBeltrami="i2" ; Linitgues="i2" ; Lmatsolver="i2" ; LGMRESprec="i2" ; NiterGMRES="i4" ; epsGMRES="es13.5" ; epsILU="es13.5" ;" )
 
    FATAL( readin, LBeltrami.lt.0 .or. LBeltrami.gt.7, error )
-   FATAL( readin, Lmatsolver.lt.0 .or. Lmatsolver.gt.3, error )
    FATAL( readin, LGMRESprec.lt.0 .or. LGMRESprec.gt.1, error )
    FATAL( readin, NiterGMRES.lt.0, error )
    FATAL( readin, abs(epsGMRES).le.machprec , error )

@@ -274,7 +274,6 @@ subroutine mirror_input_to_outfile
   HWRITEIV( grpInputLocal,             1, Linitgues          , (/ Linitgues   /))
   HWRITEIV( grpInputLocal,             1, Lposdef            , (/ Lposdef     /)) ! redundant;
   HWRITERV( grpInputLocal,             1, maxrndgues         , (/ maxrndgues  /))
-  HWRITEIV( grpInputLocal,             1, Lmatsolver         , (/ Lmatsolver  /))
   HWRITEIV( grpInputLocal,             1, LGMRESprec         , (/ LGMRESprec  /))
   HWRITERV( grpInputLocal,             1, epsGMRES           , (/ epsGMRES    /))
   HWRITERV( grpInputLocal,             1, epsILU             , (/ epsILU      /))

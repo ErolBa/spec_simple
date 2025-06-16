@@ -705,10 +705,6 @@ endif
       if (NOTstellsym) NAdof(vvol) = NAdof(vvol) - (2 * ntor + 1)
     endif
 
-    if (Lmatsolver.ge.2 .and. LGMRESprec.gt.0) then
-      if( YESstellsym ) NdMASmax(vvol) = (2 * (Lrad(vvol)/2 + 1))**2 * mn + 2 * 2 * 5 * Lrad(vvol) * mn ! Ate, Aze
-      if( NOTstellsym ) NdMASmax(vvol) = (4 * (Lrad(vvol)/2 + 1))**2 * mn + 2 * 4 * 8 * Lrad(vvol) * mn ! Ate, Aze, Ato, Azo
-    end if
    else ! .not.Lcoordinatesingularity;                                     a    c      b        d      e      f      g   h
     if( YESstellsym ) NAdof(vvol) = 2 * ( mn        ) * ( Lrad(vvol)    )                            + mn-1        + 1 + 1
     if( NOTstellsym ) NAdof(vvol) = 2 * ( mn + mn-1 ) * ( Lrad(vvol)    )                            + mn-1 + mn-1 + 1 + 1
@@ -716,10 +712,7 @@ endif
     if( YESstellsym ) Nfielddof(vvol) = 2 * ( mn        ) * ( Lrad(vvol)    )
     if( NOTstellsym ) Nfielddof(vvol) = 2 * ( mn + mn-1 ) * ( Lrad(vvol)    )
 
-    if (Lmatsolver.ge.2 .and. LGMRESprec.gt.0) then
-      if( YESstellsym ) NdMASmax(vvol) = (2 * (Lrad(vvol) + 1))**2 * mn + 2 * 2 * 5 * Lrad(vvol) * mn        ! Ate, Aze
-      if( NOTstellsym ) NdMASmax(vvol) = (4 * (Lrad(vvol) + 1))**2 * mn + 2 * 4 * 8 * Lrad(vvol) * mn        ! Ate, Aze, Ato, Azo
-    end if
+
    endif ! end of if( Lcoordinatesingularity );
 
    do ii = 1, mn ! loop over Fourier harmonics;
@@ -1079,8 +1072,6 @@ endif
 
     lvol = Nvol-1 + Linitialize
 
-    FATAL( preset, lvol.gt.Mvol, perhaps illegal combination of Linitialize and Lfreebound )
-
     do vvol = 1, lvol-1
      ;iRbc(1:mn,vvol) = iRbc(1:mn,0) + ( iRbc(1:mn,lvol) - iRbc(1:mn,0) ) * ( inifactor(1:mn,vvol) / Rscale ) / tflux(lvol)**halfmm(1:mn)
      ;iZbs(2:mn,vvol) = iZbs(2:mn,0) + ( iZbs(2:mn,lvol) - iZbs(2:mn,0) ) * ( inifactor(2:mn,vvol) / Rscale ) / tflux(lvol)**halfmm(2:mn)
@@ -1138,14 +1129,6 @@ endif
 
 
 
-
-  LILUprecond = .false.
-  if (Lmatsolver.eq.2 .or. Lmatsolver.eq.3) then ! use GMRES
-    SALLOCATE(GMRESlastsolution, (MAXVAL(NAdof),0:2,1:Mvol), zero )
-    GMRESlastsolution = zero
-    if (LGMRESprec .eq. 1) LILUprecond = .true.
-  endif
-
   SALLOCATE( vvolume    , (1:Mvol), zero ) ! volume integral of \sqrt g;
   SALLOCATE( lBBintegral, (1:Mvol), zero ) ! volume integral of B.B    ;
   SALLOCATE( lABintegral, (1:Mvol), zero ) ! volume integral of A.B    ;
@@ -1156,47 +1139,6 @@ endif
   if( NOTstellsym ) lmns = 1 + (mns-1) + (mns-1) ! number of independent degrees-of-freedom in angle transformation; 30 Jan 13;
 
   SALLOCATE( dlambdaout, (1:lmns,1:Mvol,0:1), zero )
-
-
-
-  if (Lfreebound > 0) then ! Only do for free-boundary; 7 Nov 18;
-
-    SALLOCATE( Dxyz, (1:3,1:Ntz), zero ) ! Cartesian components of computational boundary; position; 14 Apr 17;
-    SALLOCATE( Nxyz, (1:3,1:Ntz), zero ) ! Cartesian components of computational boundary; normal  ; 14 Apr 17;
-
-    SALLOCATE( Jxyz, (1:Ntz,1:3), zero ) ! Cartesian components of virtual casing surface current; needs to be recalculated at each iteration;
-
-    lvol = Mvol ; lss = one ; Lcurvature = 1 ; Lcoordinatesingularity = .false. ! will only require normal field on outer interface = computational boundary;
-
-    WCALL( preset, coords,( lvol, lss, Lcurvature, Ntz, mn ) ) ! will need Rij, Zij; THE COMPUTATIONAL BOUNDARY DOES NOT CHANGE;
-
-    do kk = 0, Nz-1 ; zeta = kk * pi2nfp / Nz
-
-     if( Igeometry.eq.3 ) then ; cszeta(0:1) = (/ cos(zeta), sin(zeta) /)
-     endif
-
-     do jj = 0, Nt-1 ; teta = jj * pi2    / Nt ; jk = 1 + jj + kk*Nt
-
-      select case( Igeometry )
-      case( 1 ) ! Igeometry = 1 ;
-       Dxyz(1:3,jk) = (/   teta       ,  zeta       ,   Rij(jk,0,0) /)
-       Nxyz(1:3,jk) = (/ - Rij(jk,2,0), -Rij(jk,3,0),   one         /)
-      case( 2 ) ! Igeometry = 2 ;
-       FATAL( bnorml, .true., free-boundary calculations not yet implemented in cylindrical geometry )
-      case( 3 ) ! Igeometry = 3 ;
-       Dxyz(1:3,jk) = (/   Rij(jk,0,0) * cszeta(0), Rij(jk,0,0) * cszeta(1), Zij(jk,0,0) /)
-       Nxyz(1:3,jk) = (/   Rij(jk,2,0) * cszeta(1) * Zij(jk,3,0) - Zij(jk,2,0) * ( Rij(jk,3,0) * cszeta(1) + Rij(jk,0,0) * cszeta(0) ), &
-                         - Rij(jk,2,0) * cszeta(0) * Zij(jk,3,0) + Zij(jk,2,0) * ( Rij(jk,3,0) * cszeta(0) - Rij(jk,0,0) * cszeta(1) ), &
-                           Rij(jk,0,0)             * Rij(jk,2,0) /)
-      end select ! end of select case( Igeometry ) ; 09 Mar 17;
-
-     enddo ! end of do jj; 14 Apr 17;
-
-    enddo ! end of do kk; 14 Apr 17;
-
-  endif ! Lfreebound > 1; 7 Nov 18;
-
-
 
   if( Lconstraint .EQ. 3) then
     Localconstraint = .false.

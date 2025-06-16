@@ -1,4 +1,10 @@
+!> \file
+!> \brief memory management module
 
+!> \brief allocate Beltrami matrices
+!>
+!> @param vvol
+!> @param LcomputeDerivatives
 subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
   use fileunits
@@ -19,9 +25,10 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
   NN = NAdof(vvol) ! shorthand;
 
-  SALLOCATE( Adotx, (0:NN), zero)
-  SALLOCATE( Ddotx, (0:NN), zero)
+  SALLOCATE( dMA, (0:NN,0:NN), zero ) ! required for both plasma region and vacuum region;
+  SALLOCATE( dMD, (0:NN,0:NN), zero )
 
+  ! we will need the rest even with or without matrix-free
   SALLOCATE( dMB, (0:NN,0: 2), zero )
   SALLOCATE( dMG, (0:NN     ), zero )
 
@@ -29,19 +36,15 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
   SALLOCATE( MBpsi, (1:NN), zero )
 
-  if (LILUprecond) then
-      SALLOCATE( dMAS, (1:NdMASmax(vvol)), zero)
-      SALLOCATE( dMDS, (1:NdMASmax(vvol)), zero)
-      SALLOCATE( idMAS, (1:NN+1), 0)
-      SALLOCATE( jdMAS, (1:NdMASmax(vvol)), 0)
-  endif ! if we use GMRES and ILU preconditioner
-
   RETURN(memory)
 
 end subroutine allocate_Beltrami_matrices
 
 
 
+!> \brief deallocate Beltrami matrices
+!>
+!> @param LcomputeDerivatives
 subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
   use fileunits
@@ -58,9 +61,8 @@ subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
   BEGIN(memory)
 
-    DALLOCATE(dMA)
-    DALLOCATE(dMD)
-
+  DALLOCATE(dMA)
+  DALLOCATE(dMD)
 
   DALLOCATE(dMB)
 
@@ -70,21 +72,19 @@ subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
   DALLOCATE(MBpsi)
 
-  if (LILUprecond) then
-    DALLOCATE(dMAS)
-    DALLOCATE(dMDS)
-    DALLOCATE(idMAS)
-    DALLOCATE(jdMAS)
-  endif ! if we use GMRES and ILU preconditioner
-
    RETURN(memory)
 
 end subroutine deallocate_Beltrami_matrices
 
 
 
+!> \brief allocate geometry matrices
+!>
+!> @param vvol
+!> @param LcomputeDerivatives
 subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
 
+! Allocate all geometry dependent matrices for a given ll
 
   use constants, only: zero
 
@@ -112,13 +112,17 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
 
   if (Lcoordinatesingularity) then ! different radial dof for Zernike; 02 Jul 19
     lldof = (Lrad(vvol) - mod(Lrad(vvol),2)) / 2
+
+      ! we need full-size matrices
       iidof = mn
       jjdof = mn
+
   else
     lldof = Lrad(vvol)
-    
+
       iidof = mn
       jjdof = mn
+
   end if
 
   SALLOCATE( guvijsave, (1:Ntz,1:3,1:3,1:Iquad(vvol)), zero)
@@ -181,8 +185,12 @@ end subroutine allocate_geometry_matrices
 
 
 
+!> \brief deallocate geometry matrices
+!>
+!> @param LcomputeDerivatives
 subroutine deallocate_geometry_matrices(LcomputeDerivatives)
 
+! Deallocate all geometry dependent matrices
   use constants, only: zero
 
   use fileunits

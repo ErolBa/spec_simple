@@ -35,7 +35,7 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
                         DDtzcc, DDtzcs, DDtzsc, DDtzss, &
                         DDzzcc, DDzzcs, DDzzsc, DDzzss, &
                         dMA, dMB, dMD, dMG, MBpsi, solution, &
-                        Nt, Nz, LILUprecond, Lsavedguvij, guvijsave, izbs
+                        Nt, Nz, Lsavedguvij, guvijsave, izbs
 
   LOCALS
 
@@ -77,11 +77,6 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
     ideriv = 0 ; Lcurvature = 1
     WCALL( dfp100, compute_guvijsave, (Iquad(vvol), vvol, ideriv, Lcurvature) )
     Lsavedguvij = .true.
-
-    if (LILUprecond) then
-      WCALL( dfp100, spsint, ( Iquad(vvol), mn, vvol, ll ) )
-      WCALL( dfp100, spsmat, ( vvol, mn, ll) )
-    endif
 
     WCALL( dfp100, ma00aa, ( Iquad(vvol), mn, vvol, ll ) ) ! compute volume integrals of metric elements;
     WCALL( dfp100, matrix, ( vvol, mn, ll ) )

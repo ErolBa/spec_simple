@@ -280,67 +280,19 @@ subroutine spec
    write(ounit,'("xspech : ",f10.2," : myid=",i3," ; adiabatic constants = "999es13.5)') cput-cpus, myid, adiabatic(1:Mvol)
   endif
 
-
-
-
-
-
-
-
-
-
-
   pressure(1:Mvol) = adiabatic(1:Mvol) / vvolume(1:Mvol)**gamma ! this matches construction of adiabatic above;
 
 
 
   lastcpu = GETTIME
 
-  if(Lcheck.eq.7) then
-    SALLOCATE( force_final, (0:NGdof), zero )
-    SALLOCATE( hessian, (1:NGdof,1:NGdof), zero )
-
-    SALLOCATE( dFFdRZ, (1:LGdof,0:1,1:LGdof,0:1,1:Mvol), zero )
-    SALLOCATE( dBBdmp, (1:LGdof,1:Mvol,0:1,1:2), zero )
-    if( LocalConstraint ) then
-      SALLOCATE( dmupfdx, (1:Mvol,    1:1,1:2,1:LGdof,0:1), zero )
-    else
-      SALLOCATE( dmupfdx, (1:Mvol, 1:Mvol-1,1:2,1:LGdof,1), zero ) ! TODO change the format to put vvol in last index position...
-    endif
-    Lhessianallocated = .true.
-    SALLOCATE( dRodR, (1:Ntz,0:3,1:mn), zero ) ! calculated in rzaxis; 19 Sep 16;
-    SALLOCATE( dRodZ, (1:Ntz,0:3,1:mn), zero )
-    SALLOCATE( dZodR, (1:Ntz,0:3,1:mn), zero )
-    SALLOCATE( dZodZ, (1:Ntz,0:3,1:mn), zero )
-
-    LComputeDerivatives = .true.
-    LComputeAxis = .false.
-    WCALL( xspech, dforce, ( NGdof, position(0:NGdof), force_final(0:NGdof), LComputeDerivatives, LComputeAxis) )
-
-  else
+  
     SALLOCATE( force_final, (0:NGdof), zero )
 
     LComputeDerivatives = .false.
     LComputeAxis = .true.
 
     WCALL( xspech, dforce, ( NGdof, position(0:NGdof), force_final(0:NGdof), LComputeDerivatives, LComputeAxis) )
-  end if
-
-
-
-  if( myid.eq.0 ) then
-   cput = GETTIME
-   write(ounit,1000) cput-cpus, nfreeboundaryiterations,          ForceErr,  cput-lastcpu, "|BB|e", alog10(BBe(1:min(Mvol-1,28)))
-   if( Igeometry.ge.3 ) then ! include spectral constraints; 04 Dec 14;
-   write(ounit,1001)                                                                       "|II|o", alog10(IIo(1:min(Mvol-1,28)))
-   endif
-   if( NOTstellsym ) then
-   write(ounit,1001)                                                                       "|BB|o", alog10(BBo(1:min(Mvol-1,28)))
-   if( Igeometry.ge.3 ) then ! include spectral constraints; 04 Dec 14;
-   write(ounit,1001)                                                                       "|II|e", alog10(IIe(1:min(Mvol-1,28)))
-   endif
-   endif
-  endif
 
 1000 format("xspech : ",f10.2," : #freeits=",i3," ; ":"|f|="es12.5" ; ":"time=",f10.2,"s ;":" log"a5,:"="28f6.2" ...")
 1001 format("xspech : ", 10x ," :          ",3x," ; ":"    "  12x "   ":"     ", 10x ,"  ;":" log"a5,:"="28f6.2" ...")

@@ -21,8 +21,7 @@ subroutine dfp200( LcomputeDerivatives, vvol)
                         epsilon, &
                         Lfindzero, &
                         Lconstraint, Lcheck, LHmatrix, &
-                        Lextrap, &
-                        Lfreebound
+                        Lextrap
 
   use cputiming, only : Tdfp200
 
@@ -689,7 +688,7 @@ subroutine evaluate_dmupfdx(innout, idof, ii, issym, irz)
 
     use cputiming, only :   Tdfp200
 
-    use inputlist, only :   Wmacros, Wdfp200, Lrad, mu, Lconstraint, Lcheck, Nvol, Igeometry, mupftol, Lfreebound, dRZ
+    use inputlist, only :   Wmacros, Wdfp200, Lrad, mu, Lconstraint, Lcheck, Nvol, Igeometry, mupftol, dRZ
 
     use allglobal, only :   ncpu, myid, cpus, MPI_COMM_SPEC, &
                             Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, &

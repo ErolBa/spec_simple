@@ -478,7 +478,7 @@ subroutine initialize_inputs
   Linitgues  =  1
   Lposdef    =  0
   maxrndgues =  1.0
-  Lmatsolver = 3
+  Lmatsolver = 1
   NiterGMRES = 200
   epsGMRES   = 1e-14
   LGMRESprec = 1
