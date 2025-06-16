@@ -18,7 +18,7 @@ subroutine ra00aa( writeorread )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   CHARACTER, intent(in) :: writeorread
 
@@ -26,8 +26,8 @@ subroutine ra00aa( writeorread )
 
   INTEGER               :: vvol, oldMvol, oldMpol, oldNtor, oldmn, oldNfp, oldLrad, ii, jj, minLrad, llmodnp, ideriv, sumLrad
   INTEGER, allocatable  :: oldim(:), oldin(:)
-  REAL   , allocatable  :: oldAte(:), oldAze(:), oldAto(:), oldAzo(:)
-  REAL   , allocatable  :: allAte(:,:), allAze(:,:), allAto(:,:), allAzo(:,:)
+  real(8)   , allocatable  :: oldAte(:), oldAze(:), oldAto(:), oldAzo(:)
+  real(8)   , allocatable  :: allAte(:,:), allAze(:,:), allAto(:,:), allAzo(:,:)
 
 
   
@@ -100,8 +100,12 @@ subroutine ra00aa( writeorread )
     if( oldMvol.ne.Mvol ) then ; write(ounit,'("ra00aa : ",f10.2," : myid=",i3," ; error ; inconsistent Mvol ;")') cput-cpus, myid ; goto 9997
     endif
 
-    SALLOCATE( oldim, (1:oldmn), 0 )
-    SALLOCATE( oldin, (1:oldmn), 0 )
+if( allocated( oldim ) ) deallocate( oldim )
+allocate( oldim(1:oldmn), stat=astat )
+oldim(1:oldmn) = 0
+if( allocated( oldin ) ) deallocate( oldin )
+allocate( oldin(1:oldmn), stat=astat )
+oldin(1:oldmn) = 0
 
     read(aunit,iostat=ios) oldim(1:oldmn)
     read(aunit,iostat=ios) oldin(1:oldmn)
@@ -112,10 +116,18 @@ subroutine ra00aa( writeorread )
 
      minLrad = min(oldLrad,Lrad(vvol))
 
-     SALLOCATE( oldAte, (0:oldLrad), zero )
-     SALLOCATE( oldAze, (0:oldLrad), zero )
-     SALLOCATE( oldAto, (0:oldLrad), zero )
-     SALLOCATE( oldAzo, (0:oldLrad), zero )
+if( allocated( oldAte ) ) deallocate( oldAte )
+allocate( oldAte(0:oldLrad), stat=astat )
+oldAte(0:oldLrad) = zero
+if( allocated( oldAze ) ) deallocate( oldAze )
+allocate( oldAze(0:oldLrad), stat=astat )
+oldAze(0:oldLrad) = zero
+if( allocated( oldAto ) ) deallocate( oldAto )
+allocate( oldAto(0:oldLrad), stat=astat )
+oldAto(0:oldLrad) = zero
+if( allocated( oldAzo ) ) deallocate( oldAzo )
+allocate( oldAzo(0:oldLrad), stat=astat )
+oldAzo(0:oldLrad) = zero
 
      do jj = 1, oldmn
 
@@ -157,12 +169,12 @@ subroutine ra00aa( writeorread )
     llmodnp = 0 ! this node contains the information that is to be broadcast; 26 Feb 13;
 
     do ii = 1, mn
-     RlBCAST( Ate(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, llmodnp )
-     RlBCAST( Aze(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, llmodnp )
+call MPI_BCAST(Ate(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Aze(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
     enddo
     do ii = 1, mn
-     RlBCAST( Ato(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, llmodnp )
-     RlBCAST( Azo(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, llmodnp )
+call MPI_BCAST(Ato(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Azo(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
     enddo
 
    enddo ! end of do vvol; 26 Feb 13;
@@ -171,7 +183,11 @@ subroutine ra00aa( writeorread )
 
   case default
 
-   FATAL(ra00aa, .true., invalid writeorread flag supplied on input )
+if( .true. ) then
+     write(6,'("ra00aa :      fatal : myid=",i3," ; .true. ; invalid writeorread flag supplied on input;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "ra00aa : .true. : invalid writeorread flag supplied on input ;"
+   endif
 
   end select
 

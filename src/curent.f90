@@ -27,14 +27,14 @@ subroutine curent( lvol, mn, Nt, Nz, iflag, ldItGp )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: lvol, mn, Nt, Nz, iflag
-  REAL   , intent(out) :: ldItGp(0:1,-1:2)
+  real(8)   , intent(out) :: ldItGp(0:1,-1:2)
 
   INTEGER              :: innout, ideriv, ii, ll, Lcurvature, ifail
-  REAL                 :: lss
-  REAL                 :: Bsupt(1:Nt*Nz,-1:2), Bsupz(1:Nt*Nz,-1:2)
+  real(8)                 :: lss
+  real(8)                 :: Bsupt(1:Nt*Nz,-1:2), Bsupz(1:Nt*Nz,-1:2)
 
   
 

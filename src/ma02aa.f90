@@ -32,37 +32,37 @@ subroutine ma02aa( lvol, NN )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: lvol, NN
 
 
   INTEGER              :: ideriv
-  REAL                 :: tol, dpsi(1:2), lastcpu
+  real(8)                 :: tol, dpsi(1:2), lastcpu
   CHARACTER            :: packorunpack
 
   INTEGER              :: Nxdof, Ndof, Ldfjac, iflag, maxfev, mode, LRR, nfev, njev, nprint, ihybrj
-  REAL                 :: Xdof(1:2), Fdof(1:2), Ddof(1:2,1:2), oDdof(1:2,1:2)
-  REAL                 :: factor, diag(1:2), RR(1:2*(2+1)/2), QTF(1:2), wk(1:2,1:4)
+  real(8)                 :: Xdof(1:2), Fdof(1:2), Ddof(1:2,1:2), oDdof(1:2,1:2)
+  real(8)                 :: factor, diag(1:2), RR(1:2*(2+1)/2), QTF(1:2), wk(1:2,1:4)
 
   INTEGER              :: irevcm
 
   INTEGER              :: pNN
 
-  REAL                 :: xi(0:NN), Fxi(0:NN), xo(0:NN), Mxi(1:NN)
+  real(8)                 :: xi(0:NN), Fxi(0:NN), xo(0:NN), Mxi(1:NN)
 
   external             :: mp00ac
 
   INTEGER              :: ihybrj1, Ldfmuaa, lengthwork
-  REAL                 :: NewtonError
-  REAL   , allocatable :: DFxi(:,:), work(:)
+  real(8)                 :: NewtonError
+  real(8)   , allocatable :: DFxi(:,:), work(:)
   external             :: df00ab
 
   INTEGER              :: NLinearConstraints, NNonLinearConstraints, LDA, LDCJ, LDR, iterations, LIWk, LRWk, ie04uff
   INTEGER, allocatable :: Istate(:), NEEDC(:), IWk(:)
-  REAL                 :: objectivefunction
-  REAL   , allocatable :: LinearConstraintMatrix(:,:), LowerBound(:), UpperBound(:)
-  REAL   , allocatable :: constraintfunction(:), constraintgradient(:,:), multipliers(:), objectivegradient(:), RS(:,:), RWk(:)
+  real(8)                 :: objectivefunction
+  real(8)   , allocatable :: LinearConstraintMatrix(:,:), LowerBound(:), UpperBound(:)
+  real(8)   , allocatable :: constraintfunction(:), constraintgradient(:,:), multipliers(:), objectivegradient(:), RS(:,:), RWk(:)
   CHARACTER            :: optionalparameter*33
 
   
@@ -74,7 +74,7 @@ subroutine ma02aa( lvol, NN )
 
 
   if( LBsequad ) then ! sequential quadratic programming (SQP); construct minimum energy with constrained helicity;
-   lastcpu = GETTIME
+   lastcpu = MPI_WTIME()
 
    NLinearConstraints = 0 ! no linear constraints;
 
@@ -86,10 +86,16 @@ subroutine ma02aa( lvol, NN )
 
    LDR = NN
 
-   SALLOCATE( LinearConstraintMatrix, (1:LDA,1:1), zero ) ! linear constraint matrix;
+if( allocated( LinearConstraintMatrix ) ) deallocate( LinearConstraintMatrix )
+allocate( LinearConstraintMatrix(1:LDA,1:1), stat=astat )
+LinearConstraintMatrix(1:LDA,1:1) = zero
 
-   SALLOCATE( LowerBound, (1:NN+NLinearConstraints+NNonLinearConstraints), zero ) ! lower bounds on variables, linear constraints and non-linear constraints;
-   SALLOCATE( UpperBound, (1:NN+NLinearConstraints+NNonLinearConstraints), zero ) ! upper bounds on variables, linear constraints and non-linear constraints;
+if( allocated( LowerBound ) ) deallocate( LowerBound )
+allocate( LowerBound(1:NN+NLinearConstraints+NNonLinearConstraints), stat=astat )
+LowerBound(1:NN+NLinearConstraints+NNonLinearConstraints) = zero
+if( allocated( UpperBound ) ) deallocate( UpperBound )
+allocate( UpperBound(1:NN+NLinearConstraints+NNonLinearConstraints), stat=astat )
+UpperBound(1:NN+NLinearConstraints+NNonLinearConstraints) = zero
 
    LowerBound(                       1 : NN                                          ) = -1.0E+21       !   variable constraints; no constraint;
    UpperBound(                       1 : NN                                          ) = +1.0E+21       !
@@ -100,32 +106,50 @@ subroutine ma02aa( lvol, NN )
 
    iterations = 0 ! iteration counter;
 
-   SALLOCATE( Istate, (1:NN+NLinearConstraints+NNonLinearConstraints), 0 )
+if( allocated( Istate ) ) deallocate( Istate )
+allocate( Istate(1:NN+NLinearConstraints+NNonLinearConstraints), stat=astat )
+Istate(1:NN+NLinearConstraints+NNonLinearConstraints) = 0
 
-   SALLOCATE( constraintfunction, (1:NNonLinearConstraints), zero ) ! constraint functions;
+if( allocated( constraintfunction ) ) deallocate( constraintfunction )
+allocate( constraintfunction(1:NNonLinearConstraints), stat=astat )
+constraintfunction(1:NNonLinearConstraints) = zero
 
-   SALLOCATE( constraintgradient, (1:LDCJ,1:NN), zero ) ! derivatives of constraint functions;
+if( allocated( constraintgradient ) ) deallocate( constraintgradient )
+allocate( constraintgradient(1:LDCJ,1:NN), stat=astat )
+constraintgradient(1:LDCJ,1:NN) = zero
 
-   SALLOCATE( multipliers, (1:NN+NLinearConstraints+NNonLinearConstraints), zero ) ! Lagrange multipliers ?;
+if( allocated( multipliers ) ) deallocate( multipliers )
+allocate( multipliers(1:NN+NLinearConstraints+NNonLinearConstraints), stat=astat )
+multipliers(1:NN+NLinearConstraints+NNonLinearConstraints) = zero
 
    objectivefunction = zero ! objective function;
 
-   SALLOCATE( objectivegradient, (1:NN), zero ) ! derivatives of objective function;
+if( allocated( objectivegradient ) ) deallocate( objectivegradient )
+allocate( objectivegradient(1:NN), stat=astat )
+objectivegradient(1:NN) = zero
 
-   SALLOCATE( RS, (1:LDR,1:NN), zero )
+if( allocated( RS ) ) deallocate( RS )
+allocate( RS(1:LDR,1:NN), stat=astat )
+RS(1:LDR,1:NN) = zero
    ideriv = 0 ; dpsi(1:2) = (/ dtflux(lvol), dpflux(lvol) /) ! these are also used below;
 
    packorunpack = 'P'
 
    call packab( packorunpack, lvol, NN, xi(1:NN), ideriv )
 
-   SALLOCATE( NEEDC, (1:NNonLinearConstraints), 0 )
+if( allocated( NEEDC ) ) deallocate( NEEDC )
+allocate( NEEDC(1:NNonLinearConstraints), stat=astat )
+NEEDC(1:NNonLinearConstraints) = 0
 
    LIWk = 3*NN + NLinearConstraints + 2*NNonLinearConstraints ! workspace;
-   SALLOCATE( IWk, (1:LIWk), 0 )       ! workspace;
+if( allocated( IWk ) ) deallocate( IWk )
+allocate( IWk(1:LIWk), stat=astat )
+IWk(1:LIWk) = 0
 
    LRWk = 2*NN**2 + NN * NLinearConstraints + 2 * NN * NNonLinearConstraints + 21 * NN + 11 * NLinearConstraints + 22 * NNonLinearConstraints + 1 ! workspace;
-   SALLOCATE( RWk, (1:LRWk), zero )                                                              ! workspace;
+if( allocated( RWk ) ) deallocate( RWk )
+allocate( RWk(1:LRWk), stat=astat )
+RWk(1:LRWk) = zero
 
    irevcm = 0 ; ie04uff = 1 ! reverse communication loop control; ifail error flag;
 
@@ -166,7 +190,7 @@ subroutine ma02aa( lvol, NN )
 
   if( LBlinear ) then ! assume Beltrami field is parameterized by helicity multiplier (and poloidal flux);
 
-   lastcpu = GETTIME
+   lastcpu = MPI_WTIME()
 
    if( Lplasmaregion ) then
 
@@ -219,7 +243,11 @@ subroutine ma02aa( lvol, NN )
 
     tol = mupftol ; LRR = Ndof * ( Ndof+1 ) / 2 ; mode = 0 ; diag(1:2) = zero ; factor = one ; maxfev = mupfits ; nprint = 0
 
-    FATAL( ma02aa, Ndof.gt.2, illegal )
+if( Ndof.gt.2 ) then
+     write(6,'("ma02aa :      fatal : myid=",i3," ; Ndof.gt.2 ; illegal;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "ma02aa : Ndof.gt.2 : illegal ;"
+   endif
 
     call hybrj2( mp00ac, Ndof, Xdof(1:Ndof), Fdof(1:Ndof), Ddof(1:Ldfjac,1:Ndof), Ldfjac, tol, &
                              maxfev, diag(1:Ndof), mode, factor, nprint, ihybrj, nfev, njev, RR(1:LRR), LRR, QTF(1:Ndof), &
@@ -262,7 +290,7 @@ subroutine ma02aa( lvol, NN )
    end select ! end of select case( Nxdof ) ;
 
 
-   cput = GETTIME
+   cput = MPI_WTIME()
 
    select case(ihybrj) ! this screen output may not be correct for Lvacuumregion;
    case(    1   )
@@ -281,7 +309,11 @@ subroutine ma02aa( lvol, NN )
     ;             write(ounit,1040) cput-cpus, myid, lvol, ihybrj, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "bad progress    ", Fdof(1:Ndof)
    case default
     ;             write(ounit,1040) cput-cpus, myid, lvol, ihybrj, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "illegal ifail   ", Fdof(1:Ndof)
-    FATAL( ma02aa, .true., illegal ifail returned by hybrj )
+if( .true. ) then
+     write(6,'("ma02aa :      fatal : myid=",i3," ; .true. ; illegal ifail returned by hybrj;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "ma02aa : .true. : illegal ifail returned by hybrj ;"
+   endif
    end select
 
   endif ! end of if( LBlinear ) then;

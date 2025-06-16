@@ -17,7 +17,7 @@ subroutine xspech
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   CHARACTER            :: ldate*8, ltime*10, arg*100
 
@@ -27,12 +27,12 @@ subroutine xspech
 
   call set_mpi_comm(MPI_COMM_WORLD)
 
-  cpus = GETTIME
+  cpus = MPI_WTIME()
   cpuo = cpus
 
   skip_write = .false.
 
-  cput = GETTIME
+  cput = MPI_WTIME()
   if( myid.eq.0 ) then
 
     write(ounit,'("xspech : ", 10x ," : version = "F5.2)') version
@@ -77,7 +77,7 @@ subroutine xspech
   call MPI_Barrier(MPI_COMM_SPEC, ierr)
 
   if (myid.eq.0) then
-   cput = GETTIME
+   cput = MPI_WTIME()
    write(ounit,'("xspech : ", 10x ," :")')
    write(ounit,'("xspech : ",f10.2," : myid=",i3," : time="f8.2"m = "f6.2"h = "f5.2"d ;")') cput-cpus, myid, (cput-cpus) / (/ 60, 60*60, 24*60*60 /)
   endif
@@ -99,7 +99,7 @@ subroutine read_command_args
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   LOGICAL              :: Lspexist
   INTEGER              :: iargc, iarg, numargs, extlen, sppos
@@ -108,7 +108,7 @@ subroutine read_command_args
 
   if (myid.eq.0) then
 
-    cput = GETTIME
+    cput = MPI_WTIME()
 
     call getarg( 1, arg )
 
@@ -213,25 +213,31 @@ subroutine spec
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   LOGICAL              :: LComputeDerivatives, LContinueFreeboundaryIterations, exist, LupdateBn, LComputeAxis
   INTEGER              :: imn, lmn, lNfp, lim, lin, ii, ideriv, stat
   INTEGER              :: vvol, ifail, wflag, iflag, vflag
-  REAL                 :: rflag, lastcpu, lRwc, lRws, lZwc, lZws, lItor, lGpol, lgBc, lgBs
-  REAL,    allocatable :: position(:), gradient(:)
+  real(8)                 :: rflag, lastcpu, lRwc, lRws, lZwc, lZws, lItor, lGpol, lgBc, lgBs
+  real(8),    allocatable :: position(:), gradient(:)
   CHARACTER            :: pack
   INTEGER              :: Lfindzero_old, mfreeits_old
-  REAL                 :: gBnbld_old
+  real(8)                 :: gBnbld_old
   INTEGER              :: lnPtrj, numTrajTotal
 
   
 
-  cpuo = GETTIME
+  cpuo = MPI_WTIME()
 
-  FATAL( xspech, NGdof.lt.0, counting error )
+if( NGdof.lt.0 ) then
+     write(6,'("xspech :      fatal : myid=",i3," ; NGdof.lt.0 ; counting error;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "xspech : NGdof.lt.0 : counting error ;"
+   endif
 
-  SALLOCATE( position, (0:NGdof), zero ) ! position ; NGdof = #geometrical degrees-of-freedom was computed in preset;
+if( allocated( position ) ) deallocate( position )
+allocate( position(0:NGdof), stat=astat )
+position(0:NGdof) = zero
 
 
 
@@ -267,7 +273,7 @@ subroutine spec
   endif
 
   if( Wxspech .and. myid.eq.0 ) then
-   cput = GETTIME
+   cput = MPI_WTIME()
    write(ounit,'("xspech : ",f10.2," : myid=",i3," ; adiabatic constants = "999es13.5)') cput-cpus, myid, adiabatic(1:Mvol)
   endif
 
@@ -275,10 +281,12 @@ subroutine spec
 
 
 
-  lastcpu = GETTIME
+  lastcpu = MPI_WTIME()
 
   
-    SALLOCATE( force_final, (0:NGdof), zero )
+if( allocated( force_final ) ) deallocate( force_final )
+allocate( force_final(0:NGdof), stat=astat )
+force_final(0:NGdof) = zero
 
     LComputeDerivatives = .false.
     LComputeAxis = .true.
@@ -328,17 +336,21 @@ subroutine final_diagnostics
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   integer              :: iocons, llmodnp, vvol, iflag, cpu_id
   real                 :: sumI
-  REAL,    allocatable :: Bt00(:,:,:)
-  REAL                 :: work(0:1,-1:2) 
+  real(8),    allocatable :: Bt00(:,:,:)
+  real(8)                 :: work(0:1,-1:2) 
 
 
 if( Ltransform ) then
 
-  FATAL(xspech, Lsvdiota.ne.1, Lsvdiota needs to be one for s.f.l transformation)
+if( Lsvdiota.ne.1 ) then
+     write(6,'("xspech :      fatal : myid=",i3," ; Lsvdiota.ne.1 ; Lsvdiota needs to be one for s.f.l transformation;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "xspech : Lsvdiota.ne.1 : Lsvdiota needs to be one for s.f.l transformation ;"
+   endif
 
   do vvol=1,Mvol
     call brcast(vvol)
@@ -350,7 +362,11 @@ if( Ltransform ) then
     if (IsMyVolumeValue.eq.0) then
       cycle
     elseif (IsMyVolumeValue.eq.-1) then
-      FATAL( xspech, .true., Unassociated volume )
+if( .true. ) then
+     write(6,'("xspech :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "xspech : .true. : Unassociated volume ;"
+   endif
     endif
 
     if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
@@ -362,8 +378,8 @@ if( Ltransform ) then
 
   do vvol = 1, Mvol
     call WhichCpuID( vvol, cpu_id )
-    RlBCAST( diotadxup(0:1,-1:2,vvol), 8, cpu_id  )
-    RlBCAST( dlambdaout(1:lmns, vvol, 0:1), 2*lmns, cpu_id  )
+call MPI_BCAST(diotadxup(0:1,-1:2,vvol), 8, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(dlambdaout(1:lmns, vvol, 0:1), 2*lmns, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
   enddo
 
 endif
@@ -371,7 +387,9 @@ endif
 
   
 
-  SALLOCATE( Bt00, (1:Mvol, 0:1, -1:2) , zero)
+if( allocated( Bt00 ) ) deallocate( Bt00 )
+allocate( Bt00(1:Mvol,0:1,-1:2), stat=astat )
+Bt00(1:Mvol,0:1,-1:2) = zero
 
   do vvol = 1, Mvol
 
@@ -404,7 +422,7 @@ endif
   enddo
 
   if (myid.eq.0) then
-   cput = GETTIME
+   cput = MPI_WTIME()
 
    if( nPpts.gt.0 ) then
     write(ounit,'("xspech : ", 10x ," :")')
@@ -426,7 +444,7 @@ endif
 
    if( myid.eq.modulo(vvol-1,ncpu) .and. myid.lt.Mvol) then ! the following is in parallel; 20 Jun 14;
 
-    if( .not.ImagneticOK(vvol) ) then ; cput = GETTIME ; write(ounit,1002) cput-cpus ; write(ounit,1002) cput-cpus, myid, vvol, ImagneticOK(vvol) ; cycle
+    if( .not.ImagneticOK(vvol) ) then ; cput = MPI_WTIME() ; write(ounit,1002) cput-cpus ; write(ounit,1002) cput-cpus, myid, vvol, ImagneticOK(vvol) ; cycle
     endif
 
 
@@ -445,12 +463,12 @@ endif
   do vvol = 1, Mvol ; llmodnp = modulo(vvol-1,ncpu)
 
 
-   RlBCAST( Btemn(1:mn,0:1,vvol), mn*2, llmodnp ) ! this is computed in lbpol; 07 Dec 16;
-   RlBCAST( Bzemn(1:mn,0:1,vvol), mn*2, llmodnp )
-   RlBCAST( Btomn(1:mn,0:1,vvol), mn*2, llmodnp )
-   RlBCAST( Bzomn(1:mn,0:1,vvol), mn*2, llmodnp )
+call MPI_BCAST(Btemn(1:mn,0:1,vvol), mn*2, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Bzemn(1:mn,0:1,vvol), mn*2, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Btomn(1:mn,0:1,vvol), mn*2, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Bzomn(1:mn,0:1,vvol), mn*2, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
 
-   RlBCAST( beltramierror(vvol,1:9), 9, llmodnp ) ! this is computed in jo00aa; 21 Aug 18;
+call MPI_BCAST(beltramierror(vvol,1:9), 9, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
 
   enddo ! end of do vvol = 1, Mvol; 01 Jul 14;
 

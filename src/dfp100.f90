@@ -40,11 +40,11 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER              :: vvol, Ndofgl, iflag, cpu_send_one, cpu_send_two, ll, NN, ideriv, iocons
   INTEGER              :: status(MPI_STATUS_SIZE), request1, request2
-  REAL                 :: Fvec(1:Ndofgl), x(1:Mvol-1), Bt00(1:Mvol, 0:1, -1:2), ldItGp(0:1, -1:2)
+  real(8)                 :: Fvec(1:Ndofgl), x(1:Mvol-1), Bt00(1:Mvol, 0:1, -1:2), ldItGp(0:1, -1:2)
   LOGICAL              :: LComputeDerivatives
   INTEGER              :: deriv, Lcurvature
 
@@ -67,7 +67,11 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
     if( IsMyVolumeValue .EQ. 0 ) then
       cycle
     else if( IsMyVolumeValue .EQ. -1) then
-      FATAL(dfp100, .true., Unassociated volume)
+if( .true. ) then
+     write(6,'("dfp100 :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "dfp100 : .true. : Unassociated volume ;"
+   endif
     endif
 
     NN = NAdof(vvol)
@@ -133,10 +137,10 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
           call WhichCpuID(vvol  , cpu_send_one)
           call WhichCpuID(vvol+1, cpu_send_two)
 
-          RlBCAST(Bt00(vvol  , 1, 0), 1, cpu_send_one)
-          RlBCAST(Bt00(vvol+1, 0, 0), 1, cpu_send_two)
-          RlBCAST(Bt00(vvol  , 1, 2), 1, cpu_send_one)
-          RlBCAST(Bt00(vvol+1, 0, 2), 1, cpu_send_two)
+call MPI_BCAST(Bt00(vvol  , 1, 0), 1, MPI_DOUBLE_PRECISION, cpu_send_one, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Bt00(vvol+1, 0, 0), 1, MPI_DOUBLE_PRECISION, cpu_send_two, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Bt00(vvol  , 1, 2), 1, MPI_DOUBLE_PRECISION, cpu_send_one, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Bt00(vvol+1, 0, 2), 1, MPI_DOUBLE_PRECISION, cpu_send_two, MPI_COMM_SPEC, ierr)
 
           IPDt(vvol) = pi2 * (Bt00(vvol+1, 0, 0) - Bt00(vvol, 1, 0))
 
@@ -149,7 +153,11 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
         endif
 
       case default
-        FATAL(dfp100, .true., Unaccepted value for Lconstraint)
+if( .true. ) then
+     write(6,'("dfp100 :      fatal : myid=",i3," ; .true. ; Unaccepted value for Lconstraint;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "dfp100 : .true. : Unaccepted value for Lconstraint ;"
+   endif
     end select
   endif
 

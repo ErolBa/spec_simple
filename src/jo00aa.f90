@@ -28,21 +28,21 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lvol, Ntz, lquad, mn
 
   INTEGER             :: jquad, Lcurvature, ll, ii, jj, kk, uu, ideriv, twolquad, mm, jk
 
-  REAL                :: lss, sbar, sbarhim(0:2), gBu(1:Ntz,1:3,0:3), gJu(1:Ntz,1:3), jerror(1:3), jerrormax(1:3), intvol
-  REAL                :: B_cartesian(1:Ntz,1:3), J_cartesian(1:Ntz,1:3)
+  real(8)                :: lss, sbar, sbarhim(0:2), gBu(1:Ntz,1:3,0:3), gJu(1:Ntz,1:3), jerror(1:3), jerrormax(1:3), intvol
+  real(8)                :: B_cartesian(1:Ntz,1:3), J_cartesian(1:Ntz,1:3)
 
-  REAL                :: Atemn(1:mn,0:2), Azemn(1:mn,0:2), Atomn(1:mn,0:2), Azomn(1:mn,0:2)
+  real(8)                :: Atemn(1:mn,0:2), Azemn(1:mn,0:2), Atomn(1:mn,0:2), Azomn(1:mn,0:2)
 
   INTEGER             :: itype, icdgqf
-  REAL                :: aa, bb, cc, dd, weight(1:lquad+1), abscis(1:lquad), workfield(1:2*lquad)
+  real(8)                :: aa, bb, cc, dd, weight(1:lquad+1), abscis(1:lquad), workfield(1:2*lquad)
 
-  REAL                :: zeta, teta, st(2), Bst(2)
+  real(8)                :: zeta, teta, st(2), Bst(2)
 
   
 
@@ -53,7 +53,7 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
   weight(lquad+1) = zero
 
 
-  cput= GETTIME
+  cput= MPI_WTIME()
   select case( icdgqf ) !                                                         123456789012345
   case( 0 )    ;  if( Wjo00aa ) write(ounit,1000) cput-cpus, myid, lvol, icdgqf, "success        ", abscis(1:lquad)
   case( 1 )    ;                write(ounit,1000) cput-cpus, myid, lvol, icdgqf, "failed         ", abscis(1:lquad)
@@ -70,7 +70,11 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 1000 format("jo00aa : ",f10.2," : myid=",i3," ; lvol=",i3," ; icdgqf=",i3," ; "a15" ;":" abscissae ="99f10.6)
 1001 format("jo00aa : ", 10x ," :       "3x"          "3x"            "3x"    "15x" ;":" weights   ="99f10.6)
 
-  FATAL( jo00aa, icdgqf.ne.0, failed to construct Gaussian integration abscisae and weights )
+if( icdgqf.ne.0 ) then
+     write(6,'("jo00aa :      fatal : myid=",i3," ; icdgqf.ne.0 ; failed to construct Gaussian integration abscisae and weights;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "jo00aa : icdgqf.ne.0 : failed to construct Gaussian integration abscisae and weights ;"
+   endif
 
 
 
@@ -276,10 +280,10 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
   beltramierror(lvol,7:9) = jerrormax(1:3)     ! the max error
 
   if (Lerrortype.eq.1 .and. Igeometry .eq. 3) then
-    cput = GETTIME ; write(ounit,1002) cput-cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput-cpui ! write error to screen;
+    cput = MPI_WTIME() ; write(ounit,1002) cput-cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput-cpui ! write error to screen;
     ;              ; write(ounit,1003) cput-cpus, myid, lvol, Lrad(lvol), jerrormax(1:3), cput-cpui ! write error to screen;
   else
-    cput = GETTIME ; write(ounit,1004) cput-cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput-cpui ! write error to screen;
+    cput = MPI_WTIME() ; write(ounit,1004) cput-cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput-cpui ! write error to screen;
     ;              ; write(ounit,1005) cput-cpus, myid, lvol, Lrad(lvol), jerrormax(1:3), cput-cpui ! write error to screen;
   endif
 
@@ -315,7 +319,7 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
       enddo
     enddo
   endif
-  cput = GETTIME ; write(ounit,1006) cput-cpus, myid, lvol, Lrad(lvol), jerror(1:2), cput-cpui ! write error to screen;
+  cput = MPI_WTIME() ; write(ounit,1006) cput-cpus, myid, lvol, Lrad(lvol), jerror(1:2), cput-cpui ! write error to screen;
 
   Bst = zero
 
@@ -335,7 +339,7 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
     Bst(2) = abs(Bst(2) - dpflux(lvol))
   endif
 
-  cput = GETTIME ; write(ounit,1007) cput-cpus, myid, lvol, Lrad(lvol), Bst(1:2), cput-cpui ! write error to screen;
+  cput = MPI_WTIME() ; write(ounit,1007) cput-cpus, myid, lvol, Lrad(lvol), Bst(1:2), cput-cpui ! write error to screen;
 
 1006 format("jo00aa : ",f10.2," : myid=",i3," ; lvol =",i3," ; lrad =",i3," ; MAX gB^s(-1)="es23.15" , gB^s(+1) ="es23.15" ; time="f8.2"s ;")
 1007 format("jo00aa : ",f10.2," : myid=",i3," ; lvol =",i3," ; lrad =",i3," ; dtfluxERR   ="es23.15" , dpfluxERR="es23.15" ; time="f8.2"s ;")

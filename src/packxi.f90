@@ -24,13 +24,13 @@ subroutine packxi( NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpa
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   LOGICAL, intent(in)    :: LComputeDerivatives ! indicates whether derivatives are to be calculated;
   LOGICAL, intent(in)    :: LComputeAxis        ! if to recompute the axis
 
   INTEGER, intent(in)    :: NGdof, Mvol, mn
-  REAL                   :: position(0:NGdof), iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol)
+  real(8)                   :: position(0:NGdof), iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol)
   CHARACTER              :: packorunpack
 
   INTEGER                :: lvol, jj, kk, irz, issym, idof, ifail, ivol

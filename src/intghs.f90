@@ -23,21 +23,21 @@
 module intghs_module
 
   type intghs_workspace
-    REAL, allocatable   :: efmn(:,:)        !< This is efmn.
-    REAL, allocatable   :: ofmn(:,:)        !< This is ofmn.
-    REAL, allocatable   :: cfmn(:,:)        !<
-    REAL, allocatable   :: sfmn(:,:)        !<
-    REAL, allocatable   :: evmn(:,:)        !<
-    REAL, allocatable   :: odmn(:,:)        !<
-    REAL, allocatable   :: ijreal(:,:)      !<
-    REAL, allocatable   :: jireal(:,:)      !<
-    REAL, allocatable   :: jkreal(:,:)      !<
-    REAL, allocatable   :: kjreal(:,:)      !<
-    REAL, allocatable   :: Bloweremn(:,:,:) !<
-    REAL, allocatable   :: Bloweromn(:,:,:) !<
-    REAL, allocatable   :: gBupper(:,:,:)   !<
-    REAL, allocatable   :: Blower(:,:,:)    !<
-    REAL, allocatable   :: basis(:,:,:,:)   !<
+    real(8), allocatable   :: efmn(:,:)        !< This is efmn.
+    real(8), allocatable   :: ofmn(:,:)        !< This is ofmn.
+    real(8), allocatable   :: cfmn(:,:)        !<
+    real(8), allocatable   :: sfmn(:,:)        !<
+    real(8), allocatable   :: evmn(:,:)        !<
+    real(8), allocatable   :: odmn(:,:)        !<
+    real(8), allocatable   :: ijreal(:,:)      !<
+    real(8), allocatable   :: jireal(:,:)      !<
+    real(8), allocatable   :: jkreal(:,:)      !<
+    real(8), allocatable   :: kjreal(:,:)      !<
+    real(8), allocatable   :: Bloweremn(:,:,:) !<
+    real(8), allocatable   :: Bloweromn(:,:,:) !<
+    real(8), allocatable   :: gBupper(:,:,:)   !<
+    real(8), allocatable   :: Blower(:,:,:)    !<
+    real(8), allocatable   :: basis(:,:,:,:)   !<
   end type
 
   TYPE(intghs_workspace) :: wk !< This is an instance of the intghs_workspace type.
@@ -56,7 +56,7 @@ subroutine intghs_workspace_init(lvol)
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, INTENT(IN) :: lvol
   INTEGER             :: lquad
@@ -65,21 +65,51 @@ subroutine intghs_workspace_init(lvol)
 
   lquad = Iquad(lvol)
 
-  SALLOCATE(wk%gBupper,   (1:Ntz,3,lquad), zero)
-  SALLOCATE(wk%Blower,    (1:Ntz,3,lquad), zero)
-  SALLOCATE(wk%Bloweremn, (1:mn,3,lquad), zero)
-  SALLOCATE(wk%Bloweromn, (1:mn,3,lquad), zero)
-  SALLOCATE(wk%efmn,      (1:mn,lquad), zero)
-  SALLOCATE(wk%ofmn,      (1:mn,lquad), zero)
-  SALLOCATE(wk%evmn,      (1:mn,lquad), zero)
-  SALLOCATE(wk%odmn,      (1:mn,lquad), zero)
-  SALLOCATE(wk%cfmn,      (1:mn,lquad), zero)
-  SALLOCATE(wk%sfmn,      (1:mn,lquad), zero)
-  SALLOCATE(wk%ijreal,    (1:mn,lquad), zero)
-  SALLOCATE(wk%jkreal,    (1:mn,lquad), zero)
-  SALLOCATE(wk%jireal,    (1:mn,lquad), zero)
-  SALLOCATE(wk%kjreal,    (1:mn,lquad), zero)
-  SALLOCATE(wk%basis,     (0:Lrad(lvol),0:mpol,0:1, lquad), zero)
+if( allocated( wk%gBupper ) ) deallocate( wk%gBupper )
+allocate( wk%gBupper(1:Ntz,3,lquad), stat=astat )
+wk%gBupper(1:Ntz,3,lquad) = zero
+if( allocated( wk%Blower ) ) deallocate( wk%Blower )
+allocate( wk%Blower(1:Ntz,3,lquad), stat=astat )
+wk%Blower(1:Ntz,3,lquad) = zero
+if( allocated( wk%Bloweremn ) ) deallocate( wk%Bloweremn )
+allocate( wk%Bloweremn(1:mn,3,lquad), stat=astat )
+wk%Bloweremn(1:mn,3,lquad) = zero
+if( allocated( wk%Bloweromn ) ) deallocate( wk%Bloweromn )
+allocate( wk%Bloweromn(1:mn,3,lquad), stat=astat )
+wk%Bloweromn(1:mn,3,lquad) = zero
+if( allocated( wk%efmn ) ) deallocate( wk%efmn )
+allocate( wk%efmn(1:mn,lquad), stat=astat )
+wk%efmn(1:mn,lquad) = zero
+if( allocated( wk%ofmn ) ) deallocate( wk%ofmn )
+allocate( wk%ofmn(1:mn,lquad), stat=astat )
+wk%ofmn(1:mn,lquad) = zero
+if( allocated( wk%evmn ) ) deallocate( wk%evmn )
+allocate( wk%evmn(1:mn,lquad), stat=astat )
+wk%evmn(1:mn,lquad) = zero
+if( allocated( wk%odmn ) ) deallocate( wk%odmn )
+allocate( wk%odmn(1:mn,lquad), stat=astat )
+wk%odmn(1:mn,lquad) = zero
+if( allocated( wk%cfmn ) ) deallocate( wk%cfmn )
+allocate( wk%cfmn(1:mn,lquad), stat=astat )
+wk%cfmn(1:mn,lquad) = zero
+if( allocated( wk%sfmn ) ) deallocate( wk%sfmn )
+allocate( wk%sfmn(1:mn,lquad), stat=astat )
+wk%sfmn(1:mn,lquad) = zero
+if( allocated( wk%ijreal ) ) deallocate( wk%ijreal )
+allocate( wk%ijreal(1:mn,lquad), stat=astat )
+wk%ijreal(1:mn,lquad) = zero
+if( allocated( wk%jkreal ) ) deallocate( wk%jkreal )
+allocate( wk%jkreal(1:mn,lquad), stat=astat )
+wk%jkreal(1:mn,lquad) = zero
+if( allocated( wk%jireal ) ) deallocate( wk%jireal )
+allocate( wk%jireal(1:mn,lquad), stat=astat )
+wk%jireal(1:mn,lquad) = zero
+if( allocated( wk%kjreal ) ) deallocate( wk%kjreal )
+allocate( wk%kjreal(1:mn,lquad), stat=astat )
+wk%kjreal(1:mn,lquad) = zero
+if( allocated( wk%basis ) ) deallocate( wk%basis )
+allocate( wk%basis(0:Lrad(lvol),0:mpol,0:1,lquad), stat=astat )
+wk%basis(0:Lrad(lvol),0:mpol,0:1,lquad) = zero
 
 
 
@@ -96,7 +126,7 @@ subroutine intghs_workspace_destroy()
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   
 

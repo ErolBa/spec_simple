@@ -31,7 +31,7 @@ subroutine brcast( lvol )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lvol
 
@@ -44,7 +44,11 @@ subroutine brcast( lvol )
 
 
 
-  FATAL( brcast, lvol.le.0 .or. lvol.gt.Mvol, error )
+if( lvol.le.0 .or. lvol.gt.Mvol ) then
+     write(6,'("brcast :      fatal : myid=",i3," ; lvol.le.0 .or. lvol.gt.Mvol ; error;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "brcast : lvol.le.0 .or. lvol.gt.Mvol : error ;"
+   endif
 
 
 
@@ -52,40 +56,40 @@ subroutine brcast( lvol )
 
 
 
-  RlBCAST(     mu(lvol), 1, llmodnp )
-  RlBCAST( dtflux(lvol), 1, llmodnp )
-  RlBCAST( dpflux(lvol), 1, llmodnp )
-  RlBCAST( helicity(lvol), 1, llmodnp)
+call MPI_BCAST(mu(lvol), 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(dtflux(lvol), 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(dpflux(lvol), 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(helicity(lvol), 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
 
-  RlBCAST(     vvolume(lvol), 1, llmodnp )
-  RlBCAST( lBBintegral(lvol), 1, llmodnp )
-  RlBCAST( lABintegral(lvol), 1, llmodnp )
+call MPI_BCAST(vvolume(lvol), 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(lBBintegral(lvol), 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(lABintegral(lvol), 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
 
-  RlBCAST( diotadxup(0:1,-1:2,lvol), 8, llmodnp )
-  RlBCAST( dItGpdxtp(0:1,-1:2,lvol), 8, llmodnp )
+call MPI_BCAST(diotadxup(0:1,-1:2,lvol), 8, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(dItGpdxtp(0:1,-1:2,lvol), 8, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
 
-  LlBCAST( ImagneticOK(lvol), 1, llmodnp )
+  call MPI_BCAST(ImagneticOK(lvol),1,MPI_LOGICAL,llmodnp,MPI_COMM_SPEC,ierr)
 
 
 
-  RlBCAST( Bemn(1:mn,lvol,0:1), 2*mn, llmodnp ) ! perhaps all these should be re-ordered; 18 Jul 14;
-  RlBCAST( Iomn(1:mn,lvol    ),   mn, llmodnp )
-  RlBCAST( Somn(1:mn,lvol,0:1), 2*mn, llmodnp )
-  RlBCAST( Pomn(1:mn,lvol,0:2), 3*mn, llmodnp ) ! 15 Sep 15;
+call MPI_BCAST(Bemn(1:mn,lvol,0:1), 2*mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Iomn(1:mn,lvol    ), mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Somn(1:mn,lvol,0:1), 2*mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Pomn(1:mn,lvol,0:2), 3*mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
 
   if( NOTstellsym ) then
 
-      RlBCAST( Bomn(1:mn,lvol,0:1), 2*mn, llmodnp )
-      RlBCAST( Iemn(1:mn,lvol    ),   mn, llmodnp )
-      RlBCAST( Semn(1:mn,lvol,0:1), 2*mn, llmodnp )
-      RlBCAST( Pemn(1:mn,lvol,0:2), 3*mn, llmodnp )
+call MPI_BCAST(Bomn(1:mn,lvol,0:1), 2*mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Iemn(1:mn,lvol    ), mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Semn(1:mn,lvol,0:1), 2*mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Pemn(1:mn,lvol,0:2), 3*mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
   endif ! end of if( NOTstellsym) ; 11 Aug 14;
 
 
 
   if( lvol.gt.Nvol                         .and. Wcurent ) then ! 27 Feb 17;
-   RlBCAST( curtor, 1, llmodnp )
-   RlBCAST( curpol, 1, llmodnp )
+call MPI_BCAST(curtor, 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(curpol, 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
   endif
 
 

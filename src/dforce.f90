@@ -47,21 +47,21 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, parameter   :: NB = 3 ! optimal workspace block size for LAPACK:DSYSVX;
 
   INTEGER, intent(in)  :: NGdof               ! dimensions;
-  REAL,    intent(in)  :: position(0:NGdof)
-  REAL,    intent(out) :: force(0:NGdof)      ! force;
+  real(8),    intent(in)  :: position(0:NGdof)
+  real(8),    intent(out) :: force(0:NGdof)      ! force;
   LOGICAL, intent(in)  :: LComputeDerivatives !
 
   INTEGER              :: vvol, innout, ii, jj, irz, issym, iocons, tdoc, tdoc_ntz, idoc, idof, tdof, jdof, ivol, imn, ll, ihybrd1, lwa, Ndofgl, llmodnp
   INTEGER              :: maxfev, ml, muhybr, mode, nprint, nfev, ldfjac, lr, Nbc, NN, cpu_id, ideriv
-  REAL                 :: epsfcn, factor
-  REAL                 :: Fdof(1:Mvol-1), Xdof(1:Mvol-1)
+  real(8)                 :: epsfcn, factor
+  real(8)                 :: Fdof(1:Mvol-1), Xdof(1:Mvol-1)
   INTEGER              :: ipiv(1:Mvol)
-  REAL, allocatable    :: fjac(:, :), r(:), Fvec(:), dpfluxout(:)
+  real(8), allocatable    :: fjac(:, :), r(:), Fvec(:), dpfluxout(:)
 
   INTEGER              :: status(MPI_STATUS_SIZE), request_recv, request_send, cpu_send
   INTEGER              :: id
@@ -78,9 +78,13 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
   
 
   if( LocalConstraint ) then
-    SALLOCATE( dmupfdx, (1:Mvol,    1:1,1:2,1:LGdof,0:1), zero )
+if( allocated( dmupfdx ) ) deallocate( dmupfdx )
+allocate( dmupfdx(1:Mvol,1:1,1:2,1:LGdof,0:1), stat=astat )
+dmupfdx(1:Mvol,1:1,1:2,1:LGdof,0:1) = zero
   else
-    SALLOCATE( dmupfdx, (1:Mvol, 1:Mvol-1,1:2,1:LGdof,1), zero ) ! TODO change the format to put vvol in last index position...
+if( allocated( dmupfdx ) ) deallocate( dmupfdx )
+allocate( dmupfdx(1:Mvol,1:Mvol-1,1:2,1:LGdof,1), stat=astat )
+dmupfdx(1:Mvol,1:Mvol-1,1:2,1:LGdof,1) = zero
   endif
 
   packorunpack = 'U' ! unpack geometrical degrees-of-freedom;
@@ -95,7 +99,9 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
   if( LocalConstraint ) then
 
-    SALLOCATE( Fvec, (1:Mvol-1), zero)
+if( allocated( Fvec ) ) deallocate( Fvec )
+allocate( Fvec(1:Mvol-1), stat=astat )
+Fvec(1:Mvol-1) = zero
 
     Ndofgl = 0; Fvec(1:Mvol-1) = 0; dfp100_logical = .FALSE.;
     Xdof(1:Mvol-1) = dpflux(2:Mvol) + xoffset
@@ -113,13 +119,17 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
       Ndofgl = Mvol-1
 
 
-    SALLOCATE( Fvec, (1:Ndofgl), zero )
+if( allocated( Fvec ) ) deallocate( Fvec )
+allocate( Fvec(1:Ndofgl), stat=astat )
+Fvec(1:Ndofgl) = zero
 
     dfp100_logical = .FALSE.
 
     call dfp100(Ndofgl, Xdof(1:Mvol-1), Fvec(1:Ndofgl), dfp100_logical)
 
-    SALLOCATE(dpfluxout, (1:Ndofgl), zero )
+if( allocated( dpfluxout ) ) deallocate( dpfluxout )
+allocate( dpfluxout(1:Ndofgl), stat=astat )
+dpfluxout(1:Ndofgl) = zero
     if ( myid .eq. 0 ) then
 
         dpfluxout = Fvec
@@ -128,8 +138,8 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
         dpflux(2:Mvol) = dpflux(2:Mvol) - dpfluxout(1:Mvol-1)
     endif
 
-    RlBCAST(dpfluxout(1:Ndofgl), Ndofgl, 0)
-    RlBCAST(dpflux(1:Mvol)   , Mvol, 0)
+call MPI_BCAST(dpfluxout(1:Ndofgl), Ndofgl, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(dpflux(1:Mvol), Mvol, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
     do vvol = 2, Mvol
 
       call IsMyVolume(vvol)
@@ -137,12 +147,18 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
       if( IsMyVolumeValue .EQ. 0 ) then
           cycle
       else if( IsMyVolumeValue .EQ. -1) then
-          FATAL(dforce, .true., Unassociated volume)
+if( .true. ) then
+     write(6,'("dforce :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "dforce : .true. : Unassociated volume ;"
+   endif
       endif
 
       NN = NAdof(vvol)
 
-      SALLOCATE( solution, (1:NN, 0:2), zero)
+if( allocated( solution ) ) deallocate( solution )
+allocate( solution(1:NN,0:2), stat=astat )
+solution(1:NN,0:2) = zero
 
       packorunpack = 'P'
       call packab( packorunpack, vvol, NN, solution(1:NN,0), 0 ) ! packing;
@@ -168,13 +184,13 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
   do vvol = 1, Mvol
     call WhichCpuID(vvol, cpu_id)
 
-    LlBCAST( ImagneticOK(vvol)         , 1, cpu_id)
+    call MPI_BCAST(ImagneticOK(vvol),1,MPI_LOGICAL,cpu_id,MPI_COMM_SPEC,ierr)
 
     do ideriv=0,2
       if( (.not.LcomputeDerivatives) .and. (ideriv.ne.0) ) cycle
       do ii = 1, mn
-        RlBCAST( Ate(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, cpu_id)
-        RlBCAST( Aze(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, cpu_id)
+call MPI_BCAST(Ate(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Aze(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
       enddo
     enddo
 
@@ -183,8 +199,8 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
       do ideriv=0,2
       if( (.not.LcomputeDerivatives) .and. (ideriv.ne.0) ) cycle
         do ii = 1, mn
-              RlBCAST( Ato(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, cpu_id)
-              RlBCAST( Azo(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, cpu_id)
+call MPI_BCAST(Ato(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
+call MPI_BCAST(Azo(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
         enddo
       enddo
     endif
@@ -232,7 +248,11 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
       ;  idoc = 0           ! degree-of-constraint counter; set;
 
       if( Lextrap.eq.1 .and. vvol.eq.1 ) then ! to be made redundant;
-        FATAL( dforce, 2.gt.Mvol, psifactor needs attention )
+if( 2.gt.Mvol ) then
+     write(6,'("dforce :      fatal : myid=",i3," ; 2.gt.Mvol ; psifactor needs attention;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "dforce : 2.gt.Mvol : psifactor needs attention ;"
+   endif
         ;force(tdoc+idoc+1:tdoc+idoc+mn) = position(1:mn) - ( iRbc(1:mn,2) / psifactor(1:mn,2) )
       else
         ;force(tdoc+idoc+1:tdoc+idoc+mn    ) = ( Bemn(1:mn    ,vvol+1,0) - Bemn(1:mn    ,vvol+0,1) ) * BBweight(1:mn) ! pressure imbalance;

@@ -40,7 +40,7 @@ subroutine ma00aa( lquad, mn, lvol, lrad )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lquad, mn, lvol, lrad
 
@@ -48,19 +48,19 @@ subroutine ma00aa( lquad, mn, lvol, lrad )
 
   INTEGER             :: kk, kd, kka, kks, kda, kds, Lcurvature, ideriv
 
-  REAL                :: lss, jthweight, fee, feo, foe, foo, Tl, Dl, Tp, Dp, TlTp, TlDp, DlTp, DlDp, ikda, ikds, imn2, ilrad, lssm
+  real(8)                :: lss, jthweight, fee, feo, foe, foo, Tl, Dl, Tp, Dp, TlTp, TlDp, DlTp, DlDp, ikda, ikds, imn2, ilrad, lssm
 
-  REAL                :: foocc, foocs, foosc, fooss
-  REAL                :: fsscc, fsscs, fsssc, fssss
-  REAL                :: fstcc, fstcs, fstsc, fstss
-  REAL                :: fszcc, fszcs, fszsc, fszss
-  REAL                :: fttcc, fttcs, fttsc, fttss
-  REAL                :: ftzcc, ftzcs, ftzsc, ftzss
-  REAL                :: fzzcc, fzzcs, fzzsc, fzzss
+  real(8)                :: foocc, foocs, foosc, fooss
+  real(8)                :: fsscc, fsscs, fsssc, fssss
+  real(8)                :: fstcc, fstcs, fstsc, fstss
+  real(8)                :: fszcc, fszcs, fszsc, fszss
+  real(8)                :: fttcc, fttcs, fttsc, fttss
+  real(8)                :: ftzcc, ftzcs, ftzsc, ftzss
+  real(8)                :: fzzcc, fzzcs, fzzsc, fzzss
 
 
-  REAL                :: sbar
-  REAL, allocatable   :: basis(:,:,:,:)
+  real(8)                :: sbar
+  real(8), allocatable   :: basis(:,:,:,:)
 
   
 
@@ -108,7 +108,9 @@ subroutine ma00aa( lquad, mn, lvol, lrad )
     DDzzss = zero
   endif !NOTstellsym
 
-  SALLOCATE(basis, (0:lrad,0:mpol,0:1,lquad), zero)
+if( allocated( basis ) ) deallocate( basis )
+allocate( basis(0:lrad,0:mpol,0:1,lquad), stat=astat )
+basis(0:lrad,0:mpol,0:1,lquad) = zero
 
   if( dBdX%L ) then ; Lcurvature = 3 ; ideriv = 1
   else              ; Lcurvature = 1 ; ideriv = 0

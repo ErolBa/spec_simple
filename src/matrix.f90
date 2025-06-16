@@ -36,7 +36,7 @@ subroutine matrix( lvol, mn, lrad )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
 
 
@@ -46,17 +46,17 @@ subroutine matrix( lvol, mn, lrad )
 
   INTEGER              :: NN, ii, jj, ll, kk, pp, ll1, pp1, mi, ni, mj, nj, mimj, minj, nimj, ninj, mjmi, mjni, njmi, njni, id, jd
 
-  REAL                 :: Wtete, Wteto, Wtote, Wtoto
-  REAL                 :: Wteze, Wtezo, Wtoze, Wtozo
-  REAL                 :: Wzete, Wzeto, Wzote, Wzoto
-  REAL                 :: Wzeze, Wzezo, Wzoze, Wzozo
+  real(8)                 :: Wtete, Wteto, Wtote, Wtoto
+  real(8)                 :: Wteze, Wtezo, Wtoze, Wtozo
+  real(8)                 :: Wzete, Wzeto, Wzote, Wzoto
+  real(8)                 :: Wzeze, Wzezo, Wzoze, Wzozo
 
-  REAL                 :: Htete, Hteto, Htote, Htoto
-  REAL                 :: Hteze, Htezo, Htoze, Htozo
-  REAL                 :: Hzete, Hzeto, Hzote, Hzoto
-  REAL                 :: Hzeze, Hzezo, Hzoze, Hzozo
+  real(8)                 :: Htete, Hteto, Htote, Htoto
+  real(8)                 :: Hteze, Htezo, Htoze, Htozo
+  real(8)                 :: Hzete, Hzeto, Hzote, Hzoto
+  real(8)                 :: Hzeze, Hzezo, Hzoze, Hzozo
 
-  REAL,allocatable     :: TTdata(:,:,:), TTMdata(:,:) ! queues to construct sparse matrices
+  real(8),allocatable     :: TTdata(:,:,:), TTMdata(:,:) ! queues to construct sparse matrices
 
   
 
@@ -66,8 +66,12 @@ subroutine matrix( lvol, mn, lrad )
   dMA(0:NN,0:NN) = zero
   dMD(0:NN,0:NN) = zero
 
-  SALLOCATE( TTdata, (0:lrad, 0:mpol, 0:1), zero)
-  SALLOCATE( TTMdata, (0:lrad, 0:mpol), zero)
+if( allocated( TTdata ) ) deallocate( TTdata )
+allocate( TTdata(0:lrad,0:mpol,0:1), stat=astat )
+TTdata(0:lrad,0:mpol,0:1) = zero
+if( allocated( TTMdata ) ) deallocate( TTMdata )
+allocate( TTMdata(0:lrad,0:mpol), stat=astat )
+TTMdata(0:lrad,0:mpol) = zero
 
   if (Lcoordinatesingularity) then
     TTdata(0:lrad,0:mpol,0:1) = RTT(0:lrad,0:mpol,0:1,0)

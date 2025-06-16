@@ -64,7 +64,7 @@ subroutine dfp200( LcomputeDerivatives, vvol)
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   LOGICAL, intent(in)  :: LComputeDerivatives ! indicates whether derivatives are to be calculated;
   LOGICAL              :: LInnerVolume
@@ -75,10 +75,10 @@ subroutine dfp200( LcomputeDerivatives, vvol)
   INTEGER              :: iflag, cpu_id, cpu_id1, even_or_odd, vol_parity
   INTEGER              :: stat(MPI_STATUS_SIZE), tag, tag2, req1, req2, req3, req4
 
-  REAL                 :: lastcpu, lss, lfactor, DDl, MMl
-  REAL                 :: det
-  REAL   , allocatable :: XX(:), YY(:), dBB(:,:), dII(:), dLL(:), dPP(:), length(:), dRR(:,:), dZZ(:,:), constraint(:)
-  REAL   , allocatable :: ddFcol1(:), ddFcol2(:), ddFcol3(:), ddFcol4(:)
+  real(8)                 :: lastcpu, lss, lfactor, DDl, MMl
+  real(8)                 :: det
+  real(8)   , allocatable :: XX(:), YY(:), dBB(:,:), dII(:), dLL(:), dPP(:), length(:), dRR(:,:), dZZ(:,:), constraint(:)
+  real(8)   , allocatable :: ddFcol1(:), ddFcol2(:), ddFcol3(:), ddFcol4(:)
 
 
   CHARACTER            :: packorunpack
@@ -88,10 +88,18 @@ subroutine dfp200( LcomputeDerivatives, vvol)
   
 
 
-  SALLOCATE( dBB       , (1:Ntz,-1:2), zero ) ! magnetic field strength (on interfaces) in real space and derivatives;
-  SALLOCATE(  XX       , (1:Ntz     ), zero )
-  SALLOCATE(  YY       , (1:Ntz     ), zero )
-  SALLOCATE( length    , (1:Ntz     ), zero ) ! this is calculated in lforce;
+if( allocated( dBB ) ) deallocate( dBB )
+allocate( dBB(1:Ntz,-1:2), stat=astat )
+dBB(1:Ntz,-1:2) = zero
+if( allocated( XX ) ) deallocate( XX )
+allocate( XX(1:Ntz), stat=astat )
+XX(1:Ntz) = zero
+if( allocated( YY ) ) deallocate( YY )
+allocate( YY(1:Ntz), stat=astat )
+YY(1:Ntz) = zero
+if( allocated( length ) ) deallocate( length )
+allocate( length(1:Ntz), stat=astat )
+length(1:Ntz) = zero
   if( LocalConstraint ) then
 
   do vvol = 1, Mvol
@@ -101,7 +109,11 @@ subroutine dfp200( LcomputeDerivatives, vvol)
     if( IsMyVolumeValue .EQ. 0 ) then
       cycle
     else if( IsMyVolumeValue .EQ. -1) then
-      FATAL(dfp200, .true., Unassociated volume)
+if( .true. ) then
+     write(6,'("dfp200 :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "dfp200 : .true. : Unassociated volume ;"
+   endif
     endif
 
 
@@ -141,7 +153,11 @@ else ! CASE SEMI GLOBAL CONSTRAINT
          if( IsMyVolumeValue .EQ. 0 ) then
              cycle
          else if( IsMyVolumeValue .EQ. -1) then
-             FATAL(dfp200, .true., Unassociated volume)
+if( .true. ) then
+     write(6,'("dfp200 :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "dfp200 : .true. : Unassociated volume ;"
+   endif
          endif
 
 

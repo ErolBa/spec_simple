@@ -1,8 +1,4 @@
 
-# ATM the sources are added as it is. For some files, preprocessing is required. Use custom command to do preprocessing once it is understood.
-
-set(MACROS ${CMAKE_CURRENT_SOURCE_DIR}/macros)
-
 function(preprocess_m4 outvar)
     message(STATUS "preprocess_fortran arguments: ${outvar}, followed by ${ARGN}")
     set(srcs)
@@ -93,48 +89,6 @@ else()
         )
     message(STATUS "Exit code from awk: ${AWK_EXITCODE}")
 endif()
-#preprocess_m4(sphdf5_src ${SPHDF5_AWK_FILE})
-#message(STATUS "sphdf5_src is ${sphdf5_src}")
-
-#set(srcs)
-#foreach(f ${unprocessed_src_files})
-#    # is it a Fortran file?
-#    if(f MATCHES "\\.[Ff](9[05])?")
-#        message(STATUS "Got fortran file: ${f}")
-#        # construct output filename
-#        if(NOT IS_ABSOLUTE "${f}")
-#            get_filename_component(f "${f}" ABSOLUTE)
-#        endif()
-#        file(RELATIVE_PATH r "${CMAKE_CURRENT_SOURCE_DIR}" "${f}")
-#        get_filename_component(e "${r}" EXT)
-#        get_filename_component(n "${r}" NAME_WE)
-#        get_filename_component(p "${r}" PATH)
-#        #set(of1 "${n}_m${e}")
-#        set(of "${CMAKE_CURRENT_BINARY_DIR}/${n}${e}")
-#        #set(of "${n}_m${e}")
-#        message(STATUS "Output name: ${of}")
-#        # preprocess the thing
-#        add_custom_command(OUTPUT ${of}
-#            COMMAND m4
-#            ARGS -P ${MACROS} ${f} >  ${of}
-#            DEPENDS ${MACROS} ${f}
-#            COMMENT "Preprocessing ${f}"
-#            #VERBATIM
-#        )
-#        list(APPEND srcs "${of}")
-#    endif()
-#endforeach()
-
-
-#set_source_files_properties(${m4_output_files} 
-#set_source_files_properties(${src} 
-#                            PROPERTIES GENERATED true)
-
-#add_custom_target(m4_process ALL
-  #DEPENDS ${m4_output_files} 
-#  DEPENDS ${src} 
-#)
-#add_dependencies(spec m4_process)
 
 
 list(APPEND srcs "${sphdf5_src}")
@@ -186,7 +140,6 @@ else()
 endif()
 
 preprocess_m4(XSPEC_OUT_FILE ${XSPEC_AWK_FILE})
-message(STATUS "XSPEC_OUT_FILE is ${XSPEC_OUT_FILE}")
 
 list(APPEND srcs "${XSPEC_OUT_FILE}")
 if(SKBUILD)

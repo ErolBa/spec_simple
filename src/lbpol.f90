@@ -34,14 +34,14 @@ subroutine lbpol(lvol, Bt00, ideriv, iocons)
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
   
   INTEGER                :: Lcurvature, ideriv, ii, ll, ifail, lvol, mi, ni, iocons
-  REAL                   :: lss, Bt00(1:Mvol, 0:1, -1:2)
-  REAL                   :: lAte(1:mn), lAze(1:mn), lAto(1:mn), lAzo(1:mn)
-  REAL                   :: dAt(1:Ntz), dAz(1:Ntz), Bt(1:Ntz), Bz(1:Ntz), dAt0(1:Ntz), dAz0(1:Ntz)
-  REAL                   :: dBtzero      ! Value of first B_theta mode jump
-  REAL                   :: mfactor           ! Regularisation factor
+  real(8)                   :: lss, Bt00(1:Mvol, 0:1, -1:2)
+  real(8)                   :: lAte(1:mn), lAze(1:mn), lAto(1:mn), lAzo(1:mn)
+  real(8)                   :: dAt(1:Ntz), dAz(1:Ntz), Bt(1:Ntz), Bz(1:Ntz), dAt0(1:Ntz), dAz0(1:Ntz)
+  real(8)                   :: dBtzero      ! Value of first B_theta mode jump
+  real(8)                   :: mfactor           ! Regularisation factor
   LOGICAL                :: LGeometricDerivative
 
 

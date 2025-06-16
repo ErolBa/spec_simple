@@ -90,11 +90,11 @@ subroutine tfft( Nt, Nz, ijreal, ijimag, mn, im, in, efmn, ofmn, cfmn, sfmn, ifa
   intrinsic aimag
   
   INTEGER :: Nt, Nz, mn, im(1:mn), in(1:mn), Ntz, imn, ifail, mm, nn
-  REAL    :: ijreal(1:Nt*Nz), ijimag(1:Nt*Nz), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn)
+  real(8)    :: ijreal(1:Nt*Nz), ijimag(1:Nt*Nz), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn)
   
   LOGICAL :: Lcheck = .false.
   INTEGER :: jj, kk, ithread
-  REAL    :: arg, ca, sa
+  real(8)    :: arg, ca, sa
   COMPLEX(C_DOUBLE_COMPLEX) :: z1, z2, z3
 
   ithread = 1
@@ -161,9 +161,9 @@ subroutine invfft( mn, im, in, efmn, ofmn, cfmn, sfmn, Nt, Nz, ijreal, ijimag )
   implicit none
   
   INTEGER, intent(in)  :: mn, im(mn), in(mn)
-  REAL   , intent(in)  :: efmn(mn), ofmn(mn), cfmn(mn), sfmn(mn)
+  real(8)   , intent(in)  :: efmn(mn), ofmn(mn), cfmn(mn), sfmn(mn)
   INTEGER, intent(in)  :: Nt, Nz
-  REAL   , intent(out) :: ijreal(Nt*Nz), ijimag(Nt*Nz) ! output real space;
+  real(8)   , intent(out) :: ijreal(Nt*Nz), ijimag(Nt*Nz) ! output real space;
   
   INTEGER              :: imn, jj, mm, nn, ithread
 
@@ -206,13 +206,13 @@ subroutine gauleg( n, weight, abscis, ifail )
   intrinsic abs, cos, epsilon
   
   INTEGER,            intent(in)  :: n
-  REAL, dimension(n), intent(out) :: weight, abscis
+  real(8), dimension(n), intent(out) :: weight, abscis
   INTEGER,            intent(out) :: ifail
 
   INTEGER, parameter :: maxiter=16
   INTEGER            :: m, j, i, irefl, iter
-  REAL               :: z1,z,pp,p3,p2,p1
-  REAL, parameter    :: eps = epsilon(z)
+  real(8)               :: z1,z,pp,p3,p2,p1
+  real(8), parameter    :: eps = epsilon(z)
 
   if( n < 1 ) then ; ifail = 2 ;  return
   endif
@@ -260,10 +260,10 @@ end subroutine gauleg
 #ifdef DELETETHIS
    
 
-REAL function pythag(a,b)  
+real(8) function pythag(a,b)  
   implicit none
-  REAL ::  a,b
-  REAL ::  absa,absb
+  real(8) ::  a,b
+  real(8) ::  absa,absb
 
 
   absa=abs(a)

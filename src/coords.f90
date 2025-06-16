@@ -30,15 +30,15 @@ subroutine coords( lvol, lss, Lcurvature, Ntz, mn )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lvol, Lcurvature, Ntz, mn
-  REAL   , intent(in) :: lss
+  real(8)   , intent(in) :: lss
 
   INTEGER             :: ii, jj, kk, irz, innout, issym, signlss, mi, ni, imn, radial_index
-  REAL                :: Remn(1:mn,0:2), Zomn(1:mn,0:2), Romn(1:mn,0:2), Zemn(1:mn,0:2), alss, blss, sbar, sbarhim(1:mn), fj(1:mn,0:2)
+  real(8)                :: Remn(1:mn,0:2), Zomn(1:mn,0:2), Romn(1:mn,0:2), Zemn(1:mn,0:2), alss, blss, sbar, sbarhim(1:mn), fj(1:mn,0:2)
 
-  REAL                :: Dij(1:Ntz,0:3), dguvij(1:Ntz,1:3,1:3), DRxij(1:Ntz,0:3), DZxij(1:Ntz,0:3)
+  real(8)                :: Dij(1:Ntz,0:3), dguvij(1:Ntz,1:3,1:3), DRxij(1:Ntz,0:3), DZxij(1:Ntz,0:3)
   
 
   
@@ -85,7 +85,12 @@ subroutine coords( lvol, lss, Lcurvature, Ntz, mn )
         ;            ; fj(Ntor+2:mn    ,0) = sbar**(im(Ntor+2:mn)+1) ! these are the me.ne.0 harmonics; 11 Aug 14; switch to sbar=r; 29 Jun 19
         case( 3   )  ; fj(     1:Ntor+1,0) = sbar**2                 ! switch to sbar=r; 29 Jun 19
         ;            ; fj(Ntor+2:mn    ,0) = sbar**im(Ntor+2:mn)     ! these are the me.ne.0 harmonics; 11 Aug 14; switch to sbar=r; 29 Jun 19
-        case default ; FATAL( coords, .true., invalid Igeometry for Lcoordinatesingularity=T )
+        case default
+          if( .true. ) then
+            write(6,'("coords :      fatal : myid=",i3," ; .true. ; invalid Igeometry for Lcoordinatesingularity=T;")') myid
+            call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+            stop "coords : .true. : invalid Igeometry for Lcoordinatesingularity=T ;"
+           endif
         end select
 
       Remn(1:mn,0) = iRbc(1:mn,0) + ( iRbc(1:mn,1) - iRbc(1:mn,0) ) * fj(1:mn,0)
@@ -136,7 +141,12 @@ subroutine coords( lvol, lss, Lcurvature, Ntz, mn )
       ;            ; fj(Ntor+2:mn    ,1) = half*(im(Ntor+2:mn)+one) * fj(Ntor+2:mn    ,0) / sbar ! these are the me.ne.0 harmonics; 11 Aug 14; switch to sbar=r; 29 Jun 19
       case( 3   )  ; fj(     1:Ntor+1,1) = sbar                                                  ! these are the mj.eq.0 harmonics; 11 Aug 14; switch to sbar=r; 29 Jun 19
       ;            ; fj(Ntor+2:mn    ,1) = half * im(Ntor+2:mn) * fj(Ntor+2:mn    ,0) / sbar     ! these are the me.ne.0 harmonics; 11 Aug 14; switch to sbar=r; 29 Jun 19
-      case default ; FATAL( coords, .true., invalid Igeometry for Lcoordinatesingularity=T and Lcurvature.ne.0 )
+      case default
+        if( .true. ) then
+          write(6,'("coords :      fatal : myid=",i3," ; .true. ; invalid Igeometry for Lcoordinatesingularity=T and Lcurvature.ne.0;")') myid
+          call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+          stop "coords : .true. : invalid Igeometry for Lcoordinatesingularity=T and Lcurvature.ne.0 ;"
+         endif
       end select
 
       Remn(1:mn,1) =                       ( iRbc(1:mn,1) - iRbc(1:mn,0) ) * fj(1:mn,1)
@@ -236,7 +246,11 @@ subroutine coords( lvol, lss, Lcurvature, Ntz, mn )
 
 
 
-   FATAL( coords, .true., selected Igeometry not supported )
+if( .true. ) then
+     write(6,'("coords :      fatal : myid=",i3," ; .true. ; selected Igeometry not supported;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "coords : .true. : selected Igeometry not supported ;"
+   endif
 
 
 
@@ -269,7 +283,12 @@ subroutine coords( lvol, lss, Lcurvature, Ntz, mn )
     case( 3 )    ; fj(     1:Ntor+1,2) = half                                                            ! these are the mj.eq.0 harmonics; 11 Aug 14; switch to sbar=r; 29 Jun 19
      ;           ; fj(Ntor+2:mn    ,2) = half * ( im(Ntor+2:mn) - one ) * fj(Ntor+2:mn    ,1) / sbar     ! these are the me.ne.0 harmonics; 11 Aug 14; switch to sbar=r; 29 Jun 19
     case default ;
-     ;           ; FATAL( coords, .true., invalid Igeometry for Lcoordinatesingularity=T and Lcurvature=2 )
+     ;           
+      if( .true. ) then
+        write(6,'("coords :      fatal : myid=",i3," ; .true ; invalid Igeometry for Lcoordinatesingularity=T and Lcurvature=2;")') myid
+        call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+        stop "coords : .true : invalid Igeometry for Lcoordinatesingularity=T and Lcurvature=2 ;"
+      endif
     end select   ;
 
     Remn(1:mn,2) =                       ( iRbc(1:mn,1) - iRbc(1:mn,0) ) * fj(1:mn,2)
@@ -386,7 +405,11 @@ Nt, Nz, Rij(1:Ntz,3,3), Zij(1:Ntz,3,3) ) ! maps to real space;
 
    case default
 
-    FATAL( coords, .true., selected Igeometry not supported for Lcurvature.eq.2 )
+if( .true. ) then
+     write(6,'("coords :      fatal : myid=",i3," ; .true. ; selected Igeometry not supported for Lcurvature.eq.2;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "coords : .true. : selected Igeometry not supported for Lcurvature.eq.2 ;"
+   endif
 
    end select ! end of select case( Igeometry ) ; 15 Sep 16;
 
@@ -474,7 +497,11 @@ Nt, Nz, Rij(1:Ntz,3,3), Zij(1:Ntz,3,3) ) ! maps to real space;
       if( irz.eq.1 ) sg(1:Ntz,1) = ( Dij(1:Ntz,1  )*Rij(1:Ntz,2,0) - Rij(1:Ntz,1,0)*Dij(1:Ntz,2  ) )
 
     else
-      FATAL( coords, Lcurvature.eq.5 .and. Igeometry.ne.3, Lcurvature.eq.5 can only be combined with Igeometry.ne.3 )
+if( Lcurvature.eq.5 .and. Igeometry.ne.3 ) then
+     write(6,'("coords :      fatal : myid=",i3," ; Lcurvature.eq.5 .and. Igeometry.ne.3 ; Lcurvature.eq.5 can only be combined with Igeometry.ne.3;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "coords : Lcurvature.eq.5 .and. Igeometry.ne.3 : Lcurvature.eq.5 can only be combined with Igeometry.ne.3 ;"
+   endif
     end if ! if (Igeometry .eq. 3) ; 13 Jan 20
 
    else ! we need more for Lcurvature=3,4 ; 13 Jan 20
@@ -504,7 +531,11 @@ Nt, Nz, Rij(1:Ntz,3,3), Zij(1:Ntz,3,3) ) ! maps to real space;
      do jj = ii, 3
       if( irz.eq.0 ) dguvij(1:Ntz,ii,jj) = Dij(1:Ntz,ii) * Rij(1:Ntz,jj,0) + Rij(1:Ntz,ii,0) * Dij(1:Ntz,jj)
       if( irz.eq.1 ) then
-         FATAL(coords, .true., No Z-geometrical degree of freedom when Igeometry=2)!dguvij(1:Ntz,ii,jj) = Dij(1:Ntz,ii) * Zij(1:Ntz,jj,0) + Zij(1:Ntz,ii,0) * Dij(1:Ntz,jj) ! TODO REMOVE
+if( .true. ) then
+     write(6,'("coords :      fatal : myid=",i3," ; .true. ; No Z-geometrical degree of freedom when Igeometry=2;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "coords : .true. : No Z-geometrical degree of freedom when Igeometry=2 ;"
+   endif
       endif
      enddo
     enddo
@@ -552,7 +583,11 @@ Nt, Nz, Rij(1:Ntz,3,3), Zij(1:Ntz,3,3) ) ! maps to real space;
 
     case default
 
-      FATAL( coords, .true., supplied Igeometry is not yet supported for Lcurvature.eq.3 or Lcurvature.eq.4 )
+if( .true. ) then
+     write(6,'("coords :      fatal : myid=",i3," ; .true. ; supplied Igeometry is not yet supported for Lcurvature.eq.3 or Lcurvature.eq.4;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "coords : .true. : supplied Igeometry is not yet supported for Lcurvature.eq.3 or Lcurvature.eq.4 ;"
+   endif
 
     end select ! end of select case( Igeometry );  7 Mar 13;
 

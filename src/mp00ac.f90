@@ -40,11 +40,11 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: Ndof, Ldfjac
-  REAL   , intent(in)  :: Xdof(1:Ndof)
-  REAL                 :: Fdof(1:Ndof), Ddof(1:Ldfjac,1:Ndof)
+  real(8)   , intent(in)  :: Xdof(1:Ndof)
+  real(8)                 :: Fdof(1:Ndof), Ddof(1:Ldfjac,1:Ndof)
   INTEGER              :: iflag
 
 
@@ -54,32 +54,32 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
   INTEGER              :: idgetrf(0:1), idgetrs(0:1), idgerfs(0:1), idgecon(0:1)
 
-  REAL                 :: lmu, dpf, dtf, dpsi(1:2), tpsi(1:2), ppsi(1:2), lcpu, test(2,2)
+  real(8)                 :: lmu, dpf, dtf, dpsi(1:2), tpsi(1:2), ppsi(1:2), lcpu, test(2,2)
 
-  REAL                 :: anorm, rcond, ferr(2), berr(2), signfactor
+  real(8)                 :: anorm, rcond, ferr(2), berr(2), signfactor
 
   CHARACTER            :: packorunpack
 
   INTEGER, allocatable :: ipiv(:), Iwork(:)
 
-  REAL   , allocatable :: matrix(:,:), rhs(:,:), LU(:,:)
+  real(8)   , allocatable :: matrix(:,:), rhs(:,:), LU(:,:)
 
-  REAL   , allocatable :: RW(:), RD(:,:)
+  real(8)   , allocatable :: RW(:), RD(:,:)
 
-  REAL   , allocatable :: matrixC(:,:)
+  real(8)   , allocatable :: matrixC(:,:)
 
   INTEGER, parameter   :: nrestart = 5 ! do GMRES restart after nrestart iterations
   INTEGER              :: maxfil   ! bandwidth for ILU subroutines, will be estimated
 
   INTEGER              :: NS, itercount, Nbilut
 
-  REAL   , allocatable :: matrixS(:), bilut(:)
+  real(8)   , allocatable :: matrixS(:), bilut(:)
   INTEGER, allocatable :: ibilut(:),  jbilut(:)
 
   INTEGER, parameter   :: ipar_SIZE = 128
   INTEGER              :: ipar(ipar_SIZE), iluierr, RCI_REQUEST, nw, t1, t2, t3
-  REAL                 :: fpar(ipar_SIZE), v1
-  REAL, allocatable    :: wk(:)
+  real(8)                 :: fpar(ipar_SIZE), v1
+  real(8), allocatable    :: wk(:)
   INTEGER,allocatable  :: jw(:), iperm(:)
 
   
@@ -124,23 +124,43 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
   NN = NAdof(lvol) ! shorthand;
 
-  SALLOCATE( rhs   , (1:NN,0:2 ), zero )
-    SALLOCATE( matrix, (1:NN,1:NN), zero )
+if( allocated( rhs ) ) deallocate( rhs )
+allocate( rhs(1:NN,0:2), stat=astat )
+rhs(1:NN,0:2) = zero
+if( allocated( matrix ) ) deallocate( matrix )
+allocate( matrix(1:NN,1:NN), stat=astat )
+matrix(1:NN,1:NN) = zero
 
 
   solution(1:NN,-1:2) = zero ! this is a global array allocated in dforce;
 
     Lwork = NB*NN
 
-    SALLOCATE( RW,    (1:Lwork ),  zero )
-    SALLOCATE( RD,    (1:NN,0:2),  zero )
-    SALLOCATE( LU,    (1:NN,1:NN), zero )
-    SALLOCATE( ipiv,  (1:NN),         0 )
-    SALLOCATE( Iwork, (1:NN),         0 )
+if( allocated( RW ) ) deallocate( RW )
+allocate( RW(1:Lwork), stat=astat )
+RW(1:Lwork) = zero
+if( allocated( RD ) ) deallocate( RD )
+allocate( RD(1:NN,0:2), stat=astat )
+RD(1:NN,0:2) = zero
+if( allocated( LU ) ) deallocate( LU )
+allocate( LU(1:NN,1:NN), stat=astat )
+LU(1:NN,1:NN) = zero
+if( allocated( ipiv ) ) deallocate( ipiv )
+allocate( ipiv(1:NN), stat=astat )
+ipiv(1:NN) = 0
+if( allocated( Iwork ) ) deallocate( Iwork )
+allocate( Iwork(1:NN), stat=astat )
+Iwork(1:NN) = 0
     nw = (NN+3)*(nrestart+2) + (nrestart+1)*nrestart
-    SALLOCATE( wk, (1:nw), zero)
-    SALLOCATE( jw, (1:2*NN), 0)
-    SALLOCATE( iperm, (1:2*NN), 0)
+if( allocated( wk ) ) deallocate( wk )
+allocate( wk(1:nw), stat=astat )
+wk(1:nw) = zero
+if( allocated( jw ) ) deallocate( jw )
+allocate( jw(1:2*NN), stat=astat )
+jw(1:2*NN) = 0
+if( allocated( iperm ) ) deallocate( iperm )
+allocate( iperm(1:2*NN), stat=astat )
+iperm(1:2*NN) = 0
 
 
 
@@ -232,7 +252,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
     end select ! ideriv;
 
-    cput = GETTIME
+    cput = MPI_WTIME()
 
     if(     idgetrf(ideriv) .eq. 0 .and. idgetrs(ideriv) .eq. 0 .and. idgerfs(ideriv) .eq. 0 .and. rcond .ge. machprec) then
       if( Wmp00ac ) write(ounit,1010) cput-cpus, myid, lvol, ideriv, "idgetrf idgetrs idgerfs", idgetrf(ideriv), idgetrs(ideriv), idgetrf(ideriv), "success ;         ", cput-lcpu
@@ -419,21 +439,31 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
   if( Wmp00ac .or. Wma02aa ) then ! the following is screen output;
 
-   cput = GETTIME
+   cput = MPI_WTIME()
 
    if( Lplasmaregion ) then
     select case( iflag )
     case( 0 )    ; write(ounit,3000) cput-cpus, myid, lvol, lmu, dpf, iflag                         ! this is impossible by above logic;
     case( 1 )    ; write(ounit,3000) cput-cpus, myid, lvol, lmu, dpf, iflag, Fdof(1:Ndof)
     case( 2 )    ; write(ounit,3010) cput-cpus, myid, lvol, lmu, dpf, iflag, Ddof(1:Ndof,1:Ndof)
-    case default ; FATAL( mp00ac, .true., illegal iflag on entry )
+    case default
+      if( .true. ) then
+        write(6,'("mp00ac :      fatal : myid=",i3," ; .true. ; illegal iflag on entry;")') myid
+        call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+        stop "mp00ac : .true. : illegal iflag on entry ;"
+       endif
     end select
    else ! Lvacuumregion
     select case( iflag )
     case( 0 )    ; write(ounit,3001) cput-cpus, myid, lvol, dtf, dpf, iflag                         ! this is impossible by above logic;
     case( 1 )    ; write(ounit,3001) cput-cpus, myid, lvol, dtf, dpf, iflag, Fdof(1:Ndof)
     case( 2 )    ; write(ounit,3011) cput-cpus, myid, lvol, dtf, dpf, iflag, Ddof(1:Ndof,1:Ndof)
-    case default ; FATAL( mp00ac, .true., illegal iflag on entry )
+    case default
+      if( .true. ) then
+        write(6,'("mp00ac :      fatal : myid=",i3," ; .true. ; illegal iflag on entry;")') myid
+        call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+        stop "mp00ac : .true. : illegal iflag on entry ;"
+       endif
     end select
    endif
 

@@ -1,3 +1,3 @@
 #!/bin/bash
 #
-./build/build/bin/xspec test.sp
+mpirun -n 1 ./build/build/bin/xspec test.sp

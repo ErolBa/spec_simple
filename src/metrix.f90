@@ -34,7 +34,7 @@ subroutine metrix( lquad, lvol )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lvol, lquad
 
@@ -98,7 +98,7 @@ subroutine compute_guvijsave(lquad, vvol, ideriv, Lcurvature)
 
   INTEGER, intent(in):: vvol, lquad, ideriv, Lcurvature
   INTEGER            :: jquad, ii, jj
-  REAL               :: lss
+  real(8)               :: lss
 
   do jquad = 1, lquad
     lss = gaussianabscissae(jquad,vvol)

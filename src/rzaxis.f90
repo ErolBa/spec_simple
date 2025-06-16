@@ -30,17 +30,17 @@ subroutine rzaxis( Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivativ
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   LOGICAL, intent(in)  :: LComputeDerivatives ! indicates whether derivatives are to be calculated;
 
   INTEGER, intent(in)    :: Mvol, mn, ivol
-  REAL                   :: inRbc(1:mn,0:Mvol), inZbs(1:mn,0:Mvol), inRbs(1:mn,0:Mvol), inZbc(1:mn,0:Mvol)
-  REAL                   :: jRbc(1:mn,0:Mvol), jZbs(1:mn,0:Mvol), jRbs(1:mn,0:Mvol), jZbc(1:mn,0:Mvol)
-  REAL                   :: tmpRbc(1:mn,0:Mvol), tmpZbs(1:mn,0:Mvol), tmpRbs(1:mn,0:Mvol), tmpZbc(1:mn,0:Mvol) ! use as temp matrices to store iRbc etc
+  real(8)                   :: inRbc(1:mn,0:Mvol), inZbs(1:mn,0:Mvol), inRbs(1:mn,0:Mvol), inZbc(1:mn,0:Mvol)
+  real(8)                   :: jRbc(1:mn,0:Mvol), jZbs(1:mn,0:Mvol), jRbs(1:mn,0:Mvol), jZbc(1:mn,0:Mvol)
+  real(8)                   :: tmpRbc(1:mn,0:Mvol), tmpZbs(1:mn,0:Mvol), tmpRbs(1:mn,0:Mvol), tmpZbc(1:mn,0:Mvol) ! use as temp matrices to store iRbc etc
 
-  REAL                   :: jacbase(1:Ntz), jacbasec(1:mn), jacbases(1:mn) ! the 2D Jacobian and its Fourier
-  REAL                   :: junkc(1:mn), junks(1:mn) ! these are junk matrices used for fft
+  real(8)                   :: jacbase(1:Ntz), jacbasec(1:mn), jacbases(1:mn) ! the 2D Jacobian and its Fourier
+  real(8)                   :: junkc(1:mn), junks(1:mn) ! these are junk matrices used for fft
 
   INTEGER                :: jvol, ii, ifail, jj, id, issym, irz, imn
   INTEGER                :: idJc, idJs, idRc, idRs, idZc, idZs
@@ -48,7 +48,7 @@ subroutine rzaxis( Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivativ
   INTEGER                :: Lcurvature
 
   INTEGER                :: Njac, idgetrf, idgetrs ! internal variables used in Jacobian method
-  REAL, allocatable      :: jacrhs(:), djacrhs(:), jacmat(:,:), djacmat(:,:), solution(:), LU(:,:) ! internal matrices used in Jacobian method
+  real(8), allocatable      :: jacrhs(:), djacrhs(:), jacmat(:,:), djacmat(:,:), solution(:), LU(:,:) ! internal matrices used in Jacobian method
   INTEGER, allocatable   :: ipiv(:)   ! internal matrices used in  Jacobian method
 
 
@@ -153,11 +153,21 @@ subroutine rzaxis( Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivativ
       Njac = 2 * (2 * Ntoraxis + 1)
     end if
 
-    SALLOCATE( jacrhs, (1:Njac), zero )
-    SALLOCATE( jacmat, (1:Njac, 1:Njac), zero )
-    SALLOCATE( LU, (1:Njac, 1:Njac), zero )
-    SALLOCATE( solution, (1:Njac), zero )
-    SALLOCATE( ipiv, (1:Njac), 0)
+if( allocated( jacrhs ) ) deallocate( jacrhs )
+allocate( jacrhs(1:Njac), stat=astat )
+jacrhs(1:Njac) = zero
+if( allocated( jacmat ) ) deallocate( jacmat )
+allocate( jacmat(1:Njac,1:Njac), stat=astat )
+jacmat(1:Njac,1:Njac) = zero
+if( allocated( LU ) ) deallocate( LU )
+allocate( LU(1:Njac,1:Njac), stat=astat )
+LU(1:Njac,1:Njac) = zero
+if( allocated( solution ) ) deallocate( solution )
+allocate( solution(1:Njac), stat=astat )
+solution(1:Njac) = zero
+if( allocated( ipiv ) ) deallocate( ipiv )
+allocate( ipiv(1:Njac), stat=astat )
+ipiv(1:Njac) = 0
 
     iRbc(1:mn,1) = jRbc(1:mn, ivol)
     iZbs(1:mn,1) = jZbs(1:mn, ivol)

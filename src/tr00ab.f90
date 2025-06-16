@@ -29,24 +29,24 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: lvol, mn, NN, Nt, Nz, iflag
 
-  REAL, intent(inout)  :: ldiota(0:1,-1:2)
+  real(8), intent(inout)  :: ldiota(0:1,-1:2)
 
   INTEGER              :: innout, ll, ii, jj, kk, jb, kb, mj, nj, ideriv, jderiv, id, MM, ielement, nelements, Lcurvature, idof, icon, mi, ni, imupf
 
-  REAL                 :: lcpu, mfactor, lss, Dteta, Dzeta, rfac, tol, rnorm, omega, diotaerror!, sparsedenseerror
+  real(8)                 :: lcpu, mfactor, lss, Dteta, Dzeta, rfac, tol, rnorm, omega, diotaerror!, sparsedenseerror
 
-  REAL                 :: lAte(0:mn,-1:2), lAze(0:mn,-1:2), lAto(0:mn,-1:2), lAzo(0:mn,-1:2)
+  real(8)                 :: lAte(0:mn,-1:2), lAze(0:mn,-1:2), lAto(0:mn,-1:2), lAzo(0:mn,-1:2)
 
 
 
   INTEGER              :: IA, if04aaf, idgesvx, ipiv(1:NN), iwork4(1:NN)
-  REAL  , allocatable  :: dmatrix(:,:,:), omatrix(:,:), FAA(:,:)
-  REAL                 :: drhs(1:NN,-1:2), dlambda(1:NN,-1:2)
-  REAL                 :: Rdgesvx(1:NN), Cdgesvx(1:NN), work4(1:4*NN), rcond, ferr(1), berr(1), ferr2(1:2), berr2(1:2)
+  real(8)  , allocatable  :: dmatrix(:,:,:), omatrix(:,:), FAA(:,:)
+  real(8)                 :: drhs(1:NN,-1:2), dlambda(1:NN,-1:2)
+  real(8)                 :: Rdgesvx(1:NN), Cdgesvx(1:NN), work4(1:4*NN), rcond, ferr(1), berr(1), ferr2(1:2), berr2(1:2)
   CHARACTER            :: equed
 
   INTEGER              :: maxitn, reqdits, extralength, lrwork, integerwork(1:2*Nt*Nz+2+1), if11def, if11zaf, if11xaf
@@ -54,19 +54,19 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
   INTEGER              :: Ndof, label(-3:Nt+2,-3:Nz+2), isym
 
   INTEGER              :: idgelsd, Lwork, Liwork, Irank, nlvl
-  REAL                 :: sval(1:NN)
-  REAL   , allocatable :: work(:)
+  real(8)                 :: sval(1:NN)
+  real(8)   , allocatable :: work(:)
 
-  REAL                 ::                      Bsupt(1:Nt*Nz,-1:2), Bsupz(1:Nt*Nz,-1:2), tdot(1:Nt*Nz)
-  REAL                 :: Bsubs(1:Nt*Nz,-1:2), Bsubt(1:Nt*Nz,-1:2), Bsubz(1:Nt*Nz,-1:2)
+  real(8)                 ::                      Bsupt(1:Nt*Nz,-1:2), Bsupz(1:Nt*Nz,-1:2), tdot(1:Nt*Nz)
+  real(8)                 :: Bsubs(1:Nt*Nz,-1:2), Bsubt(1:Nt*Nz,-1:2), Bsubz(1:Nt*Nz,-1:2)
 
-  REAL                 :: dotteta, dotzeta
+  real(8)                 :: dotteta, dotzeta
 
-  REAL   , allocatable :: rmatrix(:,:,:), rrhs(:,:), rlambda(:,:), wks1(:), wks2(:), AA(:,:)
+  real(8)   , allocatable :: rmatrix(:,:,:), rrhs(:,:), rlambda(:,:), wks1(:), wks2(:), AA(:,:)
 
   INTEGER              :: inz(-1:2), lnz
   INTEGER, allocatable :: irow(:,:), jcol(:,:), istr(:), iwork(:)
-  REAL   , allocatable :: smatrix(:,:), srhs(:,:), slambda(:,:), swork(:)
+  real(8)   , allocatable :: smatrix(:,:), srhs(:,:), slambda(:,:), swork(:)
   CHARACTER            :: duplicate*1, zeros*1, method*8, precon*1, trans*1, check*1 ! logical control of sparse routines; 20 Apr 13;
 
   
@@ -132,9 +132,15 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
 
    if( Lsparse.eq.0 .or. Lsparse.eq.3 ) then
-    SALLOCATE( dmatrix, (1:NN,1:NN,-1:2), zero )
-    SALLOCATE( omatrix, (1:NN,1:NN), zero )
-    SALLOCATE( FAA, (1:NN,1:NN), zero )
+if( allocated( dmatrix ) ) deallocate( dmatrix )
+allocate( dmatrix(1:NN,1:NN,-1:2), stat=astat )
+dmatrix(1:NN,1:NN,-1:2) = zero
+if( allocated( omatrix ) ) deallocate( omatrix )
+allocate( omatrix(1:NN,1:NN), stat=astat )
+omatrix(1:NN,1:NN) = zero
+if( allocated( FAA ) ) deallocate( FAA )
+allocate( FAA(1:NN,1:NN), stat=astat )
+FAA(1:NN,1:NN) = zero
    endif
 
    if( Lsparse.eq.0 .or. Lsparse.eq.3 ) then ! Fourier transformation; 24 Apr 13;
@@ -170,7 +176,11 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
        dmatrix(ii      ,jj      ,ideriv) = dmatrix(ii      ,jj      ,ideriv) + ( - mj * lAze(kk,ideriv) + nj * lAte(kk,ideriv) ) * half
        if( NOTstellsym) then
-        FATAL( tr00ab,ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN, illegal subscript ) ! THIS CAN BE DELETED EVENTUALLY;
+if( ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ; illegal subscript;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN : illegal subscript ;"
+   endif
         dmatrix(ii+mns-1,jj      ,ideriv) = dmatrix(ii+mns-1,jj      ,ideriv) + ( - mj * lAzo(kk,ideriv) + nj * lAto(kk,ideriv) ) * half
         dmatrix(ii      ,jj+mns-1,ideriv) = dmatrix(ii      ,jj+mns-1,ideriv) - ( + mj * lAzo(kk,ideriv) - nj * lAto(kk,ideriv) ) * half
         dmatrix(ii+mns-1,jj+mns-1,ideriv) = dmatrix(ii+mns-1,jj+mns-1,ideriv) + ( + mj * lAze(kk,ideriv) - nj * lAte(kk,ideriv) ) * half
@@ -185,10 +195,18 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
        if( ii.lt.1 ) cycle
 
-       FATAL( tr00ab,ii.gt.NN .or. jj.gt.NN, illegal subscript ) ! THIS CAN BE DELETED EVENTUALLY; 02 Sep 14;
+if( ii.gt.NN .or. jj.gt.NN ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; ii.gt.NN .or. jj.gt.NN ; illegal subscript;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : ii.gt.NN .or. jj.gt.NN : illegal subscript ;"
+   endif
        dmatrix(ii      ,jj      ,ideriv) = dmatrix(ii      ,jj      ,ideriv) + ( - mj * lAze(kk,ideriv) + nj * lAte(kk,ideriv) ) * half
        if( NOTstellsym) then
-        FATAL( tr00ab,ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN, illegal subscript ) ! THIS CAN BE DELETED EVENTUALLY;
+if( ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ; illegal subscript;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN : illegal subscript ;"
+   endif
         dmatrix(ii+mns-1,jj      ,ideriv) = dmatrix(ii+mns-1,jj      ,ideriv) + ( - mj * lAzo(kk,ideriv) + nj * lAto(kk,ideriv) ) * half * iotaksgn(kk,jj)
         dmatrix(ii      ,jj+mns-1,ideriv) = dmatrix(ii      ,jj+mns-1,ideriv) + ( + mj * lAzo(kk,ideriv) - nj * lAto(kk,ideriv) ) * half
         dmatrix(ii+mns-1,jj+mns-1,ideriv) = dmatrix(ii+mns-1,jj+mns-1,ideriv) - ( + mj * lAze(kk,ideriv) - nj * lAte(kk,ideriv) ) * half * iotaksgn(kk,jj)
@@ -216,10 +234,14 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
       if( iflag.eq.-1) then ; call DGEMV('N',NN,NN,-one,dmatrix(1,1,-1),NN,dlambda(1,0),1,one,drhs(1,-1),1)     ! BLAS version 21 Jul 19
       endif
      case default
-      FATAL( tr00ab, .true., invalid jderiv )
+if( .true. ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : .true. : invalid jderiv ;"
+   endif
      end select
 
-     lcpu = GETTIME ! record time taken in dgesvx; 09 Nov 17;
+     lcpu = MPI_WTIME() ! record time taken in dgesvx; 09 Nov 17;
 
      select case( Lsvdiota )
 
@@ -258,20 +280,33 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
       case default
 
-       FATAL( tr00ab, .true., invalid jderiv )
+if( .true. ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : .true. : invalid jderiv ;"
+   endif
 
       end select ! end of select case jderiv; 02 Sep 14;
 
-      cput = GETTIME
+      cput = MPI_WTIME()
 
       select case( idgesvx )                                                                                           !12345678901234567
       case( 0   )    ; if( Wtr00ab ) write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput-lcpu, "solved Fourier ; ", dlambda(1,0)
       case( 1:  )    ;               write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput-lcpu, "singular ;       "
       case( :-1 )    ;               write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput-lcpu, "input error ;    "
-      case default ;               FATAL( tr00ab, .true., illegal ifail returned by dgesvx )
+      case default ;               
+        if(.true.)  then
+          write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; illegal ifail returned by dgesvx;")') myid
+          call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+          stop "tr00ab : .true. : illegal ifail returned by dgesvx ;"
+         endif
       end select
 
-      FATAL( tr00ab, idgesvx.ne.0, failed to construct straight-fieldline angle using dgesvx )
+if( idgesvx.ne.0 ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; idgesvx.ne.0 ; failed to construct straight-fieldline angle using dgesvx;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : idgesvx.ne.0 : failed to construct straight-fieldline angle using dgesvx ;"
+   endif
 
      case( 1 ) ! Lsvdiota = 1; use least-squares to invert linear equations that define the straight fieldline angle; 01 Jul 14;
 
@@ -280,11 +315,15 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
       Lwork  = (63+8*nlvl)*NN+676
       Liwork = max(1,11*NN+3*nlvl*NN)
 
-      SALLOCATE( work, (1:Lwork), zero )
+if( allocated( work ) ) deallocate( work )
+allocate( work(1:Lwork), stat=astat )
+work(1:Lwork) = zero
       if (allocated(iwork)) then
         deallocate(iwork,stat=astat)
       endif
-      SALLOCATE( iwork, (1:Liwork), zero )
+if( allocated( iwork ) ) deallocate( iwork )
+allocate( iwork(1:Liwork), stat=astat )
+iwork(1:Liwork) = zero
 
       select case( jderiv )
 
@@ -319,33 +358,54 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
          ldiota(innout,imupf) = dlambda(1,imupf)
         enddo
        else
-        FATAL( tr00ab, .true., invalid iflag )
+if( .true. ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; invalid iflag;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : .true. : invalid iflag ;"
+   endif
        endif
 
       case default
 
-       FATAL( tr00ab, .true., invalid jderiv )
+if( .true. ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : .true. : invalid jderiv ;"
+   endif
 
       end select ! end of select case( jderiv) ; 02 Sep 14;
 
       deallocate(work,stat=astat)
 
-      cput = GETTIME
+      cput = MPI_WTIME()
 
       select case( idgelsd )                                                                                           !12345678901234567
       case( 0   )    ; if( Wtr00ab)  write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput-lcpu, "solved Fourier ; ", dlambda(1,0)
       case( :-1 )    ;               write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput-lcpu, "input error ;    "
       case( 1:  )    ;               write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput-lcpu, "QR failed ;      "
-      case default ;               FATAL( tr00ab, .true., illegal ifail returned by f04arf )
+      case default
+        if( .true. ) then
+          write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; illegal ifail returned by f04arf;")') myid
+          call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+          stop "tr00ab : .true. : $illegal ifail returned by f04arf ;"
+         endif
       end select
 
-      FATAL( tr00ab, idgelsd.ne.0, failed to construct straight-fieldline angle using dgelsd )
+if( idgelsd.ne.0 ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; idgelsd.ne.0 ; failed to construct straight-fieldline angle using dgelsd;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : idgelsd.ne.0 : failed to construct straight-fieldline angle using dgelsd ;"
+   endif
 
       dmatrix(1:NN,1:NN, 0) = omatrix(1:NN,1:NN) ! original "unperturbed" matrix; 30 Jan 13;
 
       case default
 
-       FATAL( tr00ab, .true., illegal Lsvdiota )
+if( .true. ) then
+     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; illegal Lsvdiota;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "tr00ab : .true. : illegal Lsvdiota ;"
+   endif
 
       end select ! end of select case( Lsvdiota ) ; 02 Sep 14;
 

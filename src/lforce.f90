@@ -33,17 +33,17 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in)  :: lvol, iocons, ideriv, Ntz, iflag
-  REAL                 :: dAt(1:Ntz, -1:2), dAz(1:Ntz, -1:2), XX(1:Ntz), YY(1:Ntz), dRR(1:Ntz,-1:1), dZZ(1:Ntz,-1:1), DDl, MMl
+  real(8)                 :: dAt(1:Ntz, -1:2), dAz(1:Ntz, -1:2), XX(1:Ntz), YY(1:Ntz), dRR(1:Ntz,-1:1), dZZ(1:Ntz,-1:1), DDl, MMl
 
-  REAL                 :: IIl(1:Ntz), length(1:Ntz), dLL(1:Ntz)
+  real(8)                 :: IIl(1:Ntz), length(1:Ntz), dLL(1:Ntz)
   INTEGER              :: Lcurvature, ii, jj, kk, ll, ifail, ivol, lnn, mi, id!, oicons
-  REAL                 :: dBB(1:Ntz, -1:2), lss, mfactor
+  real(8)                 :: dBB(1:Ntz, -1:2), lss, mfactor
 
-  REAL                 :: dAs(1:Ntz)!, dRdt(-1:1,0:1), dZdt(-1:1,0:1)
-  REAL                 :: lgvuij(1:Ntz,1:3,1:3) ! local workspace; 13 Sep 13;
+  real(8)                 :: dAs(1:Ntz)!, dRdt(-1:1,0:1), dZdt(-1:1,0:1)
+  real(8)                 :: lgvuij(1:Ntz,1:3,1:3) ! local workspace; 13 Sep 13;
 
   
 

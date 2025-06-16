@@ -24,11 +24,11 @@ subroutine packab( packorunpack, lvol, NN, solution, ideriv )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   CHARACTER, intent(in) :: packorunpack
   INTEGER  , intent(in) :: lvol, NN, ideriv
-  REAL                  :: solution(1:NN)
+  real(8)                  :: solution(1:NN)
 
   INTEGER               :: ii, ll, id, llrad
 

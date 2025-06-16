@@ -25,16 +25,16 @@ subroutine bfield( zeta, st, Bst )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
-  REAL, intent(in)   :: zeta,  st(1:Node)
-  REAL, intent(out)  ::       Bst(1:Node)
+  real(8), intent(in)   :: zeta,  st(1:Node)
+  real(8), intent(out)  ::       Bst(1:Node)
 
   INTEGER            :: lvol, ii, ll, mi, ni, ideriv
-  REAL               :: teta, lss, sbar, sbarhm(0:1), arg, carg, sarg, dBu(1:3)
-  REAL               :: cheby(0:Lrad(ivol),0:1), zernike(0:Lrad(1),0:Mpol,0:1)
+  real(8)               :: teta, lss, sbar, sbarhm(0:1), arg, carg, sarg, dBu(1:3)
+  real(8)               :: cheby(0:Lrad(ivol),0:1), zernike(0:Lrad(1),0:Mpol,0:1)
 
-  REAL               :: TT(0:Lrad(ivol),0:1) ! this is almost identical to cheby; 17 Dec 15;
+  real(8)               :: TT(0:Lrad(ivol),0:1) ! this is almost identical to cheby; 17 Dec 15;
 
   
 
@@ -76,7 +76,11 @@ subroutine bfield( zeta, st, Bst )
 
    if( Lcoordinatesingularity ) then ! regularization factor depends on mi; 17 Dec 15;
 
-    FATAL( bfield, abs(sbar).lt.vsmall, need to avoid divide-by-zero )
+if( abs(sbar).lt.vsmall ) then
+     write(6,'("bfield :      fatal : myid=",i3," ; abs(sbar).lt.vsmall ; need to avoid divide-by-zero;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "bfield : abs(sbar).lt.vsmall : need to avoid divide-by-zero ;"
+   endif
 
     do ll = 0, Lrad(lvol) ; TT(ll,0:1) = (/        zernike(ll,mi,0),        zernike(ll,mi,1)*half                      /)
     enddo
@@ -113,12 +117,16 @@ subroutine bfield( zeta, st, Bst )
 
   if( abs(gBzeta).lt.vsmall ) then
 
-   cput = GETTIME
+   cput = MPI_WTIME()
 
    write(ounit,'("bfield : ",f10.2," : lvol=",i3," ; zeta="es23.15" ; (s,t)=("es23.15" ,"es23.15" ) ; B^z="es23.15" ;")') &
                              cput-cpus, lvol,        zeta,             st(1:2),                       dBu(3)
 
-   FATAL( bfield, abs(dBu(3)).lt.vsmall, field is not toroidal )
+if( abs(dBu(3)).lt.vsmall ) then
+     write(6,'("bfield :      fatal : myid=",i3," ; abs(dBu(3)).lt.vsmall ; field is not toroidal;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "bfield : abs(dBu(3)).lt.vsmall : field is not toroidal ;"
+   endif
   endif
 
 

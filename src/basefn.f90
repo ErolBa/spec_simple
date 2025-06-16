@@ -5,9 +5,9 @@ subroutine get_cheby(lss, lrad, cheby)
 
   implicit none
 
-  REAL,intent(in) :: lss
+  real(8),intent(in) :: lss
   INTEGER, intent(in) :: lrad
-  REAL, intent(inout) :: cheby(0:lrad,0:1)
+  real(8), intent(inout) :: cheby(0:lrad,0:1)
 
   integer :: ll
 
@@ -35,9 +35,9 @@ subroutine get_cheby_d2(lss, lrad, cheby)
 
   implicit none
 
-  REAL,intent(in) :: lss
+  real(8),intent(in) :: lss
   INTEGER, intent(in) :: lrad
-  REAL, intent(inout) :: cheby(0:lrad,0:2)
+  real(8), intent(inout) :: cheby(0:lrad,0:2)
 
   integer :: ll
 
@@ -68,12 +68,12 @@ subroutine get_zernike(r, lrad, mpol, zernike)
 
   implicit none
 
-  REAL,intent(in) :: r
+  real(8),intent(in) :: r
   INTEGER, intent(in) :: lrad, mpol
-  REAL, intent(inout) :: zernike(0:lrad,0:mpol,0:1)
+  real(8), intent(inout) :: zernike(0:lrad,0:mpol,0:1)
 
-  REAL ::    rm, rm1  ! r to the power of m'th and m-1'th
-  REAL ::    factor1, factor2, factor3, factor4
+  real(8) ::    rm, rm1  ! r to the power of m'th and m-1'th
+  real(8) ::    factor1, factor2, factor3, factor4
   INTEGER :: m, n  ! Zernike R^m_n
 
   rm = one  ! r to the power of m'th
@@ -128,12 +128,12 @@ subroutine get_zernike_d2(r, lrad, mpol, zernike)
 
   implicit none
 
-  REAL,intent(in) :: r
+  real(8),intent(in) :: r
   INTEGER, intent(in) :: lrad, mpol
-  REAL, intent(inout) :: zernike(0:lrad,0:mpol,0:2)
+  real(8), intent(inout) :: zernike(0:lrad,0:mpol,0:2)
 
-  REAL ::    rm, rm1, rm2  ! r to the power of m'th, m-1'th and m-2'th
-  REAL ::    factor1, factor2, factor3, factor4
+  real(8) ::    rm, rm1, rm2  ! r to the power of m'th, m-1'th and m-2'th
+  real(8) ::    factor1, factor2, factor3, factor4
   INTEGER :: m, n  ! Zernike R^m_n
 
   rm = one  ! r to the power of m'th
@@ -191,11 +191,11 @@ subroutine get_zernike_rm(r, lrad, mpol, zernike)
 
   implicit none
 
-  REAL,intent(in) :: r
+  real(8),intent(in) :: r
   INTEGER, intent(in) :: lrad, mpol
-  REAL, intent(inout) :: zernike(0:lrad,0:mpol)
+  real(8), intent(inout) :: zernike(0:lrad,0:mpol)
 
-  REAL ::    factor1, factor2, factor3, factor4
+  real(8) ::    factor1, factor2, factor3, factor4
   INTEGER :: m, n  ! Zernike R^m_n
 
   zernike(:,:) = zero

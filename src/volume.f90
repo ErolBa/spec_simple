@@ -28,7 +28,7 @@ subroutine volume( lvol, vflag )
   use mpi
   implicit none
   INTEGER   :: ierr, astat, ios, nthreads, ithread
-  REAL      :: cput, cpui, cpuo=0
+  real(8)      :: cput, cpui, cpuo=0
 
   INTEGER, intent(in) :: lvol
 
@@ -36,11 +36,11 @@ subroutine volume( lvol, vflag )
 
   INTEGER             :: jvol, ii, jj, kk, mi, ni, mj, nj, mk, nk, innout
 
-  REAL                :: vol(0:1), vint(1:Ntz)
+  real(8)                :: vol(0:1), vint(1:Ntz)
 
-  REAL                :: Rei, Roi, Zei, Zoi, Rej, Roj, Zej, Zoj, Rek, Rok, Zek, Zok
+  real(8)                :: Rei, Roi, Zei, Zoi, Rej, Roj, Zej, Zoj, Rek, Rok, Zek, Zok
 
-  REAL                :: AA, BB, CC, DD, lss
+  real(8)                :: AA, BB, CC, DD, lss
 
   
 
@@ -118,7 +118,11 @@ subroutine volume( lvol, vflag )
         if( dBdX%issym.eq.0 ) then !     stellarator-symmetric harmonic; dV/dRei ; 13 Sep 13;
         dvolume = dvolume + iRbc(jj,jvol) * ( djkp(jj,ii) + djkm(jj,ii) + djkp(ii,jj) + djkm(ii,jj) )
         else
-        FATAL( volume, .true., derivatives of volume under construction )
+if( .true. ) then
+     write(6,'("volume :      fatal : myid=",i3," ; .true. ; derivatives of volume under construction;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "volume : .true. : derivatives of volume under construction ;"
+   endif
         dvolume = dvolume + iRbs(jj,jvol) * ( djkp(jj,ii) - djkm(jj,ii) + djkp(ii,jj) - djkm(ii,jj) ) ! needs to be checked; 02 Sep 14;
         endif
        endif
@@ -200,9 +204,17 @@ subroutine volume( lvol, vflag )
   case( 2 ) ; vvolume(lvol) = ( vol(1) - vol(0) ) * pi2pi2nfpquart         ; dvolume = dvolume * pi2pi2nfpquart
   case( 3 ) ; vvolume(lvol) = ( vol(1) - vol(0) ) * pi2pi2nfpquart * third ; dvolume = dvolume * pi2pi2nfpquart * third
   case( 4 ) ; vvolume(lvol) = one                                          ; dvolume = zero ! this is under construction; 04 Dec 14;
-   FATAL( volume, abs(pscale).gt.vsmall,need to compute volume )
+if( abs(pscale).gt.vsmall ) then
+     write(6,'("volume :      fatal : myid=",i3," ; abs(pscale).gt.vsmall ; need to compute volume;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "volume : abs(pscale).gt.vsmall : need to compute volume ;"
+   endif
   case default
-   FATAL( volume, .true., invalid Igeometry )
+if( .true. ) then
+     write(6,'("volume :      fatal : myid=",i3," ; .true. ; invalid Igeometry;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "volume : .true. : invalid Igeometry ;"
+   endif
   end select
 
   if( dBdX%innout.eq.0 ) dvolume = - dvolume
@@ -210,13 +222,17 @@ subroutine volume( lvol, vflag )
 
 
   if( Wvolume ) then
-   cput = GETTIME
+   cput = MPI_WTIME()
    write(ounit,'("volume : ",f10.2," : myid=",i3," ; Igeometry=",i2," ; vvolume(",i3," ) =",es23.15" ;")') cput-cpus, myid, Igeometry, lvol, vvolume(lvol)
   endif
 
 
 
-  FATAL( volume, vflag.eq.0 .and. vvolume(lvol).lt.small, volume cannot be zero or negative ) ! 15 Jan 13;
+if( vflag.eq.0 .and. vvolume(lvol).lt.small ) then
+     write(6,'("volume :      fatal : myid=",i3," ; vflag.eq.0 .and. vvolume(lvol).lt.small ; volume cannot be zero or negative;")') myid
+     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
+     stop "volume : vflag.eq.0 .and. vvolume(lvol).lt.small : volume cannot be zero or negative ;"
+   endif
 
   if( vvolume(lvol).lt.small ) then
    write(ounit,'("volume : ", 10x ," : myid=",i3," ; lvol=",i3," ; vvolume=",es13.5," ; volume cannot be zero or negative ;")') myid, lvol, vvolume(lvol)
