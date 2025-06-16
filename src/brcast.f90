@@ -1,20 +1,4 @@
-!> \defgroup grp_parallel Parallelization
-!>
-!> \file
-!> \brief Broadcasts Beltrami fields, profiles, . . .
 
-!> \ingroup grp_parallel
-!> \brief Broadcasts Beltrami fields, profiles, . . .
-!>
-!> **broadcasting**
-!> <ul>
-!> <li> The construction of the Beltrami fields is distributed on separate cpus. </li>
-!> <li> All "local" information needs to be broadcast so that the "global" force vector,
-!>       \f{eqnarray}{ {\bf F}_i \equiv [[p+B^2/2]]_i = (p+B^2/2)_{v,i} - (p+B^2/2)_{v-1,i}
-!>       \f}
-!>       can be constructed, and so that restart and output files can be saved to file. </li>
-!> </ul>
-!> @param[in] lvol index of nested volume
 subroutine brcast( lvol )
 
 
@@ -36,7 +20,6 @@ subroutine brcast( lvol )
                         Ate, Aze, Ato, Azo, &
                         Bemn, Bomn, Iomn, Iemn, Somn, Semn, Pomn, Pemn, &
                         ImagneticOK, &
-                       !dBBdRZ, dIIdRZ, &
                         Lhessianallocated, LGdof, dFFdRZ, dBBdmp, dmupfdx, &
                         denergydrr,denergydzr,Lhessian3Dallocated, &
                         lBBintegral, lABintegral, &
@@ -56,7 +39,6 @@ subroutine brcast( lvol )
 
 
 
-! recall this routine is inside do vvol = 1, Mvol loop; see dforce;
 
 
 
@@ -111,14 +93,6 @@ subroutine brcast( lvol )
 
   LlBCAST( ImagneticOK(lvol), 1, llmodnp )
 
-  ! Commented - broadcasted in dfp200
-  ! do ideriv = 0, 2
-  ! 	if( (ideriv.ne.0) .and. (Lconstraint.ne.3) ) cycle
-  !     do ii = 1, mn
-  !       RlBCAST( Ate(lvol,ideriv,ii)%s(0:Lrad(lvol)), Lrad(lvol)+1, llmodnp )
-  !       RlBCAST( Aze(lvol,ideriv,ii)%s(0:Lrad(lvol)), Lrad(lvol)+1, llmodnp )
-  !     enddo
-  ! enddo
 
 
   RlBCAST( Bemn(1:mn,lvol,0:1), 2*mn, llmodnp ) ! perhaps all these should be re-ordered; 18 Jul 14;
@@ -127,12 +101,6 @@ subroutine brcast( lvol )
   RlBCAST( Pomn(1:mn,lvol,0:2), 3*mn, llmodnp ) ! 15 Sep 15;
 
   if( NOTstellsym ) then
-    ! do ideriv = 0, 2
-    !   do ii = 1, mn
-    !     RlBCAST( Ato(lvol,ideriv,ii)%s(0:Lrad(lvol)), Lrad(lvol)+1, llmodnp )
-    !     RlBCAST( Azo(lvol,ideriv,ii)%s(0:Lrad(lvol)), Lrad(lvol)+1, llmodnp )
-    !   enddo
-    ! enddo
 
       RlBCAST( Bomn(1:mn,lvol,0:1), 2*mn, llmodnp )
       RlBCAST( Iemn(1:mn,lvol    ),   mn, llmodnp )
@@ -142,9 +110,7 @@ subroutine brcast( lvol )
 
 
 
-! if( lvol.gt.Nvol .and. Lconstraint.eq.-1 .and. Wcurent ) then ! 27 Feb 17;
   if( lvol.gt.Nvol                         .and. Wcurent ) then ! 27 Feb 17;
-  !write(ounit,'("brcast : " 10x " : myid="i3" ; broadcasting : curtor="es13.5" ; curpol="es13.5" ;")') myid, curtor, curpol
    RlBCAST( curtor, 1, llmodnp )
    RlBCAST( curpol, 1, llmodnp )
   endif

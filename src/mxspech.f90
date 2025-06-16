@@ -1,24 +1,9 @@
-!> \file
-!> \brief Main program
 
-!> \brief Main program of SPEC.
-!>
-!> This only calls the xpech() subroutine to do a stand-alone SPEC run.
-!> @return none
 program spec_main
   implicit none
   call xspech
 end program spec_main
 
-!> \brief Main subroutine of SPEC.
-!>
-!> This orchestrates a stand-alone SPEC run:
-!> <ul>
-!> <li> read the input file </li>
-!> <li> solve the MRxMHD equilibrium (see spec() )</li>
-!> <li> run some diagnostics on the results </li>
-!> <li> write the output file(s) </li>
-!> </ul>
 subroutine xspech
 
   use numerical
@@ -41,28 +26,17 @@ subroutine xspech
 
   BEGIN(xspech)
 
-  ! set default communicator to MPI_COMM_WORLD
   call set_mpi_comm(MPI_COMM_WORLD)
 
-  ! set initial time
   cpus = GETTIME
   cpuo = cpus
 
-  ! explicitly enable writing of HDF5 output file
   skip_write = .false.
 
-  ! print header: version of SPEC, compilation info, current date and time, machine precision
   cput = GETTIME
   if( myid.eq.0 ) then
 
-    ! screen output header
     write(ounit,'("xspech : ", 10x ," : version = "F5.2)') version
-    write(ounit,*)"      :  compiled  : date    = Mon 16 Jun 2025 02:37:15 PM CEST ; "
-    write(ounit,*)"      :            : srcdir  = /home/balkovic/codes/spec_simple ; "
-    write(ounit,*)"      :            : macros  = /home/balkovic/codes/spec_simple/src/macros ; "
-    write(ounit,*)"      :            : fc      = /home/balkovic/anaconda3/envs/spec_wrapper/bin/mpif90 ; "
-    write(ounit,*)"      :            : flags   =  ; "
-! COMPILATION ! do not delete; this line is replaced (see Makefile) with a write statement identifying date, time, compilation flags, etc.;
     call date_and_time( ldate, ltime )
     write(ounit,'("xspech : ", 10x ," : ")')
     write(ounit,1000) cput-cpus, ldate(1:4), ldate(5:6), ldate(7:8), ltime(1:2), ltime(3:4), ltime(5:6), machprec, vsmall, small
@@ -70,40 +44,25 @@ subroutine xspech
     write(ounit,'("xspech : ", 10x ," : ")')
     write(ounit,'("xspech : ",f10.2," : parallelism : ncpu=",i3," ; nthreads=",i3," ;")') cput-cpus, ncpu, nthreads
 
-    ! read command-line arguments
     call read_command_args()
 
-    ! initialize input arrays into a default state
     call initialize_inputs()
 
     write(ounit,'("xspech : ", 10x ," : ")')
     write(ounit,'("xspech : ",f10.2," : begin execution ; calling global:readin ;")') cput-cpus
 
-!> **reading input, allocating global variables**
-!>
-!> <ul>
-!> <li> The input namelists and geometry are read in via a call to readin() .
-!>       A full description of the required input is given in global.f90 . </li>
-!> <li> Most internal variables, global memory etc., are allocated in preset() . </li>
-!> <li> All quantities in the input file are mirrored into the output file's group \c /input . </li>
-!> </ul>
     call read_inputlists_from_file()
 
-    ! check that data from input file is within allowed ranges etc.
     call check_inputs()
 
   endif ! myid.eq.0
 
-  ! broadcast input file contents
   call broadcast_inputs()
 
-  ! initialize internal arrays based on data from input file
   call preset()
 
-  ! initialize HDF5 library and open output file ext.h5 for writing during execution
   call init_outfile()
 
-  ! mirror input file contents to output file
   call mirror_input_to_outfile()
 
 
@@ -112,57 +71,26 @@ subroutine xspech
     call wrtend() ! write initial restart file
   endif
 
-!> **preparing output file group iterations**
-!>
-!> <ul>
-!> <li> The group \c /iterations is created in the output file.
-!>       This group contains the interface geometry at each iteration, which is useful for constructing movies illustrating the convergence.
-!>       The data structure in use is an unlimited array of the following compound datatype:
-!> ```C
-!> DATATYPE  H5T_COMPOUND {
-!>       H5T_NATIVE_INTEGER "nDcalls";
-!>       H5T_NATIVE_DOUBLE "Energy";
-!>       H5T_NATIVE_DOUBLE "ForceErr";
-!>       H5T_ARRAY { [Mvol+1][mn] H5T_NATIVE_DOUBLE } "iRbc";
-!>       H5T_ARRAY { [Mvol+1][mn] H5T_NATIVE_DOUBLE } "iZbs";
-!>       H5T_ARRAY { [Mvol+1][mn] H5T_NATIVE_DOUBLE } "iRbs";
-!>       H5T_ARRAY { [Mvol+1][mn] H5T_NATIVE_DOUBLE } "iZbc";
-!> }
-!> ```
-!> </li>
-!> </ul>
   call init_convergence_output()
 
 
-  ! MAIN SUBROUTINE: iterate until converged or #iterations exceeds limit
   call spec()
 
-  ! some final diagnostics: compute errors, Poincare plots, ....
   call final_diagnostics()
 
-  ! post-processing: magnetic field evaluated on a grid
   call write_grid()
 
   if( myid.eq.0 ) then
 
-!> **restart files**
-!>
-!> <ul>
-!> <li> wrtend() is called to write the restart files. </li>
-!> </ul>
     call wrtend()
   endif
 
-  ! write final outputs to HDF5 file
   call hdfint()
 
-  ! close HDF5 output file
   call finish_outfile()
 
-  ! print ending info
   call ending()
 
-  ! wait for writing to finish
   call MPI_Barrier(MPI_COMM_SPEC, ierr)
 
   if (myid.eq.0) then
@@ -179,18 +107,6 @@ subroutine xspech
 
 end subroutine xspech
 
-!> \brief Read command-line arguments; in particular, determine input file (name or extension).
-!>
-!> <ul>
-!> <li> The input file name, \c ext , is given as the first command line input, and the input file itself is then \c ext.sp .</li>
-!> <li> Alternatively, you can directly specify the input file itself as \c ext.sp .</li>
-!> <li> You can also generate a template input file using \c xspec -i .</li>
-!> <li> Or print help information using \c xspec -h .</li>
-!> <li> Additional command line inputs recognized are:
-!>      <ul>
-!>      <li> \c -readin will immediately set \c Wreadin=T ; this may be over-ruled when the namelist \c screenlist is read
-!>      </ul> </li>
-!> </ul>
 subroutine read_command_args
 
   use fileunits, only: ounit
@@ -208,7 +124,6 @@ subroutine read_command_args
 
     cput = GETTIME
 
-    ! first command-line argument is likely ext or ext.sp
     call getarg( 1, arg )
 
     write(ounit,'("rdcmdl : ", 10x ," : ")')
@@ -260,11 +175,6 @@ subroutine read_command_args
 end subroutine read_command_args
 
 
-!> \brief This is the main "driver" for the physics part of SPEC.
-!>
-!> Picard iterations are performed (if in free-boundary mode)
-!> and within each Picard iteration, the fixed-boundary problem
-!> is solved (also iteratively).
 subroutine spec
 
   use constants, only : zero, one, pi2, mu0
@@ -338,14 +248,11 @@ subroutine spec
 
   nfreeboundaryiterations = -1
 
-! This is the free-boundary iteration loop (implemented using GOTO); 08 Jun 16;
 9000 nfreeboundaryiterations = nfreeboundaryiterations + 1
 
-  ! run fix_boundary for the first free_boundary iteration if LautoinitBn was set to 1
   if (Lfreebound.eq.1 .and. LautoinitBn.eq.1) then
      if (nfreeboundaryiterations.eq.0) then  ! first iteration
         first_free_bound = .true.
-        !Mvol = Nvol
         gBnbld_old = gBnbld
         gBnbld = zero
         Lfindzero_old = Lfindzero
@@ -355,7 +262,6 @@ subroutine spec
         if (myid.eq.0) write(ounit,'("xspech : ",10X," : First iteration of free boundary calculation : update Bns from plasma.")')
      else
         first_free_bound = .false.
-        !Mvol = Nvol + Lfreebound
         Lfindzero = Lfindzero_old
         gBnbld = gBnbld_old
         mfreeits = mfreeits_old
@@ -364,12 +270,6 @@ subroutine spec
 
 
 
-!> **packing geometrical degrees-of-freedom into vector**
-!>
-!> <ul>
-!> <li> If \c NGdof.gt.0 , where \c NGdof counts the geometrical degrees-of-freedom, i.e. the \f$R_{bc}\f$, \f$Z_{bs}\f$, etc.,
-!>       then packxi() is called to "pack" the geometrical degrees-of-freedom into \c position(0:NGdof) . </li>
-!> </ul>
 
   if( NGdof.gt.0 ) then ! pack geometry into vector; 14 Jan 13;
 
@@ -382,15 +282,6 @@ subroutine spec
 
 
 
-!> **initialize adiabatic constants**
-!>
-!> <ul>
-!> <li> If \c Ladiabatic.eq.0 , then the "adiabatic constants" in each region, \f$P_v\f$, are calculated as
-!>       \f{eqnarray}{ P_v \equiv p_v V_v^\gamma, \label{eq:adiabatic_xspech}
-!>       \f}
-!>       where \f$p_v\equiv\,\f$\c pressure(vvol) , the volume \f$V_v\f$ of each region is computed by volume() ,
-!>       and the adiabatic index \f$\gamma\equiv\,\f$\c gamma . </li>
-!> </ul>
 
   do vvol = 1, Mvol
 
@@ -413,19 +304,10 @@ subroutine spec
 
 
 
-!> **post diagnostics**
-!>
-!> <ul>
-!> <li> The pressure is computed from the adiabatic constants from Eqn.\f$(\ref{eq:adiabatic_xspech})\f$, i.e. \f$p=P/V^\gamma\f$. </li>
-!> <li> The Beltrami/vacuum fields in each region are re-calculated using dforce() . </li>
-!> <li> If \c Lcheck.eq.5 \c .or. \c LHevalues \c .or. \c LHevectors \c .or. \c Lperturbed.eq.1 , then the force-gradient matrix is examined using hesian() . </li>
-!> </ul>
 
 
 
-! set/reset input variables;
 
-! if( Lconstraint.lt.2 ) helicity(1:Nvol) = lABintegral(1:Nvol) ! updated ``input'' quantity;
 
 
 
@@ -498,49 +380,10 @@ subroutine spec
 
 
 
-!> **free-boundary: re-computing normal field**
-!>
-!> <ul>
-!> <li> If \c Lfreebound.eq.1 and \c Lfindzero.gt.0 and \c mfreeits.ne.0 ,
-!>       then the magnetic field at the computational boundary produced by the plasma currents is computed using bnorml() . </li>
-!> <li> The "new" magnetic field at the computational boundary produced by the plasma currents is updated using a Picard scheme:
-!>       \f{eqnarray}{ \texttt{Bns}_i^{j} = \lambda \, \texttt{Bns}_i^{j-1} + (1-\lambda) \texttt{Bns}_i, \label{eq:blending_xspech}
-!>       \f}
-!>       where \f$j\f$ labels free-boundary iterations, the "blending parameter" is \f$\lambda\equiv\,\f$\c gBnbld ,
-!>       and \c Bns \f$_i\f$ is computed by virtual casing.
-!>       The subscript "$i$" labels Fourier harmonics.  </li>
-!> <li> If the new (unblended) normal field is _not_ sufficiently close to the old normal field, as quantified by \c gBntol ,
-!>       then the free-boundary iterations continue.
-!>       This is quantified by
-!>       \f{eqnarray}{ \sum_i | \texttt{Bns}_i^{j-1} - \texttt{Bns}_i | / N, \label{eq:gBntol_xspech}
-!>       \f}
-!>       where \f$N\f$ is the total number of Fourier harmonics. </li>
-!> <li> There are several choices that are available:
-!>       <ul>
-!>       <li> if \c mfreeits=-2 : the vacuum magnetic field
-!>             (really, the normal component of the field produced by the external currents at the computational boundary)
-!>             required to hold the given equlibrium is written to file.
-!>             This information is required as input by FOCUS \cite y2017_zhu
-!>             for example. (This option probably needs to revised.) </li>
-!>       <li> if \c mfreeits=-1 : after the plasma field is computed by virtual casing,
-!>             the vacuum magnetic field is set to exactly balance the plasma field
-!>             (again, we are really talking about the normal component at the computational boundary.)
-!>             This will ensure that the computational boundary itself if a flux surface of the total magnetic field. </li>
-!>       <li> if \c mfreeits=0 : the plasma field at the computational boundary is not updated; no "free-boundary" iterations take place. </li>
-!>       <li> if \c mfreeits>0 : the plasma field at the computational boundary is updated according to the above blending Eqn.\f$(\ref{eq:blending_xspech})\f$,
-!>             and the free-boundary iterations will continue until either the tolerance condition is met (see \c gBntol and Eqn.\f$(\ref{eq:gBntol_xspech})\f$)
-!>             or the maximum number of free-boundary iterations, namely \c mfreeits , is reached.
-!>             For this case, \c Lzerovac is relevant:
-!>             if \c Lzerovac=1 , then the vacuum field is set equal to the normal field at every iteration,
-!>             which results in the computational boundary being a flux surface.
-!>             (I am not sure if this is identical to setting \c mfreeits=-1 ; the logic etc. needs to be revised.) </li>
-!>       </ul> </li>
-!> </ul>
 
   LContinueFreeboundaryIterations = .false.
 
   ;                                                              LupdateBn = .false. ! default;
-!  if( Lfreebound.eq.1 .and. Lfindzero.gt.0 ) then
   if( Lfreebound.eq.1) then   ! removed Lfindzero check; Loizu Dec 18;
    if( mfreeits.gt.0 .and. nfreeboundaryiterations.lt.mfreeits ) LupdateBn = .true.
    if( mfreeits.lt.0                                           ) LupdateBn = .true.
@@ -554,7 +397,6 @@ subroutine spec
 
    WCALL( xspech, bnorml, ( mn, Ntz, efmn(1:mn), ofmn(1:mn) ) ) ! compute normal field etc. on computational boundary;
 
-   !FATAL( xspech, mn-1.le.0, divide by zero )
 
    if(mn.eq.1) then
      if( YESstellsym ) bnserr = 0.0 !TODO: NOT SURE, this should test if bns is actually 0
@@ -674,11 +516,6 @@ subroutine spec
 
 
 
-!> **output files: vector potential**
-!>
-!> <ul>
-!> <li> The vector potential is written to file using ra00aa() . </li>
-!> </ul>
 
   WCALL( xspech, ra00aa, ('W') ) ! this writes vector potential to file;
 
@@ -693,20 +530,11 @@ subroutine spec
 
 
 
-! FREE-BOUNDARY ITERATIONS HAVE FINISHED;
 
 
 
 end subroutine spec
 
-!> \brief Final diagnostics
-!>
-!> <ul>
-!> <li> sc00aa() is called to compute the covariant components of the magnetic field at the interfaces;
-!>      these are related to the singular currents </li>
-!> <li> if \c Lcheck=1 , jo00aa() is called to compute the error in the Beltrami equation </li>
-!> <li> pp00aa() is called to construct the Poincare plot by field-line following. </li>
-!> </ul>
 subroutine final_diagnostics
 
   use inputlist, only: nPtrj, nPpts, Igeometry, Lcheck, Nvol, odetol, &
@@ -731,7 +559,6 @@ subroutine final_diagnostics
   REAL                 :: work(0:1,-1:2) 
 
 
-! Evaluate rotational transform and straight field line coordinate transformation
 if( Ltransform ) then
 
   FATAL(xspech, Lsvdiota.ne.1, Lsvdiota needs to be one for s.f.l transformation)
@@ -754,7 +581,6 @@ if( Ltransform ) then
     call tr00ab( vvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1,-1:2, vvol) ) ! stores lambda in a global variable.
   enddo
 
-  ! Broadcast
   do vvol = 1, Mvol
     call WhichCpuID( vvol, cpu_id )
     RlBCAST( diotadxup(0:1,-1:2,vvol), 8, cpu_id  )
@@ -765,7 +591,6 @@ endif
 
 
   
-! Computes the surface current at each interface for output
 
   SALLOCATE( Bt00, (1:Mvol, 0:1, -1:2) , zero)
 
@@ -776,10 +601,8 @@ endif
     do iocons = 0, 1
 	  if( Lcoordinatesingularity .and. iocons.eq.0 ) cycle
           if( vvol.eq.Nvol+1 .and. iocons.eq.1 ) cycle
-      ! Compute covariant magnetic field at interface
       call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), 0, iocons)
 
-      ! Save covariant magnetic field at interface for output - computed in lbpol
       Btemn(1:mn, iocons, vvol) = efmn(1:mn)
       Btomn(1:mn, iocons, vvol) = ofmn(1:mn)
       Bzemn(1:mn, iocons, vvol) = cfmn(1:mn)
@@ -787,21 +610,18 @@ endif
     enddo
   enddo
 
-  ! Evaluate surface current
   do vvol = 1, Mvol-1
     IPDt(vvol) = pi2 * (Bt00(vvol+1, 0, 0) - Bt00(vvol, 1, 0))
   enddo
 
   DALLOCATE( Bt00 )
 
-  ! Evaluate volume current
   sumI = 0
   do vvol = 1, Mvol
     Ivolume(vvol) = mu(vvol) * dtflux(vvol) * pi2 + sumI    ! factor pi2 due to normalization in preset
     sumI = Ivolume(vvol)                                    ! Sum over all volumes since this is how Ivolume is defined
   enddo
 
-  ! screen info about diagnostics; 20 Jun 14;
   if (myid.eq.0) then
    cput = GETTIME
 
@@ -826,8 +646,6 @@ endif
     if( .not.ImagneticOK(vvol) ) then ; cput = GETTIME ; write(ounit,1002) cput-cpus ; write(ounit,1002) cput-cpus, myid, vvol, ImagneticOK(vvol) ; cycle
     endif
 
-    ! No need for sc00aa anymore - this is done in lbpol
-    !;WCALL( xspech, sc00aa, ( vvol, Ntz                  ) ) ! compute covariant field (singular currents);
 
     if( Lcheck.eq.1 ) then
      call jo00aa( vvol, Ntz, Iquad(vvol), mn )
@@ -855,8 +673,6 @@ endif
 
 end subroutine final_diagnostics
 
-!> \brief Closes output files, writes screen summary.
-!>
 subroutine ending
 
   use constants, only : zero
@@ -881,51 +697,6 @@ subroutine ending
 
   cput = GETTIME
 
-   SUMTIME(manual)
-   SUMTIME(rzaxis)
-   SUMTIME(packxi)
-   SUMTIME(volume)
-   SUMTIME(coords)
-   SUMTIME(basefn)
-   SUMTIME(memory)
-   SUMTIME(metrix)
-   SUMTIME(ma00aa)
-   SUMTIME(matrix)
-   SUMTIME(spsmat)
-   SUMTIME(spsint)
-   SUMTIME(mp00ac)
-   SUMTIME(ma02aa)
-   SUMTIME(packab)
-   SUMTIME(tr00ab)
-   SUMTIME(curent)
-   SUMTIME(df00ab)
-   SUMTIME(lforce)
-   SUMTIME(intghs)
-   SUMTIME(lbpol)
-   SUMTIME(brcast)
-   SUMTIME(dfp100)
-   SUMTIME(dfp200)
-   SUMTIME(dforce)
-   SUMTIME(casing)
-   SUMTIME(bnorml)
-   SUMTIME(jo00aa)
-   SUMTIME(bfield)
-   SUMTIME(stzxyz)
-   SUMTIME(ra00aa)
-   SUMTIME(numrec)
-   SUMTIME(dcuhre)
-   SUMTIME(minpack)
-   SUMTIME(iqpack)
-   SUMTIME(rksuite)
-   SUMTIME(i1mach)
-   SUMTIME(d1mach)
-   SUMTIME(ilut)
-   SUMTIME(iters)
-   SUMTIME(sphdf5)
-   SUMTIME(preset)
-   SUMTIME(global)
-   SUMTIME(xspech)
-! SUMTIME !  this is expanded by Makefile, and then again by macros; do not remove;
 
   cput = GETTIME ; dcpu = cput-cpus
 
@@ -933,51 +704,6 @@ subroutine ending
 
    Ttotal = zero
 
-   PRTTIME(manual)
-   PRTTIME(rzaxis)
-   PRTTIME(packxi)
-   PRTTIME(volume)
-   PRTTIME(coords)
-   PRTTIME(basefn)
-   PRTTIME(memory)
-   PRTTIME(metrix)
-   PRTTIME(ma00aa)
-   PRTTIME(matrix)
-   PRTTIME(spsmat)
-   PRTTIME(spsint)
-   PRTTIME(mp00ac)
-   PRTTIME(ma02aa)
-   PRTTIME(packab)
-   PRTTIME(tr00ab)
-   PRTTIME(curent)
-   PRTTIME(df00ab)
-   PRTTIME(lforce)
-   PRTTIME(intghs)
-   PRTTIME(lbpol)
-   PRTTIME(brcast)
-   PRTTIME(dfp100)
-   PRTTIME(dfp200)
-   PRTTIME(dforce)
-   PRTTIME(casing)
-   PRTTIME(bnorml)
-   PRTTIME(jo00aa)
-   PRTTIME(bfield)
-   PRTTIME(stzxyz)
-   PRTTIME(ra00aa)
-   PRTTIME(numrec)
-   PRTTIME(dcuhre)
-   PRTTIME(minpack)
-   PRTTIME(iqpack)
-   PRTTIME(rksuite)
-   PRTTIME(i1mach)
-   PRTTIME(d1mach)
-   PRTTIME(ilut)
-   PRTTIME(iters)
-   PRTTIME(sphdf5)
-   PRTTIME(preset)
-   PRTTIME(global)
-   PRTTIME(xspech)
-! PRTTIME ! this is expanded by Makefile, and then again by macros; do not remove;
    write(ounit,'("ending : ",f10.2," : time spent in wrtend =",f10.2," ;")') dcpu, Twrtend ; Ttotal = Ttotal + Twrtend
    write(ounit,'("ending : ",f10.2," : time spent in readin =",f10.2," ;")') dcpu, Treadin ; Ttotal = Ttotal + Treadin
 

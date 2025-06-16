@@ -1,60 +1,25 @@
 
 
-!title (numerics) ! Some miscellaneous numerical routines.
-
-!latex \briefly{miscellaneous ``numerical'' routines}
-
-!l tex \calledby{\link{}}
-!l tex \calls{\link{}}
-
-!latex \tableofcontents
 
 
 
-!latex \subsection{Outline}
-
-!latex This file contains various miscellaneous ``numerical'' routines as described below.
 
 
 
-!l tex \begin{itemize}
 
 
 
-!l tex \item \type{gi00aa}
-
-!subroutine gi00aa( ii, jj, ig ) ! not used; SRH: 27 Feb 18;
-!  
-!  implicit none
-!  
-!  INTEGER, intent(in)  :: ii,jj
-!  INTEGER, intent(out) :: ig
-!  
-!  if( ( ii.eq.1 .and. jj.eq.1 )                                ) ig = 1
-!  if( ( ii.eq.1 .and. jj.eq.2 ) .or. ( ii.eq.2 .and. jj.eq.1 ) ) ig = 2
-!  if( ( ii.eq.1 .and. jj.eq.3 ) .or. ( ii.eq.3 .and. jj.eq.1 ) ) ig = 3
-!  if( ( ii.eq.2 .and. jj.eq.2 )                                ) ig = 4
-!  if( ( ii.eq.2 .and. jj.eq.3 ) .or. ( ii.eq.3 .and. jj.eq.2 ) ) ig = 5
-!  if( ( ii.eq.3 .and. jj.eq.3 )                                ) ig = 6
-!  
-!  return
-!  
-!end subroutine gi00aa
 
 
 
-!latex \subsection{\type{gi00ab}}
 
-!latex \begin{enumerate}
 
-!latex \item This routine assigns the Fourier mode labels that converts a double-sum into a single sum; i.e., the $m_j$ and $n_j$ are assigned where
-!latex \be f(\t,\z) & = & \sum_{n=0}^{N} f_{0,n}\cos(-n \, N_P \, \z) 
-!latex + \sum_{m=1}^{M} \sum_{n=-N}^{N} f_{m,n}\cos(m\t-n \, N_P \, \z) \\
-!latex              & = & \sum_j f_j \cos(m_j\t-n_j\z), \label{eq:condensedFourierrepresentation}
-!latex \ee
-!latex where $N\equiv $ \type{Ntor} and $M\equiv $ \type{Mpol} are given on input, and $N_P \equiv $ \type{Nfp} is the field periodicity.
 
-!latex \end{enumerate}
+
+
+
+
+
 
 subroutine gi00ab( Mpol, Ntor, Nfp, mn, im, in )
   
@@ -86,7 +51,6 @@ end subroutine gi00ab
 
 
 subroutine getimn(Mpol, Ntor, Nfp, mi, ni, idx)
-  ! convert m and n to index
   implicit none
   integer, intent(in) :: Mpol, Ntor, Nfp, mi, ni
   integer, intent(out) :: idx
@@ -103,23 +67,10 @@ end subroutine getimn
 
 
 
-!latex \subsection{\type{tfft}}
 
-!latex \begin{enumerate}
 
-!latex \item This constructs the ``forward'' Fourier transform.
 
-!latex \item Given a set of data, $(f_{i},g_{i})$ for $i = 1, \dots N_\theta N_\zeta$, on a regular two-dimensional angle grid, 
-!latex       where $\theta_j = 2 \pi j / N_\theta$ for $j = 0, N_\theta-1$, and
-!latex             $\zeta_k  = 2 \pi k / N_\zeta $ for $k = 0, N_\zeta -1$.
-!latex       The ``packing'' is governed by $i = 1 + j + k N_\theta$.
-!latex       The ``discrete'' resolution is $N_\theta \equiv $ \type{Nt}, $N_\zeta \equiv $ \type{Nz} and \type{Ntz} $=$ \type{Nt} $\times$ \type{Nz}, 
-!latex       which are set in \link{preset}.
-!latex \item The Fourier harmonics consistent with \Eqn{condensedFourierrepresentation} are constructed.
-!latex       The mode identification labels appearing in \Eqn{condensedFourierrepresentation} are $m_j \equiv $ \type{im(j)} and $n_j \equiv $ \type{in(j)},
-!latex       which are set in \link{global} via a call to \type{gi00ab}.
 
-!latex \end{enumerate}
 
 subroutine tfft( Nt, Nz, ijreal, ijimag, mn, im, in, efmn, ofmn, cfmn, sfmn, ifail )
 
@@ -143,13 +94,10 @@ subroutine tfft( Nt, Nz, ijreal, ijimag, mn, im, in, efmn, ofmn, cfmn, sfmn, ifa
   
   LOGICAL :: Lcheck = .false.
   INTEGER :: jj, kk, ithread
-  !REAL    :: jireal(1:Nt*Nz), jiimag(1:Nt*Nz), arg, ca, sa
   REAL    :: arg, ca, sa
   COMPLEX(C_DOUBLE_COMPLEX) :: z1, z2, z3
 
   GETTHREAD
-  !if( Lcheck ) then ; jireal = ijreal ; jiimag = ijimag
-  !endif
 
   do jj = 1, Nz ; cplxin(:,jj,ithread) = CMPLX( ijreal((jj-1)*Nt+1:jj*Nt), ijimag((jj-1)*Nt+1:jj*Nt), KIND=C_DOUBLE_COMPLEX )
   enddo
@@ -189,7 +137,6 @@ subroutine tfft( Nt, Nz, ijreal, ijimag, mn, im, in, efmn, ofmn, cfmn, sfmn, ifa
    enddo
   enddo
   
-  !write(ounit,'("tfft   : ",10x," : Fourier reconstruction error =",2es15.5," ;")') sqrt(sum((ijreal-jireal)**2)/Ntz), sqrt(sum((ijimag-jiimag)**2)/Ntz)
 
   return
 
@@ -197,15 +144,10 @@ end subroutine tfft
 
 
 
-!latex \subsection{\type{invfft}}
 
-!latex \begin{enumerate}
 
-!latex \item Given the Fourier harmonics, the data on a regular angular grid are constructed.
 
-!latex \item This is the inverse routine to \type{tfft}.
 
-!latex \end{enumerate}
 
 subroutine invfft( mn, im, in, efmn, ofmn, cfmn, sfmn, Nt, Nz, ijreal, ijimag )
 
@@ -229,7 +171,6 @@ subroutine invfft( mn, im, in, efmn, ofmn, cfmn, sfmn, Nt, Nz, ijreal, ijimag )
 
   cplxin(:,:,ithread) = zero
 
-  !Copy real arrays to complex
   do imn = 1,mn ; mm = im(imn) ; nn = in(imn) / Nfp
      cplxin(1 + MOD(Nt - mm, Nt), 1 + MOD(Nz + nn, Nz),ithread) = &
           half * CMPLX(efmn(imn) - sfmn(imn), cfmn(imn) + ofmn(imn), KIND=C_DOUBLE_COMPLEX)
@@ -240,7 +181,6 @@ subroutine invfft( mn, im, in, efmn, ofmn, cfmn, sfmn, Nt, Nz, ijreal, ijimag )
 
   call fftw_execute_dft(planb, cplxin(:,:,ithread), cplxout(:,:,ithread)) !Inverse transform
 
-  !Copy complex result back to real arrays
   do jj=1,Nz
      ijreal((jj-1)*Nt+1:jj*Nt) =  real(cplxout(:,jj,ithread))
      ijimag((jj-1)*Nt+1:jj*Nt) = aimag(cplxout(:,jj,ithread))
@@ -252,15 +192,10 @@ end subroutine invfft
 
 
 
-!latex \subsection{\type{gauleg}}
 
-!latex \begin{enumerate}
 
-!latex \item Compute Gaussian integration weights and abscissae.
 
-!latex \item From Numerical Recipes.
 
-!latex \end{enumerate}
 
 subroutine gauleg( n, weight, abscis, ifail )
   
@@ -279,7 +214,6 @@ subroutine gauleg( n, weight, abscis, ifail )
   REAL               :: z1,z,pp,p3,p2,p1
   REAL, parameter    :: eps = epsilon(z)
 
-  !Error checking
   if( n < 1 ) then ; ifail = 2 ;  return
   endif
 
@@ -292,7 +226,6 @@ subroutine gauleg( n, weight, abscis, ifail )
         z = 0.0
      endif
 
-     !Refine by Newton method
      do iter=1,maxiter
         p1 = one;  p2 = zero           ! Initialize recurrence relation
 
@@ -323,7 +256,6 @@ end subroutine gauleg
 
 #ifdef DELETETHIS
 
-!l tex \subsection{\type{svdcmp}} ! not used; SRH: 27 Feb 18;
 
 subroutine svdcmp(a,m,n,mp,np,w,v)
   use constants,only:zero,one
@@ -334,7 +266,6 @@ subroutine svdcmp(a,m,n,mp,np,w,v)
       REAL ::  a(MP,nP),w(nP),v(nP,nP),rv1(nMaX)
       REAL ::  c,F,g,H,s,X,Y,Z,scale,anorM,pythag,oone
 
-     !stop "svdcmp : to be deleted?"
 
       g=zero
       scale=zero
@@ -561,14 +492,12 @@ subroutine svdcmp(a,m,n,mp,np,w,v)
    
 #ifdef DELETETHIS
    
-!l tex \subsection{\type{pythag}} ! not used; SRH: 27 Feb 18;
 
 REAL function pythag(a,b)  
   implicit none
   REAL ::  a,b
   REAL ::  absa,absb
 
- !stop "pythag : to be deleted?"
 
   absa=abs(a)
   absb=abs(b)
@@ -590,7 +519,6 @@ end function pythag
    
 #ifdef DELETETHIS
 
-!l tex \subsection{\type{svbksb}} ! not used; SRH: 27 Feb 18;
 
 subroutine svbksb(u,w,v,M,n,MP,nP,b,X)
   
@@ -601,7 +529,6 @@ subroutine svbksb(u,w,v,M,n,MP,nP,b,X)
       REAL ::  u(MP,nP),w(nP),v(nP,nP),X(nP),tMP(nMaX)
       REAL ::  s
 
-     !stop "svbksb : to be deleted?"
   
       do 12 j=1,n
          s=0.
@@ -629,7 +556,6 @@ subroutine svbksb(u,w,v,M,n,MP,nP,b,X)
       
 #ifdef DELETETHIS
 
-!l tex \subsection{\type{sort}} ! not used; SRH: 27 Feb 18;
 
       subroutine sort(n,ra)
 
@@ -637,7 +563,6 @@ subroutine svbksb(u,w,v,M,n,MP,nP,b,X)
       integer n,l,ir,i,j
       REAL ::  ra(n),rra
 
-     !stop "sort : to be deleted?"
 
       if(n.eq.1) return
       l=n/2+1
@@ -680,7 +605,6 @@ subroutine svbksb(u,w,v,M,n,MP,nP,b,X)
 
 #ifdef DELETETHIS
      
-!l tex \subsection{\type{singvalues}} ! not used; SRH: 27 Feb 18;
 
       subroutine singvalues(nrow,ncol,Mat,b,sx,cutoff,wsvd) ! nrow = nconstraints ; ncol = nfreedom
       implicit none
@@ -706,7 +630,6 @@ subroutine svbksb(u,w,v,M,n,MP,nP,b,X)
        endif
       enddo
       call svbksb(Mato,wsvdc,vsvd,nrow,ncol,nrow,ncol,b,sx)
-     !Mat=Mato
       call sort(ncol,wsvd)
       return
       end subroutine singvalues
@@ -715,6 +638,5 @@ subroutine svbksb(u,w,v,M,n,MP,nP,b,X)
 
 
 
-!l tex \end{itemize}
 
 

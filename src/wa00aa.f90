@@ -1,9 +1,4 @@
-!> \defgroup grp_smooth_boundary Smooth boundary
-!>
-!> \file
-!> \brief Constructs smooth approximation to wall.
 
-!> \brief ...todo...
 module laplaces
 
   LOGICAL              :: stage1        !< what is this ?
@@ -36,16 +31,6 @@ module laplaces
 
 end module laplaces
 
-!> \brief Constructs smooth approximation to wall.
-!> \ingroup grp_smooth_boundary
-!>
-!> **solution of Laplace's equation in two-dimensions**
-!>
-!> <ul>
-!> <li> The wall is given by a discrete set of points. </li>
-!> <li> The points must go anti-clockwise. </li>
-!> </ul>
-!>
 subroutine wa00aa( iwa00aa )
 
 
@@ -82,7 +67,6 @@ subroutine wa00aa( iwa00aa )
 
    REAL, allocatable    :: RZwall(:,:)
 
-  !REAL                 :: phiwall
 
    external             :: VacuumPhi
 
@@ -117,16 +101,11 @@ subroutine wa00aa( iwa00aa )
 
 
 
-! Rmin = minval( RZwall(1,1:Nwall) )
   Rmax = maxval( RZwall(1,1:Nwall) )
-! Zmin = minval( RZwall(2,1:Nwall) )
-! Zmax = maxval( RZwall(2,1:Nwall) )
-!
   Rmid = half * ( maxval(Rij(1:Ntz,0,0) ) + minval(Rij(1:Ntz,0,0) ) ) ! defined by plasma boundary; 10 Apr 13;
 
 
 
-!                                          boundary points +    nodes  + repeated point + inner boundary + inner nodes
   Nintervals = Nwall-1 + Ntz ; Nsegments =       Nwall     + (Nwall-1) +         1      +    (Ntz+1)     +     Ntz
 
 
@@ -147,7 +126,6 @@ subroutine wa00aa( iwa00aa )
 
   iwall = 0
 
-! outer boundary must go anti-clockwise; 24 Oct 12;
 
    do ii = 1, Nwall-1
     iwall = iwall + 1 ; xpoly(iwall) =          RZwall(1,ii)                    ; ypoly(iwall) =          RZwall(2,ii)                    ! vertices; 24 Oct 12;
@@ -156,11 +134,9 @@ subroutine wa00aa( iwa00aa )
       ii =    Nwall
     iwall = iwall + 1 ; xpoly(iwall) =          RZwall(1,ii)                    ; ypoly(iwall) =          RZwall(2,ii)                    ! last point=first; 24 Oct 12;
 
-! repeated point indicates end of outer boundary; 24 Oct 12;
 
     iwall = iwall + 1 ; xpoly(iwall) =          RZwall(1,ii)                    ; ypoly(iwall) =          RZwall(2,ii)
 
-! inner boundary must go clockwise; 24 Oct 12;
 
    do ii = 1, Ntz-1
     iwall = iwall + 1 ; xpoly(iwall) =          Rij( ii,0,0)                  ; ypoly(iwall) =          Zij( ii,0,0)                  ! vertices; 24 Oct 12;
@@ -184,7 +160,6 @@ subroutine wa00aa( iwa00aa )
 
 
   stage1   = .true.  ! preparation;
- !exterior = .true.  ! unbounded domain;
   exterior = .false. ! interior  domain;
   dorm     = .true.  ! Dirichlet or mixed boundary value problem;
 
@@ -211,7 +186,6 @@ subroutine wa00aa( iwa00aa )
 
 
 
-! the intialization of Laplaces solution is complete; 24 Oct 12;
 
 
 
@@ -284,13 +258,6 @@ end subroutine wa00aa
 
 
 
-!> \brief Compute vacuum magnetic scalar potential (?)
-!> \ingroup grp_smooth_boundary
-!>
-!> @param Nconstraints
-!> @param rho
-!> @param fvec
-!> @param iflag
 subroutine VacuumPhi( Nconstraints, rho, fvec, iflag )
 
 
@@ -312,7 +279,6 @@ subroutine VacuumPhi( Nconstraints, rho, fvec, iflag )
   INTEGER :: Nconstraints, iflag
   REAL    :: rho(1:Nconstraints), fvec(1:Nconstraints), angle, px, py
 
- !REAL    :: phiwall
 
   INTEGER :: ifail
 
@@ -344,7 +310,6 @@ subroutine VacuumPhi( Nconstraints, rho, fvec, iflag )
 
   if( rho(1).lt.zero ) iflag = -1 ! could also check that R, Z are within domain;
 
- !fvec(1) = alpha - phiwall
   fvec(1) = alpha - half
 
 

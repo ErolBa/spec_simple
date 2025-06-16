@@ -1,72 +1,4 @@
-!> \file
-!> \brief Measures error in Beltrami equation, \f$\nabla \times {\bf B} - \mu {\bf B}\f$.
 
-!> \brief Measures error in Beltrami equation, \f$\nabla \times {\bf B} - \mu {\bf B}\f$.
-!> \ingroup grp_diagnostics
-!>
-!> This routine is called by xspech() as a post diagnostic and only if \c Lcheck==1.
-!>
-!> **construction of current,** \f${\bf j} \equiv \nabla \times \nabla \times {\bf A}\f$
-!> <ul>
-!> <li> The components of the vector potential, \f${\bf A}=A_\theta \nabla + A_\zeta \nabla \zeta\f$, are
-!>      \f{eqnarray}{
-!>        A_\theta(s,\theta,\zeta) &=& \sum_{i,l} {\color{red}  A_{\theta,e,i,l}} \; {\overline T}_{l,i}(s) \cos\alpha_i + \sum_{i,l} {\color{Orange}  A_{\theta,o,i,l}} \; {\overline T}_{l,i}(s) \sin\alpha_i, \label{eq:At_jo00aa} \\
-!>        A_\zeta (s,\theta,\zeta) &=& \sum_{i,l} {\color{blue} A_{\zeta, e,i,l}} \; {\overline T}_{l,i}(s) \cos\alpha_i + \sum_{i,l} {\color{Cerulean}A_{\zeta ,o,i,l}} \; {\overline T}_{l,i}(s) \sin\alpha_i, \label{eq:Az_jo00aa}
-!>      \f}
-!>      where \f${\overline T}_{l,i}(s) \equiv \bar s^{m_i/2} \, T_l(s)\f$, \f$T_l(s)\f$ is the Chebyshev polynomial, and \f$\alpha_j \equiv m_j\theta-n_j\zeta\f$.
-!>      The regularity factor, \f$\bar s^{m_i/2}\f$, where \f$\bar s \equiv (1+s)/2\f$, is only included if there is a coordinate singularity in the domain
-!>      (i.e. only in the innermost volume, and only in cylindrical and toroidal geometry.) </li>
-!> <li> The magnetic field, \f$\sqrt g \, {\bf B} = \sqrt g B^s {\bf e}_s + \sqrt g B^\theta {\bf e}_\theta + \sqrt g B^\zeta {\bf e}_\zeta\f$, is
-!>      \f{eqnarray}{
-!>        \begin{array}{ccccrcrcrcrcccccccccccccccccccccccccccccccccccccccccccccccccccc}
-!>        \sqrt g \, {\bf B} & = & {\bf e}_s      & \sum_{i,l} [ ( & - m_i {\color{blue} A_{\zeta, e,i,l}} & - & n_i {\color{red}  A_{\theta,e,i,l}} & ) {\overline T}_{l,i}        \sin\alpha_i + ( & + m_i {\color{Cerulean}A_{\zeta ,o,i,l}} & + & n_i {\color{Orange}  A_{\theta,o,i,l}} & ) {\overline T}_{l,i}        \cos\alpha_i ] \\
-!>                           & + & {\bf e}_\theta & \sum_{i,l} [ ( &                                       & - &     {\color{blue} A_{\zeta, e,i,l}} & ) {\overline T}_{l,i}^\prime \cos\alpha_i + ( &                                          & - &     {\color{Cerulean}A_{\zeta ,o,i,l}} & ) {\overline T}_{l,i}^\prime \sin\alpha_i ] \\
-!>                           & + & {\bf e}_\zeta  & \sum_{i,l} [ ( &       {\color{red}  A_{\theta,e,i,l}} &   &                                     & ) {\overline T}_{l,i}^\prime \cos\alpha_i + ( &       {\color{Orange}  A_{\theta,o,i,l}} &   &                                        & ) {\overline T}_{l,i}^\prime \sin\alpha_i ]
-!>        \end{array}
-!>      \f} </li>
-!> <li> The current is
-!>      \f{eqnarray}{ \sqrt g \, {\bf j} = ( \partial_\theta B_\zeta  - \partial_\zeta  B_\theta) \; {\bf e}_s
-!>                                       + ( \partial_\zeta  B_s      - \partial_s      B_\zeta ) \; {\bf e}_\theta
-!>                                       + ( \partial_s      B_\theta - \partial_\theta B_s     ) \; {\bf e}_\zeta ,
-!>      \f}
-!>      where (for computational convenience) the covariant components of \f${\bf B}\f$ are computed as
-!>      \f{eqnarray}{
-!>        B_s      & = & (\sqrt g B^s) \, g_{ss     } / \sqrt g + (\sqrt g B^\theta) \, g_{s     \theta} / \sqrt g + (\sqrt g B^\zeta) \, g_{s     \zeta} / \sqrt g, \\
-!>        B_\theta & = & (\sqrt g B^s) \, g_{s\theta} / \sqrt g + (\sqrt g B^\theta) \, g_{\theta\theta} / \sqrt g + (\sqrt g B^\zeta) \, g_{\theta\zeta} / \sqrt g, \\
-!>        B_\zeta  & = & (\sqrt g B^s) \, g_{s\zeta } / \sqrt g + (\sqrt g B^\theta) \, g_{\theta\zeta } / \sqrt g + (\sqrt g B^\zeta) \, g_{\zeta \zeta} / \sqrt g.
-!>      \f} </li>
-!> </ul>
-!>
-!> **quantification of the error**
-!> <ul>
-!> <li> The measures of the error are
-!>      \f{eqnarray}{
-!>          ||\left( {\bf j}-\mu {\bf B}\right)\cdot\nabla s      || &  \equiv  &
-!>        \int \!\! ds \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \left| \sqrt g \, {\bf j}\cdot\nabla s     -\mu \; \sqrt g \, {\bf B} \cdot\nabla s      \right|, \label{eq:Es_jo00aa} \\
-!>          ||\left( {\bf j}-\mu {\bf B}\right)\cdot\nabla \theta || &  \equiv  &
-!>        \int \!\! ds \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \left| \sqrt g \, {\bf j}\cdot\nabla \theta-\mu \; \sqrt g \, {\bf B} \cdot\nabla \theta \right|, \label{eq:Et_jo00aa} \\
-!>          ||\left( {\bf j}-\mu {\bf B}\right)\cdot\nabla \zeta  || &  \equiv  &
-!>        \int \!\! ds \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \left| \sqrt g \, {\bf j}\cdot\nabla \zeta -\mu \; \sqrt g \, {\bf B} \cdot\nabla \zeta  \right|. \label{eq:Ez_jo00aa}
-!>      \f} </li>
-!> </ul>
-!>
-!> **comments**
-!> <ul>
-!> <li>  Is there a better definition and quantification of the error? For example, should we employ an error measure that is dimensionless? </li>
-!> <li>  If the coordinate singularity is in the domain, then \f$|\nabla\theta|\rightarrow\infty\f$ at the coordinate origin.
-!>       What then happens to \f$||\left( {\bf j}-\mu {\bf B}\right)\cdot\nabla \theta ||\f$ as defined in Eqn.\f$(\ref{eq:Et_jo00aa})\f$? </li>
-!> <li>  What is the predicted scaling of the error in the Chebyshev-Fourier representation scale with numerical resolution?
-!>       Note that the predicted error scaling for \f$E^s\f$, \f$E^\theta\f$ and \f$E^\zeta\f$ may not be standard,
-!>       as various radial derivatives are taken to compute the components of \f${\bf j}\f$.
-!>       (See for example the discussion in Sec.IV.C in Hudson et al. (2011) \cite y2011_hudson ,
-!>       where the expected scaling of the error for a finite-element implementation is confirmed numerically.) </li>
-!> <li>  Instead of using Gaussian integration to compute the integral over \f$s\f$, an adaptive quadrature algorithm may be preferable. </li>
-!> </ul>
-!>
-!> @param[in] lvol  in which volume should the Beltrami error be computed
-!> @param[in] Ntz   number of grid points in \f$\theta\f$ and \f$\zeta\f$
-!> @param[in] lquad degree of Gaussian quadrature
-!> @param[in] mn    number of Fourier harmonics
 subroutine jo00aa( lvol, Ntz, lquad, mn )
 
 
@@ -95,7 +27,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
   LOCALS
 
-!                        these are really global, but are included in argument list to remove allocations
   INTEGER, intent(in) :: lvol, Ntz, lquad, mn
 
   INTEGER             :: jquad, Lcurvature, ll, ii, jj, kk, uu, ideriv, twolquad, mm, jk
@@ -113,18 +44,11 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
   BEGIN(jo00aa)
 
 
-!> **details of the numerics**
-!> <ul>
-!> <li> The integration over \f$s\f$ is performed using Gaussian integration, e.g., \f$\displaystyle \int \!\! f(s) ds \approx \sum_k \omega_k f(s_k)\f$;
-!>      with the abscissae, \f$s_k\f$, and the weights, \f$\omega_k\f$, for \f$k=1,\f$ \c Iquad\f$_v\f$, determined by \c CDGQF.
-!>      The resolution, \c N \f$ \equiv \f$ \c Iquad\f$_v\f$, is determined by \c Nquad  (see global.f90 and preset() ).
-!>      A fatal error is enforced by jo00aa() if \c CDGQF returns an \c ifail \f$\ne 0\f$. </li>
   itype = 1 ; aa = -one ; bb = +one ; cc = zero ; dd = zero ; twolquad = 2 * lquad
 
   call CDGQF( lquad, abscis(1:lquad), weight(1:lquad), itype, aa, bb, twolquad, workfield(1:twolquad), icdgqf ) ! prepare Gaussian quadrature;
   weight(lquad+1) = zero
 
-! write(ounit,'("jo00aa :  WARNING ! : THE ERROR FLAGS RETURNED BY CDGQF SEEM DIFFERENT TO NAG:D01BCF (may be trivial, but please revise); 2018/01/10;")')
 
   cput= GETTIME
   select case( icdgqf ) !                                                         123456789012345
@@ -152,8 +76,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
 
 
-!> <li>  Inside the Gaussian quadrature loop, i.e. for each \f$s_k\f$,
-!>       <ul>
 
   do jquad = 1, lquad+1 ! loop over radial sub-sub-grid (numerical quadrature);
 
@@ -163,10 +85,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
     lss = abscis(jquad) ; sbar = ( lss + one ) * half
    endif
 
-!>       <li>  The metric elements, \f$g_{\mu,\nu} \equiv \f$ \c gij(1:6,0,1:Ntz), and the Jacobian, \f$\sqrt g \equiv \f$ \c sg(0,1:Ntz),
-!>             are calculated on a regular angular grid, \f$(\theta_i,\zeta_j)\f$, in coords().
-!>             The derivatives \f$\partial_i g_{\mu,\nu} \equiv\f$ \c gij(1:6,i,1:Ntz) and \f$\partial_i \sqrt g \equiv \f$ \c sg(i,1:Ntz),
-!>             with respect to \f$ i \in \{ s,\theta,\zeta \}\f$ are also returned. </li>
 
    Lcurvature = 2
 
@@ -188,7 +106,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
    Azomn(1:mn,0:2) = zero
    endif
 
-!>       <li>  The Fourier components of the vector potential given in Eqn.\f$(\ref{eq:At_jo00aa})\f$ and Eqn.\f$(\ref{eq:Az_jo00aa})\f$, and their first and second radial derivatives, are summed. </li>
 
    if (Lcoordinatesingularity) then
     do ll = 0, Lrad(lvol) ! radial (Chebyshev) resolution of magnetic vector potential;
@@ -226,8 +143,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
     do ll = 0, Lrad(lvol) ! radial (Chebyshev) resolution of magnetic vector potential;
 
-!>       <li>  The quantities \f$\sqrt g B^s\f$, \f$\sqrt g B^\theta\f$ and \f$\sqrt g B^\zeta\f$, and their first and second derivatives with respect to \f$(s,\theta,\zeta)\f$,
-!>             are computed on the regular angular grid (using FFTs). </li>
 
       do ii = 1, mn  ! Fourier resolution of magnetic vector potential;
 
@@ -298,27 +213,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
    call invfft( mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz,3,2), gBu(1:Ntz,3,3) ) ! d(gB^z)/dt, d(gB^z)/dz;
 
-!>       <li>  The following quantities are then computed on the regular angular grid
-!>             \f{eqnarray}{ \sqrt g j^s      & = & \sum_u \left[
-!>                           \partial_\theta (\sqrt g B^u) \; g_{u,\zeta } + (\sqrt g B^u) \; \partial_\theta g_{u,\zeta } - (\sqrt g B^u) g_{u,\zeta } \; \partial_\theta \sqrt g / \sqrt g
-!>                                                    \right] / \sqrt g \nonumber \\
-!>                                       & - & \sum_u \left[
-!>                           \partial_\zeta  (\sqrt g B^u) \; g_{u,\theta} + (\sqrt g B^u) \; \partial_\zeta  g_{u,\theta} - (\sqrt g B^u) g_{u,\theta} \; \partial_\zeta  \sqrt g / \sqrt g
-!>                                                    \right] / \sqrt g, \\
-!>                           \sqrt g j^\theta & = & \sum_u \left[
-!>                           \partial_\zeta  (\sqrt g B^u) \; g_{u,s     } + (\sqrt g B^u) \; \partial_\zeta  g_{u,s     } - (\sqrt g B^u) g_{u,s     } \; \partial_\zeta  \sqrt g / \sqrt g
-!>                                                    \right] / \sqrt g \nonumber \\
-!>                                       & - & \sum_u \left[
-!>                           \partial_s      (\sqrt g B^u) \; g_{u,\zeta } + (\sqrt g B^u) \; \partial_s      g_{u,\zeta } - (\sqrt g B^u) g_{u,\zeta } \; \partial_s      \sqrt g / \sqrt g
-!>                                                    \right] / \sqrt g, \\
-!>                           \sqrt g j^\zeta  & = & \sum_u \left[
-!>                           \partial_s      (\sqrt g B^u) \; g_{u,\theta} + (\sqrt g B^u) \; \partial_s      g_{u,\theta} - (\sqrt g B^u) g_{u,\theta} \; \partial_s      \sqrt g / \sqrt g
-!>                                                    \right] / \sqrt g \nonumber \\
-!>                                       & - & \sum_u \left[
-!>                           \partial_\theta (\sqrt g B^u) \; g_{u,s     } + (\sqrt g B^u) \; \partial_\theta g_{u,s     } - (\sqrt g B^u) g_{u,s     } \; \partial_\theta \sqrt g / \sqrt g
-!>                                                    \right] / \sqrt g.
-!>             \f} </li>
-!>       </ul>
 
    do ii = 1, 3
 
@@ -362,7 +256,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
    if (Lerrortype.eq.1 .and. Igeometry .eq. 3) then
     do ii = 1, 3 ; jerror(ii) = jerror(ii) + weight(jquad) *sum(sg(1:Ntz,0)*abs(  J_cartesian(1:Ntz,ii) - mu(lvol) * B_cartesian(1:Ntz,ii)  ) )
-                  !if (maxval(abs(  J_cartesian(1:Ntz,ii) - mu(lvol) * B_cartesian(1:Ntz,ii)  )) > jerrormax(ii)) write(ounit,*) ii, lss,maxval(abs(  J_cartesian(1:Ntz,ii) - mu(lvol) * B_cartesian(1:Ntz,ii)  ))
     ;            ; jerrormax(ii) = max(jerrormax(ii), maxval(abs(  J_cartesian(1:Ntz,ii) - mu(lvol) * B_cartesian(1:Ntz,ii)  )))
     enddo
    else
@@ -387,7 +280,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
     ;              ; write(ounit,1005) cput-cpus, myid, lvol, Lrad(lvol), jerrormax(1:3), cput-cpui ! write error to screen;
   endif
 
-!> <li>  The error is stored into an array called \c beltramierror which is then written to the HDF5 file in hdfint(). </li>
 
 1002 format("jo00aa : ",f10.2," : myid=",i3," ; lvol =",i3," ; lrad =",i3," ; AVG E^\R="es23.15" , E^\Z="es23.15" , E^\phi="es23.15" ; time="f8.2"s ;")
 1003 format("jo00aa : ",f10.2," : myid=",i3," ; lvol =",i3," ; lrad =",i3," ; MAX E^\R="es23.15" , E^\Z="es23.15" , E^\phi="es23.15" ; time="f8.2"s ;")
@@ -396,7 +288,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
 
 
-! check boundary condition
   jerror = zero
   ivol = lvol
 
@@ -423,7 +314,6 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
   endif
   cput = GETTIME ; write(ounit,1006) cput-cpus, myid, lvol, Lrad(lvol), jerror(1:2), cput-cpui ! write error to screen;
 
-  ! check fluxes
   Bst = zero
 
   if (Lcoordinatesingularity) then
@@ -451,6 +341,5 @@ subroutine jo00aa( lvol, Ntz, lquad, mn )
 
   RETURN(jo00aa)
 
-!> </ul>
 
 end subroutine jo00aa

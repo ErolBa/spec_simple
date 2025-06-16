@@ -1,48 +1,4 @@
-!> \defgroup grp_output Output file(s)
-!>
-!> \file
-!> \brief Writes vector potential to \c .ext.sp.A .
 
-!> \brief Writes vector potential to \c .ext.sp.A .
-!> \ingroup grp_output
-!>
-!> **representation of vector potential**
-!>
-!> <ul>
-!> <li> The components of the vector potential, \f${\bf A}=A_\theta \nabla + A_\zeta \nabla \zeta\f$, are
-!>      \f{eqnarray}{
-!>        A_\theta(s,\theta,\zeta) &=& \sum_{i,l} {\color{red}  A_{\theta,e,i,l}} \; {\overline T}_{l,i}(s) \cos\alpha_i + \sum_{i,l} {\color{Orange}  A_{\theta,o,i,l}} \; {\overline T}_{l,i}(s) \sin\alpha_i, \label{eq:At_ra00aa} \\
-!>        A_\zeta( s,\theta,\zeta) &=& \sum_{i,l} {\color{blue} A_{\zeta, e,i,l}} \; {\overline T}_{l,i}(s) \cos\alpha_i + \sum_{i,l} {\color{Cerulean}A_{\zeta ,o,i,l}} \; {\overline T}_{l,i}(s) \sin\alpha_i, \label{eq:Az_ra00aa}
-!>      \f}
-!>      where \f${\overline T}_{l,i}(s) \equiv \bar s^{m_i/2} \, T_l(s)\f$, \f$T_l(s)\f$ is the Chebyshev polynomial, and \f$\alpha_j \equiv m_j\theta-n_j\zeta\f$.
-!>      The regularity factor, \f$\bar s^{m_i/2}\f$, where \f$\bar s \equiv (1+s)/2\f$, is only included if there is a coordinate singularity in the domain
-!>      (i.e. only in the innermost volume, and only in cylindrical and toroidal geometry.) </li>
-!> </ul>
-!>
-!> **file format**
-!>
-!> <ul>
-!> <li> The format of the files containing the vector potential is as follows:
-!> ```
-!> open(aunit, file="."//trim(ext)//".sp.A", status="replace", form="unformatted" )
-!> write(aunit) Mvol, Mpol, Ntor, mn, Nfp ! integers;
-!> write(aunit) im(1:mn) ! integers; poloidal modes;
-!> write(aunit) in(1:mn) ! integers; toroidal modes;
-!> do vvol = 1, Mvol ! integers; loop over volumes;
-!> write(aunit) Lrad(vvol) ! integers; the radial resolution in each volume may be different;
-!> do ii = 1, mn
-!> write(aunit) Ate(vvol,ii)%s(0:Lrad(vvol)) ! reals;
-!> write(aunit) Aze(vvol,ii)%s(0:Lrad(vvol)) ! reals;
-!> write(aunit) Ato(vvol,ii)%s(0:Lrad(vvol)) ! reals;
-!> write(aunit) Azo(vvol,ii)%s(0:Lrad(vvol)) ! reals;
-!> enddo ! end of do ii;
-!> enddo ! end of do vvol;
-!> close(aunit)
-!> ```
-!> </li>
-!> </ul>
-!>
-!> @param[in] writeorread 'W' to write the vector potential; 'R' to read it
 subroutine ra00aa( writeorread )
 
 
@@ -89,7 +45,6 @@ subroutine ra00aa( writeorread )
 
   case( 'W' ) ! write vector potential harmonics to file;
 
-   ! determine total radial dimension: sum(Lrad(1:Mvol)+1)
    sumLrad = sum(Lrad(1:Mvol)+1)
 
    allocate(allAte(1:sumLrad,1:mn))
@@ -97,12 +52,9 @@ subroutine ra00aa( writeorread )
    allocate(allAto(1:sumLrad,1:mn))
    allocate(allAzo(1:sumLrad,1:mn))
 
-   ! collect data in 2D arrays which can be written more conveniently
    sumLrad = 1
    do vvol = 1, Mvol
 
-    ! TODO: MPI_allgather ????
-    ! or at least selective via IsMyVolume()
 
     do ii = 1, mn ! loop over Fourier harmonics;
      allAte(sumLrad:sumLrad+Lrad(vvol),ii) = Ate(vvol,ideriv,ii)%s(0:Lrad(vvol))
@@ -113,13 +65,10 @@ subroutine ra00aa( writeorread )
     sumLrad = sumLrad+Lrad(vvol)+1
    enddo ! end of do vvol;  6 Feb 13;
 
-   ! determine total radial dimension: sum(Lrad(1:Mvol)+1)
    sumLrad = sum(Lrad(1:Mvol)+1)
 
-   ! HDF5 calls have to be done from all CPUs when using the collective API
    WCALL( ra00aa, write_vector_potential, (sumLrad, allAte, allAze, allAto, allAzo) )
 
-   ! clean up after yourself
    deallocate(allAte)
    deallocate(allAze)
    deallocate(allAto)
@@ -129,7 +78,6 @@ subroutine ra00aa( writeorread )
 
   case( 'R' ) ! read potential from file; interpolate onto new radial grid;
 
-   !FATAL( ra00aa, .true., under reconstruction )
 
    if( myid.eq.0 ) then
 
@@ -215,12 +163,10 @@ subroutine ra00aa( writeorread )
      RlBCAST( Ate(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, llmodnp )
      RlBCAST( Aze(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, llmodnp )
     enddo
-   !if( NOTstellsym ) then
     do ii = 1, mn
      RlBCAST( Ato(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, llmodnp )
      RlBCAST( Azo(vvol,ideriv,ii)%s(0:Lrad(vvol)), Lrad(vvol)+1, llmodnp )
     enddo
-   !endif
 
    enddo ! end of do vvol; 26 Feb 13;
 

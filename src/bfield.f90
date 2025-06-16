@@ -1,53 +1,4 @@
-!> \defgroup grp_diagnostics Diagnostics to check the code
-!>
-!> \latexonly
-!> \definecolor{Orange}{rgb}{1.0,0.5,0.0}
-!> \definecolor{Cerulean}{rgb}{0.0,0.5,1.0}
-!> \endlatexonly
-!>
-!> \file
-!> \brief Returns \f$\dot s \equiv B^s / B^\zeta\f$ and \f$\dot \theta \equiv B^\theta / B^\zeta\f$.
 
-!> \brief Compute the magnetic field.
-!> \ingroup grp_diagnostics
-!>
-!> Returns the magnetic field field line equations, \f$ d{\bf x}/d\phi = {\bf B}/B^\phi \f$ .
-!>
-!> **Equations of field line flow**
-!> <ul>
-!> <li> The equations for the fieldlines are normalized to the toroidal field, i.e.
-!>       \f{equation}{ \dot s      \equiv \frac{B^s     }{B^\zeta}, \qquad
-!>                     \dot \theta \equiv \frac{B^\theta}{B^\zeta}. \label{eq:stdot_bfield} \f} </li>
-!> </ul>
-!>
-!> **Representation of magnetic field**
-!> <ul>
-!> <li> The components of the vector potential, \f${\bf A}=A_\theta \nabla + A_\zeta \nabla \zeta\f$, are
-!>      \f{eqnarray}{
-!>        A_\theta(s,\theta,\zeta) &=& \sum_{i,l} {\color{red}  A_{\theta,e,i,l}} \; {\overline T}_{l,i}(s) \cos\alpha_i + \sum_{i,l} {\color{Orange}  A_{\theta,o,i,l}} \; {\overline T}_{l,i}(s) \sin\alpha_i, \label{eq:At_bfield} \\
-!>        A_\zeta( s,\theta,\zeta) &=& \sum_{i,l} {\color{blue} A_{\zeta, e,i,l}} \; {\overline T}_{l,i}(s) \cos\alpha_i + \sum_{i,l} {\color{Cerulean}A_{\zeta ,o,i,l}} \; {\overline T}_{l,i}(s) \sin\alpha_i, \label{eq:Az_bfield}
-!>      \f}
-!>      where \f${\overline T}_{l,i}(s) \equiv \bar s^{m_i/2} \, T_l(s)\f$, \f$T_l(s)\f$ is the Chebyshev polynomial, and \f$\alpha_j \equiv m_j\theta-n_j\zeta\f$.
-!>      The regularity factor, \f$\bar s^{m_i/2}\f$, where \f$\bar s \equiv (1+s)/2\f$, is only included if there is a coordinate singularity in the domain
-!>      (i.e. only in the innermost volume, and only in cylindrical and toroidal geometry.) </li>
-!> <li> The magnetic field, \f$\sqrt g \, {\bf B} = \sqrt g B^s {\bf e}_s + \sqrt g B^\theta {\bf e}_\theta + \sqrt g B^\zeta {\bf e}_\zeta\f$, is
-!>      \f{eqnarray}{
-!>        \begin{array}{ccccrcrcrcrcccccccccccccccccccccccccccccccccccccccccccccccccccc}
-!>        \sqrt g \, {\bf B} & = & {\bf e}_s      & \sum_{i,l} [ ( & - m_i {\color{blue} A_{\zeta, e,i,l}} & - & n_i {\color{red}  A_{\theta,e,i,l}} & ) {\overline T}_{l,i}        \sin\alpha_i + ( & + m_i {\color{Cerulean}A_{\zeta ,o,i,l}} & + & n_i {\color{Orange}  A_{\theta,o,i,l}} & ) {\overline T}_{l,i}        \cos\alpha_i ] \\
-!>                           & + & {\bf e}_\theta & \sum_{i,l} [ ( &                                       & - &     {\color{blue} A_{\zeta, e,i,l}} & ) {\overline T}_{l,i}^\prime \cos\alpha_i + ( &                                          & - &     {\color{Cerulean}A_{\zeta ,o,i,l}} & ) {\overline T}_{l,i}^\prime \sin\alpha_i ] \\
-!>                           & + & {\bf e}_\zeta  & \sum_{i,l} [ ( &       {\color{red}  A_{\theta,e,i,l}} &   &                                     & ) {\overline T}_{l,i}^\prime \cos\alpha_i + ( &       {\color{Orange}  A_{\theta,o,i,l}} &   &                                        & ) {\overline T}_{l,i}^\prime \sin\alpha_i ]
-!>        \end{array}
-!>      \f}
-!> </li>
-!> <li> In Eqn.\f$(\ref{eq:stdot_bfield})\f$ , the coordinate Jacobian, \f$\sqrt g\f$, cancels.
-!>   No coordinate metric information is required to construct the fieldline equations from the magnetic vector potential. </li>
-!> </ul>
-!> IT IS REQUIRED TO SET IVOL THROUGH GLOBAL MEMORY BEFORE CALLING BFIELD.
-!>
-!> The format of this subroutine is constrained by the NAG ode integration routines.
-!> @param[in] zeta toroidal angle \f$ \zeta \f$
-!> @param[in] st radial coordinate \f$s\f$ and poloidal angle \f$\theta\f$
-!> @param[out] Bst tangential magnetic field directions \f$B_s, B_\theta\f$
 subroutine bfield( zeta, st, Bst )
 
 
@@ -165,9 +116,6 @@ subroutine bfield( zeta, st, Bst )
                              cput-cpus, lvol,        zeta,             st(1:2),                       dBu(3)
 
    FATAL( bfield, abs(dBu(3)).lt.vsmall, field is not toroidal )
-   !if( abs( dBu(3)).lt.vsmall ) then
-   !    write(ounit,'("WARNING: bfield: field is not toroidal")')
-   !endif
   endif
 
 
@@ -182,11 +130,6 @@ subroutine bfield( zeta, st, Bst )
 
 end subroutine bfield
 
-!> \brief compute the tangential magnetic field
-!>
-!> @param[in] zeta toroidal angle
-!> @param[in] st radial(s) and poloidal(theta) positions
-!> @param[out] Bst tangential magnetic field
 subroutine bfield_tangent( zeta, st, Bst )
 
 
@@ -234,7 +177,6 @@ subroutine bfield_tangent( zeta, st, Bst )
 
   lss = st(1) ; teta = st(2) ;
 
-  ! the perturbation
   deltax(1:2,1) = st(3:4);
   deltax(1:2,2) = st(5:6);
 
@@ -277,28 +219,22 @@ subroutine bfield_tangent( zeta, st, Bst )
 
 
    do ll = 0, Lrad(lvol) ! loop over Chebyshev summation; 20 Feb 13;
-    ! no derivative
     ;dBu(1,0) = dBu(1,0) + ( - mi * Aze(lvol,ideriv,ii)%s(ll) - ni * Ate(lvol,ideriv,ii)%s(ll) ) * TT(ll,0) * sarg
     ;dBu(2,0) = dBu(2,0) + (                                  -      Aze(lvol,ideriv,ii)%s(ll) ) * TT(ll,1) * carg
     ;dBu(3,0) = dBu(3,0) + (        Ate(lvol,ideriv,ii)%s(ll)                                  ) * TT(ll,1) * carg
-    ! ds
     ;dBu(1,1) = dBu(1,1) + ( - mi * Aze(lvol,ideriv,ii)%s(ll) - ni * Ate(lvol,ideriv,ii)%s(ll) ) * TT(ll,1) * sarg
     ;dBu(2,1) = dBu(2,1) + (                                  -      Aze(lvol,ideriv,ii)%s(ll) ) * TT(ll,2) * carg
     ;dBu(3,1) = dBu(3,1) + (        Ate(lvol,ideriv,ii)%s(ll)                                  ) * TT(ll,2) * carg
-    ! dtheta
     ;dBu(1,2) = dBu(1,2) + mi * ( - mi * Aze(lvol,ideriv,ii)%s(ll) - ni * Ate(lvol,ideriv,ii)%s(ll) ) * TT(ll,0) * carg
     ;dBu(2,2) = dBu(2,2) - mi * (                                  -      Aze(lvol,ideriv,ii)%s(ll) ) * TT(ll,1) * sarg
     ;dBu(3,2) = dBu(3,2) - mi * (        Ate(lvol,ideriv,ii)%s(ll)                                  ) * TT(ll,1) * sarg
     if( NOTstellsym ) then ! include non-symmetric harmonics; 28 Jan 13;
-     ! no derivative
      dBu(1,0) = dBu(1,0) + ( + mi * Azo(lvol,ideriv,ii)%s(ll) + ni * Ato(lvol,ideriv,ii)%s(ll) ) * TT(ll,0) * carg
      dBu(2,0) = dBu(2,0) + (                                  -      Azo(lvol,ideriv,ii)%s(ll) ) * TT(ll,1) * sarg
      dBu(3,0) = dBu(3,0) + (        Ato(lvol,ideriv,ii)%s(ll)                                  ) * TT(ll,1) * sarg
-     ! ds
      dBu(1,1) = dBu(1,1) + ( + mi * Azo(lvol,ideriv,ii)%s(ll) + ni * Ato(lvol,ideriv,ii)%s(ll) ) * TT(ll,1) * carg
      dBu(2,1) = dBu(2,1) + (                                  -      Azo(lvol,ideriv,ii)%s(ll) ) * TT(ll,2) * sarg
      dBu(3,1) = dBu(3,1) + (        Ato(lvol,ideriv,ii)%s(ll)                                  ) * TT(ll,2) * sarg
-     ! dtheta
      dBu(1,2) = dBu(1,2) - mi * ( + mi * Azo(lvol,ideriv,ii)%s(ll) + ni * Ato(lvol,ideriv,ii)%s(ll) ) * TT(ll,0) * sarg
      dBu(2,2) = dBu(2,2) + mi * (                                  -      Azo(lvol,ideriv,ii)%s(ll) ) * TT(ll,1) * carg
      dBu(3,2) = dBu(3,2) + mi * (        Ato(lvol,ideriv,ii)%s(ll)                                  ) * TT(ll,1) * carg
@@ -331,7 +267,6 @@ subroutine bfield_tangent( zeta, st, Bst )
   Bst(1:2) = dBu(1:2,0) / gBzeta ! normalize field line equations to toroidal field; 20 Apr 13;
 
 
-  ! assemble the tangent matrix
   M(1,1) = (dBu(1,1) * dBu(3,0) - dBu(3,1) * dBu(1,0)) / gBzeta**2   ! d(Bs/Bz)/ds
   M(1,2) = (dBu(1,2) * dBu(3,0) - dBu(3,2) * dBu(1,0)) / gBzeta**2   ! d(Bs/Bz)/dt
   M(2,1) = (dBu(2,1) * dBu(3,0) - dBu(3,1) * dBu(2,0)) / gBzeta**2   ! d(Bt/Bz)/ds

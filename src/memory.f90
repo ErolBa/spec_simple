@@ -1,10 +1,4 @@
-!> \file
-!> \brief memory management module
 
-!> \brief allocate Beltrami matrices
-!>
-!> @param vvol
-!> @param LcomputeDerivatives
 subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
   use fileunits
@@ -33,7 +27,6 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
       SALLOCATE( Ddotx, (0:NN), zero)
   endif
 
-  ! we will need the rest even with or without matrix-free
   SALLOCATE( dMB, (0:NN,0: 2), zero )
   SALLOCATE( dMG, (0:NN     ), zero )
 
@@ -54,9 +47,6 @@ end subroutine allocate_Beltrami_matrices
 
 
 
-!> \brief deallocate Beltrami matrices
-!>
-!> @param LcomputeDerivatives
 subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
   use fileunits
@@ -102,13 +92,8 @@ end subroutine deallocate_Beltrami_matrices
 
 
 
-!> \brief allocate geometry matrices
-!>
-!> @param vvol
-!> @param LcomputeDerivatives
 subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
 
-! Allocate all geometry dependent matrices for a given ll
 
   use constants, only: zero
 
@@ -137,11 +122,9 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
   if (Lcoordinatesingularity) then ! different radial dof for Zernike; 02 Jul 19
     lldof = (Lrad(vvol) - mod(Lrad(vvol),2)) / 2
     if (YESMatrixFree .and. .not. LcomputeDerivatives) then
-      ! we only need a reduced number of terms to be computed for the preconditioner
       iidof = Mpol + 1
       jjdof = 1
     else
-      ! we need full-size matrices
       iidof = mn
       jjdof = mn
     endif
@@ -216,12 +199,8 @@ end subroutine allocate_geometry_matrices
 
 
 
-!> \brief deallocate geometry matrices
-!>
-!> @param LcomputeDerivatives
 subroutine deallocate_geometry_matrices(LcomputeDerivatives)
 
-! Deallocate all geometry dependent matrices
   use constants, only: zero
 
   use fileunits

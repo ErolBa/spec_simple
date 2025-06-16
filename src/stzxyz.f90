@@ -1,21 +1,4 @@
-!> \file
-!> \brief Calculates coordinates, \f${\bf x}(s,\theta,\zeta) \equiv R \, {\bf e}_R + Z \, {\bf e}_Z\f$, and metrics, at given \f$(s,\theta,\zeta)\f$.
 
-!> \brief Calculates coordinates, \f${\bf x}(s,\theta,\zeta) \equiv R \, {\bf e}_R + Z \, {\bf e}_Z\f$, and metrics, at given \f$(s,\theta,\zeta)\f$.
-!> \ingroup grp_diagnostics
-!>
-!> <ul>
-!> <li> This routine is a "copy" of co01aa(),
-!>       which calculates the coordinate information on a regular, discrete grid in \f$\theta\f$ and \f$\zeta\f$ at given \f$s\f$
-!>       whereas stzxyz() calculates the coordinate information at a single point \f$(s,\theta,\zeta)\f$. </li>
-!> <li> \todo Please see co01aa() for documentation.
-!>
-!> </li>
-!> </ul>
-!>
-!> @param[in]  lvol
-!> @param[in]  stz
-!> @param[out] RpZ
 subroutine stzxyz( lvol , stz , RpZ )
 
 
@@ -61,9 +44,7 @@ subroutine stzxyz( lvol , stz , RpZ )
 
 
    Remn = zero ; Zomn = zero
-!  if( NOTstellsym ) then
    Romn = zero ; Zemn = zero
-!  endif
 
    if( Lcoordinatesingularity ) then
 

@@ -1,15 +1,4 @@
-!> \file
-!> \brief Evaluates volume integrals, and their derivatives w.r.t. interface geometry, using "packed" format.
 
-!> \brief Evaluates volume integrals, and their derivatives w.r.t. interface geometry, using "packed" format.
-!> \ingroup grp_integrals
-!>
-!> @param[in] pNN
-!> @param[in] xi
-!> @param[out] Fxi
-!> @param[out] DFxi
-!> @param[in] Ldfjac
-!> @param[in] iflag
 subroutine df00ab( pNN , xi , Fxi , DFxi , Ldfjac , iflag )
 
 
@@ -21,7 +10,6 @@ subroutine df00ab( pNN , xi , Fxi , DFxi , Ldfjac , iflag )
   use cputiming
   use allglobal, only : myid, cpus, MPI_COMM_SPEC, &
                         dMA, dMD, & ! energy and helicity matrices; 26 Feb 13;
-!                       MBpsi, MEpsi, psiMCpsi, psiMFpsi, & ! pre-calculated matrix vector products; 26 Feb 13;
                         MBpsi,                            & ! pre-calculated matrix vector products; 26 Feb 13;
                         ivol
 
@@ -54,10 +42,8 @@ subroutine df00ab( pNN , xi , Fxi , DFxi , Ldfjac , iflag )
 
   case( 1 ) ! return d F;
 
-! !Fxi(   0) = - half * sum( xi(1:NN) * matmul( dMD(1:NN,1:NN), xi(1:NN) ) ) - sum( xi(1:NN) * MEpsi(1:NN) ) - psiMFpsi + helicity(ivol)
    Fxi(   0) = - half * sum( xi(1:NN) * matmul( dMD(1:NN,1:NN), xi(1:NN) ) )                                            + helicity(ivol)
 
-! !Fxi(1:NN) = matmul( dMA(1:NN,1:NN), xi(1:NN)  ) + MBpsi(1:NN) - lmu * ( matmul( dMD(1:NN,1:NN), xi(1:NN)  ) + MEpsi(1:NN) )
    Fxi(1:NN) = matmul( dMA(1:NN,1:NN), xi(1:NN)  ) + MBpsi(1:NN) - lmu * ( matmul( dMD(1:NN,1:NN), xi(1:NN)  )               )
 
   case( 2 ) ! return ddF;

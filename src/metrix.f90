@@ -1,40 +1,4 @@
-!> \defgroup grp_metrics Metric quantities
-!>
-!> \file
-!> \brief Calculates the metric quantities, \f$\sqrt g \, g^{\mu\nu}\f$, which are required for the energy and helicity integrals.
 
-!> \brief Calculates the metric quantities, \f$\sqrt g \, g^{\mu\nu}\f$, which are required for the energy and helicity integrals.
-!> \ingroup grp_metrics
-!>
-!> **metrics**
-!>
-!> <ul>
-!> <li> The Jacobian, \f$\sqrt g\f$, and the "lower" metric elements, \f$g_{\mu\nu}\f$, are calculated by coords(),
-!>      and are provided on a regular grid in "real-space", i.e. \f$(\theta,\zeta)\f$, at a given radial location, i.e. where \f$s\f$ is input. </li>
-!> </ul>
-!>
-!> **plasma region**
-!>
-!> <ul>
-!> <li>  In the plasma region, the required terms are \f$\bar g_{\mu\nu} \equiv g_{\mu\nu}/\sqrt g\f$.
-!>
-!>       \f{eqnarray}{ \begin{array}{ccccccccccccccccccccccccc}
-!>       \sqrt g \; g^{s     s     } & = & \left( g_{\theta\theta} g_{\zeta \zeta } - g_{\theta\zeta } g_{\theta\zeta } \right) / \sqrt g \\
-!>       \sqrt g \; g^{s     \theta} & = & \left( g_{\theta\zeta } g_{s     \zeta } - g_{s     \theta} g_{\zeta \zeta } \right) / \sqrt g \\
-!>       \sqrt g \; g^{s     \zeta } & = & \left( g_{s     \theta} g_{\theta\zeta } - g_{\theta\theta} g_{s     \zeta } \right) / \sqrt g \\
-!>       \sqrt g \; g^{\theta\theta} & = & \left( g_{\zeta \zeta } g_{s     s     } - g_{s     \zeta } g_{s     \zeta } \right) / \sqrt g \\
-!>       \sqrt g \; g^{\theta\zeta } & = & \left( g_{s     \zeta } g_{s     \theta} - g_{\theta\zeta } g_{s     s     } \right) / \sqrt g \\
-!>       \sqrt g \; g^{\zeta \zeta } & = & \left( g_{s     s     } g_{\theta\theta} - g_{s     \theta} g_{s     \theta} \right) / \sqrt g
-!>       \end{array}
-!>       \f} </li>
-!> </ul>
-!>
-!> **FFTs**
-!>
-!> <ul>
-!> <li> After constructing the required quantities in real space, FFTs provided the required Fourier harmonics, which are returned through global.f90 .
-!>      (The "extended" Fourier resolution is used.) </li>
-!> </ul>
 subroutine metrix( lquad, lvol )
 
 
@@ -122,12 +86,6 @@ end subroutine metrix
 
 
 
-!> \brief compute guvijsave
-!>
-!> @param lquad
-!> @param vvol
-!> @param ideriv
-!> @param Lcurvature
 subroutine compute_guvijsave(lquad, vvol, ideriv, Lcurvature)
 
   use allglobal, only : gaussianabscissae, Ntz, mn, guvij, guvijsave, &
@@ -139,7 +97,6 @@ subroutine compute_guvijsave(lquad, vvol, ideriv, Lcurvature)
   INTEGER            :: jquad, ii, jj
   REAL               :: lss
 
-  ! we need to compute guvij and save it in guvijsave
   do jquad = 1, lquad
     lss = gaussianabscissae(jquad,vvol)
     call coords( vvol, lss, Lcurvature, Ntz, mn )

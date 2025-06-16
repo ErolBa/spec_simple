@@ -1,18 +1,6 @@
-!> \file
-!> \brief Calculates volume integrals of Chebyshev-polynomials and metric elements for preconditioner.
 
-!> \brief Calculates volume integrals of Chebyshev-polynomials and metric elements for preconditioner.
-!> \ingroup grp_integrals
-!>
-!> Computes the integrals needed for spsmat.f90. Same as ma00aa.f90, but only compute the relevant terms that are non-zero.
-!>
-!> @param lquad
-!> @param mn
-!> @param lvol
-!> @param lrad
 subroutine spsint( lquad, mn, lvol, lrad )
 
-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
 
   use constants, only : zero, half, one, two, pi, pi2
 
@@ -41,7 +29,6 @@ subroutine spsint( lquad, mn, lvol, lrad )
                         guvijsave
 
 
-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
 
   LOCALS
 
@@ -68,7 +55,6 @@ subroutine spsint( lquad, mn, lvol, lrad )
   REAL, allocatable   :: basis(:,:,:,:)
 
   BEGIN( spsint )
-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
 
   mn2_max = mn*mn
   lp2_max = (lrad+1)*(lrad+1)
@@ -103,14 +89,11 @@ subroutine spsint( lquad, mn, lvol, lrad )
       call get_cheby(lss, lrad, basis(:,0,0:1,jquad))
     endif
   enddo
-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
 
-!$OMP PARALLEL DO PRIVATE(TlTp,TlDp,DlTp,DlDp,Tl,Dl,Tp,Dp,ll1,pp1,ll,pp,lss,jthweight,sbar,goomne,gssmne,gstmne,gszmne,gttmne,gtzmne,gzzmne,foocc,fooss,fsscc,fssss,fstcc,fstss,fszcc,fszss,fttcc,fttss,ftzcc,ftzss,fzzcc,fzzss) SHARED(lquad,lp2_max,lrad,basis)
   do jquad = 1, lquad ! Gaussian quadrature loop;
 
     lss = gaussianabscissae(jquad,lvol) ; jthweight = gaussianweight(jquad,lvol)
 
-    ! compute metric
 
     goomne = one
     gssmne = SUM(guvijsave(1:Ntz,1,1,jquad)) / real(Ntz)
@@ -181,33 +164,20 @@ subroutine spsint( lquad, mn, lvol, lrad )
         DlTp = Dl * Tp
         DlDp = Dl * Dp
 
-!$OMP ATOMIC UPDATE
         DToocc( ll1, pp1, mi+1, 1 ) = DToocc( ll1, pp1, mi+1, 1 ) + DlTp * foocc
-!$OMP ATOMIC UPDATE
         TTssss( ll1, pp1, mi+1, 1 ) = TTssss( ll1, pp1, mi+1, 1 ) + TlTp * fssss
-!$OMP ATOMIC UPDATE
         DDttcc( ll1, pp1, mi+1, 1 ) = DDttcc( ll1, pp1, mi+1, 1 ) + DlDp * fttcc
-!$OMP ATOMIC UPDATE
         DDtzcc( ll1, pp1, mi+1, 1 ) = DDtzcc( ll1, pp1, mi+1, 1 ) + DlDp * ftzcc
-!$OMP ATOMIC UPDATE
         DDzzcc( ll1, pp1, mi+1, 1 ) = DDzzcc( ll1, pp1, mi+1, 1 ) + DlDp * fzzcc
 
         if (NOTstellsym) then
-!$OMP ATOMIC UPDATE
           DTooss( ll1, pp1, mi+1, 1 ) = DTooss( ll1, pp1, mi+1, 1 ) + DlTp * fooss
-!$OMP ATOMIC UPDATE
           TTsscc( ll1, pp1, mi+1, 1 ) = TTsscc( ll1, pp1, mi+1, 1 ) + TlTp * fsscc
-!$OMP ATOMIC UPDATE
           TDstcc( ll1, pp1, mi+1, 1 ) = TDstcc( ll1, pp1, mi+1, 1 ) + TlDp * fstcc
-!$OMP ATOMIC UPDATE
           TDszcc( ll1, pp1, mi+1, 1 ) = TDszcc( ll1, pp1, mi+1, 1 ) + TlDp * fszcc
-!$OMP ATOMIC UPDATE
           TDszss( ll1, pp1, mi+1, 1 ) = TDszss( ll1, pp1, mi+1, 1 ) + TlDp * fszss
-!$OMP ATOMIC UPDATE
           DDttss( ll1, pp1, mi+1, 1 ) = DDttss( ll1, pp1, mi+1, 1 ) + DlDp * fttss
-!$OMP ATOMIC UPDATE
           DDtzss( ll1, pp1, mi+1, 1 ) = DDtzss( ll1, pp1, mi+1, 1 ) + DlDp * ftzss
-!$OMP ATOMIC UPDATE
           DDzzss( ll1, pp1, mi+1, 1 ) = DDzzss( ll1, pp1, mi+1, 1 ) + DlDp * fzzss
         end if !NOTstellsym
 
@@ -216,8 +186,6 @@ subroutine spsint( lquad, mn, lvol, lrad )
     enddo ! end of do mi
 
   enddo ! end of do jquad; ! 16 Jan 13;
-!$OMP END PARALLEL DO
-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
 
   nele = SIZE(TTssss)
 
@@ -242,12 +210,9 @@ subroutine spsint( lquad, mn, lvol, lrad )
   end if !NOTstellsym
 
   DALLOCATE(basis)
-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
 
   RETURN( spsint )
 
-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!
 
 end subroutine spsint
 
-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!

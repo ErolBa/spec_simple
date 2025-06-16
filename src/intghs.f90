@@ -1,79 +1,27 @@
-!> \file
-!> \brief Calculates volume integrals of Chebyshev-polynomials and covariant field for Hessian computation.
-
-!latex \briefly{Calculates volume integrals of Chebyshev polynomials and covariant field products.}
-
-!latex \calledby{\link{dforce}}
-!latex \calls{\link{getbco}}
-
-!latex \tableofcontents
-
-!l tex \newcommand{\bT}[1]{{\overline T}_{#1}}
 
 
 
-!latex \subsection{chebyshev-metric information}
 
-!latex \begin{enumerate}
 
-!latex \item The following quantities are calculated:
 
-!latex       \be \verb+DToocc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}  \; \ooint \cos\a_i \cos\a_j                  \\
-!latex           \verb+DToocs(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}  \; \ooint \cos\a_i \sin\a_j                  \\
-!latex           \verb+DToosc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}  \; \ooint \sin\a_i \cos\a_j                  \\
-!latex           \verb+DTooss(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}  \; \ooint \sin\a_i \sin\a_j
-!latex       \ee
 
-!latex       \be \verb+TTsscc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}  \; \ooint \cos\a_i \cos\a_j \; \bar g_{\s\s} \\
-!latex           \verb+TTsscs(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}  \; \ooint \cos\a_i \sin\a_j \; \bar g_{\s\s} \\
-!latex           \verb+TTsssc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}  \; \ooint \sin\a_i \cos\a_j \; \bar g_{\s\s} \\
-!latex           \verb+TTssss(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}  \; \ooint \sin\a_i \sin\a_j \; \bar g_{\s\s}
-!latex       \ee
 
-!latex       \be \verb+TDstcc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}' \; \ooint \cos\a_i \cos\a_j \; \bar g_{\s\t} \\
-!latex           \verb+TDstcs(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}' \; \ooint \cos\a_i \sin\a_j \; \bar g_{\s\t} \\
-!latex           \verb+TDsTsc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}' \; \ooint \sin\a_i \cos\a_j \; \bar g_{\s\t} \\
-!latex           \verb+TDsTss(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}' \; \ooint \sin\a_i \sin\a_j \; \bar g_{\s\t}
-!latex       \ee
 
-!latex       \be \verb+TDstcc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}' \; \ooint \cos\a_i \cos\a_j \; \bar g_{\s\z} \\
-!latex           \verb+TDstcs(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}' \; \ooint \cos\a_i \sin\a_j \; \bar g_{\s\z} \\
-!latex           \verb+TDsTsc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}' \; \ooint \sin\a_i \cos\a_j \; \bar g_{\s\z} \\
-!latex           \verb+TDsTss(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}  \; \bT{p,j}' \; \ooint \sin\a_i \sin\a_j \; \bar g_{\s\z}
-!latex       \ee
 
-!latex       \be \verb+DDstcc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \cos\a_i \cos\a_j \; \bar g_{\t\t} \\
-!latex           \verb+DDstcs(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \cos\a_i \sin\a_j \; \bar g_{\t\t} \\
-!latex           \verb+DDsTsc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \sin\a_i \cos\a_j \; \bar g_{\t\t} \\
-!latex           \verb+DDsTss(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \sin\a_i \sin\a_j \; \bar g_{\t\t}
-!latex       \ee
 
-!latex       \be \verb+DDstcc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \cos\a_i \cos\a_j \; \bar g_{\t\z} \\
-!latex           \verb+DDstcs(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \cos\a_i \sin\a_j \; \bar g_{\t\z} \\
-!latex           \verb+DDsTsc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \sin\a_i \cos\a_j \; \bar g_{\t\z} \\
-!latex           \verb+DDsTss(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \sin\a_i \sin\a_j \; \bar g_{\t\z}
-!latex       \ee
 
-!latex       \be \verb+DDstcc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \cos\a_i \cos\a_j \; \bar g_{\z\z} \\
-!latex           \verb+DDstcs(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \cos\a_i \sin\a_j \; \bar g_{\z\z} \\
-!latex           \verb+DDsTsc(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \sin\a_i \cos\a_j \; \bar g_{\z\z} \\
-!latex           \verb+DDsTss(l,p,i,j)+ & \equiv & \int ds \; \bT{l,i}' \; \bT{p,j}' \; \ooint \sin\a_i \sin\a_j \; \bar g_{\z\z}
-!latex       \ee
 
-!latex       where $\bT{l,i}\equiv T_l \, \bar s^{m_i/2}$ if the domain includes the coordinate singularity, and $\bT{l,i}\equiv T_l$ if not;
-!latex       and $\bar g_{\mu\nu} \equiv g_{\mu\nu} / \sqrt g$.
 
-!latex \item The double-angle formulae are used to reduce the above expressions to the Fourier harmonics of $\bar g_{\mu\nu}$:
-!latex       see \internal{kija} and \internal{kijs}, which are defined in \link{preset}.
 
-!latex \end{enumerate}
+
+
+
+
 
 
 
 module intghs_module
 
-  !> \brief This calculates the integral of something related to matrix-vector-multiplication.
-  !> \todo Zhisong might need to update the documentation of this type.
   type intghs_workspace
     REAL, allocatable   :: efmn(:,:)        !< This is efmn.
     REAL, allocatable   :: ofmn(:,:)        !< This is ofmn.
@@ -98,13 +46,6 @@ end module intghs_module
 
 
 
-!> \brief Calculates volume integrals of Chebyshev polynomials and covariant field products.
-!>
-!> @param lquad
-!> @param mn
-!> @param lvol
-!> @param lrad
-!> @param idx
 subroutine intghs( lquad, mn, lvol, lrad, idx )
 
 
@@ -193,14 +134,8 @@ subroutine intghs( lquad, mn, lvol, lrad, idx )
   wk%gBupper = zero; wk%Blower = zero;
 
 
-!$OMP PARALLEL DO PRIVATE(jquad,ll1,lss,sbar,Tl,Dl,ii,jj,ll,mi,ni,ik) SHARED(lquad,mn,lvol,lrad,idx)
   do jquad = 1, lquad
 
-    ! A_t  : wk%ijreal, wk%jireal
-    ! A_z  : wk%jkreal, wk%kjreal
-    ! gB^s : wk%evmn, wk%odmn
-    ! gB^t : wk%cfmn, wk%sfmn
-    ! gB^z : wk%efmn, wk%ofmn
 
     do ii = 1, mn ; mi = im(ii) ; ni = in(ii) ! loop over Fourier harmonics;
 
@@ -260,11 +195,9 @@ subroutine intghs( lquad, mn, lvol, lrad, idx )
     wk%Bloweromn(1,2:3,jquad) = zero
 
   end do
-!$OMP END PARALLEL DO
 
 w(1:lquad) = gaussianweight(1:lquad,lvol)
 
-!$OMP PARALLEL DO SHARED(mn,lrad,w) PRIVATE(ii,ik,ll,ll1,bid,dfactor)
 do ii = 1, mn
 
   if (ii==1) then ;ik = two
@@ -305,7 +238,6 @@ do ii = 1, mn
 
     enddo !ll
   enddo !ii
-!$OMP END PARALLEL DO
 
 
 
@@ -341,9 +273,6 @@ end subroutine intghs
 
 
 
-!> \brief init workspace
-!>
-!> @param lvol
 subroutine intghs_workspace_init(lvol)
 
   use constants, only : zero
@@ -382,9 +311,6 @@ subroutine intghs_workspace_init(lvol)
 
 end subroutine intghs_workspace_init
 
-!> \brief free workspace
-!>
-!> @param lvol
 subroutine intghs_workspace_destroy()
 
   use inputlist, only : Wmacros, Wintghs

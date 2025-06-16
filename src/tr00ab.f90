@@ -1,72 +1,4 @@
-!> \defgroup grp_transform Rotational Transform
-!>
-!> \file
-!> \brief Calculates rotational transform given an arbitrary tangential field.
 
-!> \brief Calculates rotational transform given an arbitrary tangential field.
-!> \ingroup grp_transform
-!>
-!> Calculates transform, \f$ \iota \hspace{-0.35em}\)-\( = \dot \theta ( 1 + \lambda_\theta) + \lambda_\zeta \f$, given \f${\bf B}|_{\cal I}\f$.
-!>
-!> **constructing straight field line angle on interfaces**
-!>
-!> <ul>
-!> <li> The algorithm stems from introducing a straight field line angle \f$\theta_s=\theta+\lambda(\theta,\zeta)\f$, where
-!>       \f{eqnarray}{ \lambda=\sum_j \lambda_{o,j}\sin(m_j\theta-n_j\zeta) + \sum_j \lambda_{e,j}\cos(m_j\theta-n_j\zeta)
-!>       \f}
-!>       and insisting that
-!>       \f{eqnarray}{
-!>       \frac{{\bf B}\cdot \nabla \theta_s}{{\bf B}\cdot \nabla \zeta} = \dot \theta ( 1 + \lambda_\theta) + \lambda_\zeta = {{\,\iota\!\!\!}-},
-!>       \f}
-!>       where \f${{\,\iota\!\!\!}-}\f$ is a constant that is to be determined. </li>
-!> <li> Writing \f$\dot \theta = - \partial_s A_\zeta / \partial_s A_\theta\f$, we have
-!>       \f{eqnarray}{ \label{eq:sfla_tr00ab}
-!>       \partial_s A_\theta \, {{\,\iota\!\!\!}-} + \partial_s A_\zeta \, \lambda_\theta - \partial_s A_\theta \, \lambda_\zeta = - \partial_s A_\zeta
-!>       \f} </li>
-!> <li> Expanding this equation we obtain
-!>       \f{eqnarray}{
-!>         &   & \left( A_{\theta,e,k}^\prime \cos\alpha_k + A_{\theta,o,k}^\prime \sin\alpha_k\right) \, {{\,\iota\!\!\!}-} \nonumber \\
-!>         & + & \left( A_{\zeta ,e,k}^\prime \cos\alpha_k + A_{\zeta ,o,k}^\prime \sin\alpha_k\right) \, \left( +m_j \lambda_{o,j} \cos\alpha_j - m_j \lambda_{e,j} \sin\alpha_j
-!>               \right) \nonumber \\
-!>         & - & \left( A_{\theta,e,k}^\prime \cos\alpha_k + A_{\theta,o,k}^\prime \sin\alpha_k\right) \, \left( -n_j \lambda_{o,j} \cos\alpha_j + n_j \lambda_{e,j} \sin\alpha_j
-!>               \right) \nonumber \\
-!>       = & - & \left( A_{\zeta ,e,k}^\prime \cos\alpha_k + A_{\zeta ,o,k}^\prime \sin\alpha_k\right),
-!>       \f}
-!>       where summation over \f$k=1,\,\f$\c mn and \f$j=2,\,\f$\c mns is implied </li>
-!> <li> After applying double angle formulae,
-!>       \f{eqnarray}{
-!>         &   & \left( A_{\theta,e,k}^\prime \cos\alpha_k + A_{\theta,o,k}^\prime \sin\alpha_k\right) \, {{\,\iota\!\!\!}-} \nonumber \\
-!>         & + & \lambda_{o,j} \left( + m_j A_{\zeta,e,k}^\prime + n_j A_{\theta,e,k}^\prime \right) \left[ +\cos(\alpha_k+\alpha_j)+\cos(\alpha_k-\alpha_j)\right]/2 \nonumber \\
-!>         & + & \lambda_{e,j} \left( - m_j A_{\zeta,e,k}^\prime - n_j A_{\theta,e,k}^\prime \right) \left[ +\sin(\alpha_k+\alpha_j)-\sin(\alpha_k-\alpha_j)\right]/2 \nonumber \\
-!>         & + & \lambda_{o,j} \left( + m_j A_{\zeta,o,k}^\prime + n_j A_{\theta,o,k}^\prime \right) \left[ +\sin(\alpha_k+\alpha_j)+\sin(\alpha_k-\alpha_j)\right]/2 \nonumber \\
-!>         & + & \lambda_{e,j} \left( - m_j A_{\zeta,o,k}^\prime - n_j A_{\theta,o,k}^\prime \right) \left[ -\cos(\alpha_k+\alpha_j)+\cos(\alpha_k-\alpha_j)\right]/2 \nonumber \\
-!>       = & - & \left( A_{\zeta,e,k}^\prime \cos\alpha_k + A_{\zeta,o,k}^\prime \sin\alpha_k\right),
-!>       \f}
-!>       and equating coefficients, an equation of the form \f${\bf A} \cdot {\bf x} = {\bf b}\f$ is obtained, where
-!>       \f{eqnarray}{ {\bf x} = ( \underbrace{{{\,\iota\!\!\!}-}}_{\verb!x[1]!} \; , \;
-!>                       \underbrace{\lambda_{o,2}, \lambda_{o,3},\dots}_{\verb!x[  2: N  ]!} \; , \;
-!>                       \underbrace{\lambda_{e,2}, \lambda_{e,3},\dots}_{\verb!x[N+1:2N-1]!} \;
-!>                      )^T.
-!>       \f} </li>
-!> </ul>
-!>
-!> **alternative iterative method**
-!>
-!> <ul>
-!> <li> Consider the equation \f$\dot \theta ( 1 + \lambda_\theta ) + \lambda_\zeta = {{\,\iota\!\!\!}-}\f$, where \f$\lambda = \sum_j \lambda_j \sin\alpha_j\f$, given on a grid
-!>       \f{eqnarray}{ \dot \theta_i + \dot \theta_i \sum_j m_j \cos \alpha_{i,j} \lambda_j - \sum_j n_j \cos \alpha_{i,j} \lambda_j = {{\,\iota\!\!\!}-},
-!>       \f}
-!>       where \f$i\f$ labels the grid point. </li>
-!> <li> This is a matrix equation... </li>
-!> </ul>
-!>
-!> @param lvol
-!> @param mn
-!> @param NN
-!> @param Nt
-!> @param Nz
-!> @param iflag
-!> @param ldiota
 subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-field line magnetic coordinates;
 
 
@@ -106,24 +38,18 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
   REAL                 :: lAte(0:mn,-1:2), lAze(0:mn,-1:2), lAto(0:mn,-1:2), lAzo(0:mn,-1:2)
 
-!  REAL                 :: lBso(1:mn,-1:2), lBte(1:mn,-1:2), lBze(1:mn,-1:2)
-!  REAL                 :: lBse(1:mn,-1:2), lBto(1:mn,-1:2), lBzo(1:mn,-1:2)
 
-!  REAL                 :: gvu(1:Nt*Nz,1:3,1:3) ! local workspace; 13 Sep 13;
 
-! required for Fourier routines;
   INTEGER              :: IA, if04aaf, idgesvx, ipiv(1:NN), iwork4(1:NN)
   REAL  , allocatable  :: dmatrix(:,:,:), omatrix(:,:), FAA(:,:)
   REAL                 :: drhs(1:NN,-1:2), dlambda(1:NN,-1:2)
   REAL                 :: Rdgesvx(1:NN), Cdgesvx(1:NN), work4(1:4*NN), rcond, ferr(1), berr(1), ferr2(1:2), berr2(1:2)
   CHARACTER            :: equed
 
-! required for real-space routines;
   INTEGER              :: maxitn, reqdits, extralength, lrwork, integerwork(1:2*Nt*Nz+2+1), if11def, if11zaf, if11xaf
   INTEGER              :: IAA, if04atf, if04arf
   INTEGER              :: Ndof, label(-3:Nt+2,-3:Nz+2), isym
 
-!required for SVD routines;
   INTEGER              :: idgelsd, Lwork, Liwork, Irank, nlvl
   REAL                 :: sval(1:NN)
   REAL   , allocatable :: work(:)
@@ -154,10 +80,8 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
    lAte(0:mn,-1:2) = zero ! radial derivatives of vector potential evaluated at interfaces; 20 Apr 13;
    lAze(0:mn,-1:2) = zero
-!  if( NOTstellsym ) then ! the non-stellarator-symmetric harmonics need to be set to zero in any case; 20 Apr 13;
    lAto(0:mn,-1:2) = zero
    lAzo(0:mn,-1:2) = zero
-!  endif
 
    do ideriv = -1, 2 ; id = ideriv ! labels derivative of magnetic field wrt enclosed fluxes; 20 Apr 13;
 
@@ -203,7 +127,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
 
 
-! construct real-space, real-space transformation matrix; 20 Apr 13;
 
    if( Lsparse.eq.0 .or. Lsparse.eq.3 ) then
     SALLOCATE( dmatrix, (1:NN,1:NN,-1:2), zero )
@@ -244,8 +167,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
        if( jj.eq.0   .and. kk.eq.0   ) cycle
        if( jj.eq.hNt .and. kk.eq.0   ) cycle
-!      if( jj.eq.0   .and. kk.eq.hNz ) cycle
-!      if( jj.ge.hNt .and. kk.eq.hNz ) cycle
 
        ii = ii + 1 ; label(jj,kk) = ii ! labels degree of freedom; 24 Apr 13;
 
@@ -260,7 +181,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
     Ndof = Ndof + 1 ! include rotational-transform as a degree-of-freedom; 23 Apr 13;
 
-! dense arrays; 24 Apr 13; ! these will eventually be redundant; 24 Apr 13;
     if( Lsparse.eq.1 ) then ! dense transformation; 24 Apr 13;
      SALLOCATE( rmatrix, (1:Ndof,1:Ndof,-1:2), zero ) ! real-space angle transformation matrix; dense; 23 Apr 13;
      SALLOCATE( rrhs   , (1:Ndof,       -1:2), zero )
@@ -270,7 +190,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
      SALLOCATE( AA     , (1:Ndof,1:Ndof     ), zero )
     endif ! end of if( Lsparse.eq.1 ) ; 24 Apr 13;
 
-! sparse arrays; ! all of these can be simply defined (1:Ntz) etc. . . . ; 24 Apr 13;
     if( Lsparse.ge.2 ) then ! sparse transformation; 24 Apr 13;
      SALLOCATE( srhs   , (1:  Ndof  ,-1:2), zero )
      SALLOCATE( istr   , (1:  Ndof+1     ),   0  ) ! for re-ordering; 24 Apr 13;
@@ -292,7 +211,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
      if( iflag.eq. 2 .and. ideriv.lt.0 ) cycle
      if( iflag.eq.-1 .and. ideriv.gt.0 ) cycle
 
-    !if( Lscalarpotential .and. ideriv.eq.2 ) cycle ! do not need derivatives of transform wrt enclosed poloidal current = "linking current" provided by coils;
 
      lnz=0 ! counter; 24 Apr 13;
 
@@ -426,7 +344,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
      if( Lsparse.ge.2 ) then ; lnz=lnz+1 ; smatrix(lnz,id)=rfac ; irow(lnz,id)=Ndof ; jcol(lnz,id)=Ndof
      endif
 
-! REAL MATRICES HAVE BEEN CONSTRUCTED; 24 Apr 13;
 
      inz(id) = lnz ! lnz is short-hand; 24 Apr 13;
 
@@ -451,7 +368,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
 
     enddo ! end of do ideriv; 23 Apr 13;
 
-! for safety, let's assume that the following NAG routines will destroy the provided matrices, so better keep a backup; 24 Apr 13;
 
     if( Lsparse.eq.1 ) rmatrix(1:Ndof,1:Ndof,-1) = rmatrix(1:Ndof,1:Ndof, 0)
     if( Lsparse.ge.2 ) then
@@ -486,7 +402,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
      if( iflag.eq. 2 .and. ideriv.lt.0 ) cycle
      if( iflag.eq.-1 .and. ideriv.gt.0 ) cycle
 
-    !if( Lscalarpotential .and. ideriv.eq.2 ) cycle ! do not need derivatives of transform wrt enclosed poloidal current = "linking current" provided by coils;
 
      if( Lsparse.eq.1 ) rmatrix(1:Ndof,1:Ndof, 0) = rmatrix(1:Ndof,1:Ndof,-1) ! recover original;
      if( Lsparse.ge.2 ) then
@@ -583,7 +498,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
      if( iflag.eq. 1 .and. ideriv.ne.0 ) cycle ! derivatives                                                        not required; 20 Jun 14;
      if( iflag.eq. 2 .and. ideriv.lt.0 ) cycle ! derivatives wrt helicity multiplier and differential poloidal flux are required; 20 Jun 14;
      if( iflag.eq.-1 .and. ideriv.gt.0 ) cycle ! derivative  wrt geometry                                               required; 20 Jun 14;
-!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(kk,ii,jj,mj,nj)
      do kk = 1, mn
 
       ii = iotakkii(kk)
@@ -598,27 +512,17 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
        dmatrix(ii+mns-1,1,ideriv) = lAto(kk,ideriv)
       endif
 
-!#ifdef NEWIOTA ! 19 Sep 16;
-!! perhaps a rigid shift in the angle does not change the rotational-transform; 02 Sep 14; ! 19 Sep 16;
-!      do jj = 1, mns ; mj = ims(jj) ; nj = ins(jj) ! 02 Sep 14; ! 19 Sep 16;
-!#else ! 19 Sep 16;
       do jj = 2, mns ; mj = ims(jj) ; nj = ins(jj) ! this seems to ignore the non-stellarator symmetric mode; 02 Sep 14;
-!#endif ! 19 Sep 16;
 
        ii = iotakadd(kk,jj)
 
        if( ii.lt.1 ) cycle
 
-!      FATAL( tr00ab,ii.gt.NN .or. jj.gt.NN, illegal subscript ) ! THIS CAN BE DELETED EVENTUALLY; 02 Sep 14;
-!$OMP ATOMIC UPDATE
        dmatrix(ii      ,jj      ,ideriv) = dmatrix(ii      ,jj      ,ideriv) + ( - mj * lAze(kk,ideriv) + nj * lAte(kk,ideriv) ) * half
        if( NOTstellsym) then
         FATAL( tr00ab,ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN, illegal subscript ) ! THIS CAN BE DELETED EVENTUALLY;
-!$OMP ATOMIC UPDATE
         dmatrix(ii+mns-1,jj      ,ideriv) = dmatrix(ii+mns-1,jj      ,ideriv) + ( - mj * lAzo(kk,ideriv) + nj * lAto(kk,ideriv) ) * half
-!$OMP ATOMIC UPDATE
         dmatrix(ii      ,jj+mns-1,ideriv) = dmatrix(ii      ,jj+mns-1,ideriv) - ( + mj * lAzo(kk,ideriv) - nj * lAto(kk,ideriv) ) * half
-!$OMP ATOMIC UPDATE
         dmatrix(ii+mns-1,jj+mns-1,ideriv) = dmatrix(ii+mns-1,jj+mns-1,ideriv) + ( + mj * lAze(kk,ideriv) - nj * lAte(kk,ideriv) ) * half
        endif
 
@@ -632,28 +536,21 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
        if( ii.lt.1 ) cycle
 
        FATAL( tr00ab,ii.gt.NN .or. jj.gt.NN, illegal subscript ) ! THIS CAN BE DELETED EVENTUALLY; 02 Sep 14;
-!$OMP ATOMIC UPDATE
        dmatrix(ii      ,jj      ,ideriv) = dmatrix(ii      ,jj      ,ideriv) + ( - mj * lAze(kk,ideriv) + nj * lAte(kk,ideriv) ) * half
        if( NOTstellsym) then
         FATAL( tr00ab,ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN, illegal subscript ) ! THIS CAN BE DELETED EVENTUALLY;
-!$OMP ATOMIC UPDATE
         dmatrix(ii+mns-1,jj      ,ideriv) = dmatrix(ii+mns-1,jj      ,ideriv) + ( - mj * lAzo(kk,ideriv) + nj * lAto(kk,ideriv) ) * half * iotaksgn(kk,jj)
-!$OMP ATOMIC UPDATE
         dmatrix(ii      ,jj+mns-1,ideriv) = dmatrix(ii      ,jj+mns-1,ideriv) + ( + mj * lAzo(kk,ideriv) - nj * lAto(kk,ideriv) ) * half
-!$OMP ATOMIC UPDATE
         dmatrix(ii+mns-1,jj+mns-1,ideriv) = dmatrix(ii+mns-1,jj+mns-1,ideriv) - ( + mj * lAze(kk,ideriv) - nj * lAte(kk,ideriv) ) * half * iotaksgn(kk,jj)
        endif
 
       enddo ! end of do jj; 30 Jan 13;
 
      enddo ! end of do kk; 30 Jan 13;
-!$OMP END PARALLEL DO
     enddo ! end of ideriv; 30 Jan 13;
 
 
-! FOURIER MATRICES HAVE BEEN CONSTRUCTED; SAVE UNPERTURBED MATRIX AND UNPERTURBED SOLUTION; FOR FUTURE USE; 20 Jun 14;
 
-    !omatrix(1:NN,1:NN) = dmatrix(1:NN,1:NN,0) ! original "unperturbed" matrix; 30 Jan 13;
     call DCOPY(NN*NN, dmatrix(1,1,0), 1, omatrix(1,1), 1) ! BLAS version 21 Jul 19
 
     do jderiv = 0, 1
@@ -663,11 +560,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
      select case( jderiv )
      case( 0 ) ;!             drhs(1:NN, 0) = drhs(1:NN, 0)
      case( 1 ) ;
-      !if( iflag.eq. 2) then ; drhs(1:NN, 1) = drhs(1:NN, 1) - matmul( dmatrix(1:NN,1:NN, 1), dlambda(1:NN,0) ) ! derivative wrt helicity multiplier        ;
-      ! ;                    ; drhs(1:NN, 2) = drhs(1:NN, 2) - matmul( dmatrix(1:NN,1:NN, 2), dlambda(1:NN,0) ) ! derivative wrt differential poloidal flux ;
-      !endif
-      !if( iflag.eq.-1) then ; drhs(1:NN,-1) = drhs(1:NN,-1) - matmul( dmatrix(1:NN,1:NN,-1), dlambda(1:NN,0) ) ! derivative wrt geometry;
-      !endif
       if( iflag.eq. 2) then ; call DGEMV('N',NN,NN,-one,dmatrix(1,1, 1),NN,dlambda(1,0),1,one,drhs(1, 1),1)     ! BLAS version 21 Jul 19
        ;                    ; call DGEMV('N',NN,NN,-one,dmatrix(1,1, 2),NN,dlambda(1,0),1,one,drhs(1, 2),1)     ! BLAS version 21 Jul 19
       endif
@@ -705,7 +597,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
         ;                     ; drhs(1:NN, 2) = zero
        endif
 
-       !dmatrix(1:NN,1:NN,0) = omatrix(1:NN,1:NN) ! original "unperturbed" matrix; 30 Jan 13;
        call DCOPY(NN*NN, omatrix(1,1), 1, dmatrix(1,1,0), 1) ! BLAS version 21 Jul 19
 
        call dgesvx( 'N', 'N', NN, MM, dmatrix(1:NN,1:NN,0), NN, FAA(1:NN,1:NN), NN, ipiv(1:NN),    &
@@ -735,9 +626,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
      case( 1 ) ! Lsvdiota = 1; use least-squares to invert linear equations that define the straight fieldline angle; 01 Jul 14;
 
 
-!     Here Lwork = 12*N + 2*N*SMLSIZ + 8*N*NLVL + N*NRHS + (SMLSIZ+1)**2  and Liwork = (11+3*NLVL)*NN
-!     where SMLSIZ=25 and NLVL = MAX( 0, INT( LOG_2( MIN( M,N )/(SMLSIZ+1) ) ) + 1 )
-!     Warning: this could become insufficient in some cases and produce input error message; 12 Nov 17
       nlvl   = max(0, int(log( real(NN)/26 )/log(2.0D0))+1)
       Lwork  = (63+8*nlvl)*NN+676
       Liwork = max(1,11*NN+3*nlvl*NN)
@@ -833,7 +721,6 @@ subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-fi
      if( iflag.eq. 2 .and. ideriv.lt.0 ) cycle
      if( iflag.eq.-1 .and. ideriv.gt.0 ) cycle
 
-    !if( Lscalarpotential .and. ideriv.eq.2 ) cycle ! do not need derivatives of transform wrt enclosed poloidal current = "linking current" provided by coils;
 
      ;                           diotaerror = zero
      if( if11def.eq.0          ) diotaerror = dlambda(1,id) - slambda(Ndof,id) ! error between Fourier estimate and real-space estimate; 21 Apr 13;

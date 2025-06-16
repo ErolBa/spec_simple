@@ -1,16 +1,4 @@
-!> \defgroup grp_initialization Initialization of the code
-!>
-!> \latexonly
-!> \definecolor{Orange}{rgb}{1.0,0.5,0.0}
-!> \definecolor{Cerulean}{rgb}{0.0,0.5,1.0}
-!> \endlatexonly
-!>
-!> \file
-!> \brief Allocates and initializes internal arrays.
 
-!> \brief Allocates and initializes internal arrays.
-!> \ingroup grp_initialization
-!>
 subroutine preset
 
 
@@ -49,8 +37,6 @@ subroutine preset
 
 
 
-! the following was in global:readin previously
-! set internal parameters that depend on physicslist;
 
 
   select case( Istellsym )
@@ -62,10 +48,6 @@ subroutine preset
 
 
 
-!latex \subsubsection{\type{Mvol} : total number of volumes}
-!latex \begin{enumerate}
-!latex \item The number of plasma volumes is \internal{Mvol}=\inputvar{Nvol}+\inputvar{Lfreebound};
-!latex \end{enumerate}
 
   FATAL( readin, Lfreebound.lt.0 .or. Lfreebound.gt.1, illegal Lfreebound )
 
@@ -77,19 +59,6 @@ subroutine preset
 
 
 
-!latex \subsubsection{\type{mn}, \type{im(1:mn)} and \type{in(1:mn)} : Fourier mode identification}
-!latex \begin{enumerate}
-!latex \item The Fourier description of even periodic functions is
-!latex       \be f(\t,\z) = \sum_{n=0}^{N} f_{0,n} \cos(-n\z) + \sum_{m=1}^{M}\sum_{n=-N}^{N} f_{m,n} \cos(m\t-n\z),
-!latex       \ee
-!latex       where the resolution is given on input, $M\equiv $ \inputvar{ Mpol} and $N\equiv $ \inputvar{ Ntor}.
-!latex \item For convenience, the Fourier summations are written as
-!latex       \be f(\s,\t,\z) &=& \sum_j f_j(s) \cos( m_j \t - n_j \z ),
-!latex       \ee
-!latex       for $j=1,$ \type{mn}, where \type{mn}$ = N + 1 +  M  ( 2 N + 1 )$.
-!latex \item The integer arrays \type{im(1:mn)} and \type{in(1:mn)} contain the $m_j$ and $n_j$.
-!latex \item The array \type{in} includes the \type{Nfp} factor.
-!latex \end{enumerate}
 
   mn = 1 + Ntor +  Mpol * ( 2 *  Ntor + 1 ) ! Fourier resolution of interface geometry & vector potential;
 
@@ -100,11 +69,6 @@ subroutine preset
 
 
 
-!latex \subsubsection{\type{halfmm(1:mn}, regumm(1:mn) : regularization factor}
-!latex \begin{enumerate}
-!latex \item The ``regularization'' factor, \type{halfmm(1:mn)} = \type{im(1:mn)} * \type{half}, is real.
-!latex \item This is used in \link{lforce}, \link{bfield}, \link{stzxyz}, \link{coords}, \link{jo00aa}, \link{ma00aa}, \link{sc00aa} and \link{tr00ab}.
-!latex \end{enumerate}
 
   SALLOCATE( halfmm, (1:mn), im(1:mn) * half )
   SALLOCATE( regumm, (1:mn), im(1:mn) * half )
@@ -115,17 +79,10 @@ subroutine preset
 
   endif
 
-! if( myid.eq.0 ) write(ounit,'("global : " 10x " : "i3") im ="i3" , halfmm ="f5.1" , regum ="f5.1" ;")') ( ii, im(ii), halfmm(ii), regumm(ii), ii = 1, mn )
 
 
 
-!latex \subsubsection{\type{ime} and \type{ine} : extended resolution Fourier mode identification}
-!latex \begin{enumerate}
-!latex \item The ``extended'' Fourier resolution is defined by \internal{lMpol} $ = 4 $ \inputvar{Mpol}, \internal{lNtor} $ = 4 $\inputvar{Ntor}.
-!latex \end{enumerate}
 
-! lMpol =   Mpol ; lNtor =   Ntor ! no    enhanced resolution for metrics;
-! lMpol = 2*Mpol ; lNtor = 2*Ntor !       enhanced resolution for metrics;
   lMpol = 4*Mpol ; lNtor = 4*Ntor ! extra-enhanced resolution for metrics;
 
   mne = 1 + lNtor + lMpol * ( 2 * lNtor + 1 ) ! resolution of metrics; enhanced resolution; see metrix;
@@ -137,7 +94,6 @@ subroutine preset
 
 
 
-!latex \subsubsection{\type{mns}, \type{ims} and \type{ins} : Fourier mode identification for straight-fieldline angle}
 
   sMpol = iMpol ; sNtor = iNtor
 
@@ -154,31 +110,22 @@ subroutine preset
 
 
 
-! set internal parameters that depend on numericlist;
 
 
 
-! set internal parameters that depend on locallist;
 
 
 
-! set internal parameters that depend on globallist;
 
 
 
-! set internal parameters that depend on diagnosticslist;
 
   if( Lcheck.eq.5 ) then ; forcetol = 1.0e+12 ; nPpts = 0 ! will check Hessian using finite-differences;
   endif
 
 
 
-!latex \subsubsection{\type{iRbc(1:mn,0:Mvol}, \type{iZbs(1:mn,0:Mvol}, \type{iRbs(1:mn,0:Mvol} and \type{iZbc(1:mn,0:Mvol} : geometry}
 
-!latex \begin{enumerate}
-!latex \item \type{iRbc}, \type{iZbs}, \type{iRbs} and \type{iZbc} : Fourier harmonics of interface geometry;
-!latex \item \type{iVns}, \type{iVnc}, \type{iBns} and \type{iBns} : Fourier harmonics of normal field at computational boundary;
-!latex \end{enumerate}
 
   SALLOCATE( iRbc, (1:mn,0:Mvol), zero ) ! interface Fourier harmonics;
   SALLOCATE( iZbs, (1:mn,0:Mvol), zero )
@@ -199,20 +146,10 @@ subroutine preset
   SALLOCATE( iVnc, (1:mn), zero )
   SALLOCATE( iBnc, (1:mn), zero )
 
- !SALLOCATE( lRbc, (1:mn), zero ) ! not used; SRH: 27 Feb 18;
- !SALLOCATE( lZbs, (1:mn), zero )
- !SALLOCATE( lRbs, (1:mn), zero )
- !SALLOCATE( lZbc, (1:mn), zero )
 
 
 
-!latex \subsubsection{\type{ajk} : construction of coordinate axis}
 
-!latex \begin{enumerate}
-!latex \item This is only used in \link{rzaxis} to perform the poloidal integration and is defined quite simply: \newline
-!latex       \internal{ajk[i]} $\equiv 2\pi$ if $m_i =   0$, and \newline
-!latex       \internal{ajk[i]} $\equiv 0   $ if $m_i \ne 0$.
-!latex \end{enumerate}
 
   SALLOCATE( ajk, (1:mn), zero ) ! this must be allocated & assigned now, as it is used in readin; primarily used in packxi; 02 Jan 15;
 
@@ -424,7 +361,6 @@ subroutine preset
   call random_seed()
 
 
- !FATAL( preset, Nfp.eq.0, illegal division ) ! this was checked in global: readin; SRH: 27 Feb 18;
 
   pi2nfp         = pi2 / Nfp
 
@@ -438,14 +374,7 @@ subroutine preset
 
 
 
-!> **LGdof and NGdof : number of geometrical degrees-of-freedom**
-!>
-!> <ul>
-!> <li> \c LGdof \f$\equiv\f$ the number of degrees-of-freedom in the geometry (i.e. Fourier harmonics) of each interface </li>
-!> <li> \c NGdof \f$\equiv\f$ total number of degrees-of-freedom in geometry, i.e. of all interfaces </li>
-!> </ul>
 
-!                            Rbc  Zbs    Rbs    Zbc
   select case( Igeometry )
   case( 1:2)
    if( YESstellsym ) LGdof = mn
@@ -462,18 +391,6 @@ subroutine preset
 
 
 
-!> **iota and oita: rotational transform on interfaces**
-!>
-!> <ul>
-!> <li> The input variables \c iota and \c oita are the rotational transform
-!>       on "inner-side" and on the "outer-side" of each interface. </li>
-!> <li> These quantities are formally inputs. </li>
-!> <li> Note that if \f$q_l+\gamma q_r \ne 0\f$, then \c iota is given by
-!>       \f{eqnarray}{ {{\,\iota\!\!\!}-} \equiv \frac{p_l + \gamma p_r}{q_l + \gamma q_r},
-!>       \f}
-!>       where \f$p_l \equiv\,\f$\c pl, \f$q_l \equiv\,\f$\c ql , etc.;
-!>       and similarly for \c oita . </li>
-!> </ul>
 
   do vvol = 0, Nvol
 
@@ -494,16 +411,6 @@ subroutine preset
 
 
 
-!> **dtflux(1:Mvol) and dpflux(1:Mvol): enclosed fluxes**
-!>
-!> <ul>
-!> <li> \c dtflux \f$\equiv \Delta \psi_{tor} / 2\pi\f$ and
-!>      \c dpflux \f$\equiv \Delta \psi_{pol} / 2\pi\f$ in each volume. </li>
-!> <li> Note that the total toroidal flux enclosed by the plasma boundary is \f$\Phi_{edge} \equiv\,\f$\c phiedge . </li>
-!> <li> \f$\psi_{tor} \equiv\,\f$\c tflux and \f$\psi_{pol} \equiv\,\f$\c pflux are immediately normalized (in readin() ) according to
-!>      \f$\psi_{tor,i} \rightarrow \psi_{tor,i} / \psi_{0}\f$ and
-!>      \f$\psi_{pol,i} \rightarrow \psi_{pol,i} / \psi_{0}\f$, where \f$\psi_{0} \equiv \psi_{tor,N}\f$ on input. </li>
-!> </ul>
 
   SALLOCATE( dtflux, (1:Mvol), zero )
   SALLOCATE( dpflux, (1:Mvol), zero )
@@ -521,14 +428,6 @@ subroutine preset
 
 
 
-!latex \subsubsection{\type{mu(1:Mvol)} evaluation of \inputvar{mu} from \inputvar{Ivolume};}
-!latex Only used when $Lconstraint = 3$. The coefficients \inputvar{mu} are evaluated as
-!latex \begin{equation}
-!latex \mu_1 = \mu_0 \frac{I_{volume}(1)}{\psi_{t,1}}
-!latex \end{equation}
-!latex \begin{equation}
-!latex \mu_n = \mu_0 \frac{I_{volume}(n) - I_{volume}(n-1)}{\psi_{t,n}-\psi_{t,n-1}},\qquad \forall\ n>1;
-!latex \end{equation}
 
 if (Lconstraint.EQ.3) then
 
@@ -542,54 +441,14 @@ endif
 
 
 
-!> **sweight(1:Mvol): star-like angle constraint weight**
-!>
-!> <ul>
-!> <li> the "star-like" poloidal angle constraint weights (only required for toroidal geometry, i.e. \c Igeometry=3) are given by
-!>       \f{eqnarray}{ \texttt{sweight}_v \equiv \texttt{upsilon} \times (l_v / N_{vol})^w,
-!>       \f}
-!>       where \f$l_v\f$ is the volume number,
-!>       and \f$w \equiv\,\f$\c wpoloidal. </li>
-!> </ul>
 
   SALLOCATE( sweight, (1:Mvol), zero )
- !sweight(1:Mvol) = upsilon * tflux(1:Mvol)**wpoloidal ! toroidal flux in vacuum region is not constant; 11 July 18;
   do vvol = 1, Mvol ; sweight(vvol) = upsilon * (vvol*one/Nvol)**wpoloidal ! 11 July 18;
   enddo
 
 
 
 
-!> **TT(0:Mrad,0:1,0:1): Chebyshev polynomials at inner/outer interface**
-!>
-!> <ul>
-!> <li> \c TT(0:Lrad,0:1,0:1) gives the Chebyshev polynomials, and their first derivative, evaluated at \f$s=-1\f$ and \f$s=+1\f$. </li>
-!> <li> Precisely, \c TT(l,i,d) \f$\equiv T_l^{(d)}(s_i)\f$ for \f$s_0=-1\f$ and \f$s_1=+1\f$. </li>
-!> <li> Note that \f$T_l^{(0)}(s)=s^l\f$ and \f$T_l^{(1)}(s)=s^{l+1} l^2\f$ for \f$s=\pm 1\f$. </li>
-!> <li> Note that
-!>       \f{eqnarray}{ T_l(-1)        = \left\{ \begin{array}{ccccccccccccccc}+1,& \textrm{ if $l$ is even,} \\
-!>                                                                            -1,& \textrm{ if $l$ is odd;}
-!>                                              \end{array} \right. & \; \;&
-!>                     T_l(+1)        = \left\{ \begin{array}{ccccccccccccccc}+1,& \textrm{ if $l$ is even,} \\
-!>                                                                            +1,& \textrm{ if $l$ is odd;}
-!>                                              \end{array} \right. \\
-!>                     T_l^\prime(-1) = \left\{ \begin{array}{ccccccccccccccc}-l^2,& \textrm{ if $l$ is even,} \\
-!>                                                                            +l^2,& \textrm{ if $l$ is odd;}
-!>                                              \end{array} \right. &\; \;&
-!>                     T_l^\prime(+1) = \left\{ \begin{array}{ccccccccccccccc}+l^2,& \textrm{ if $l$ is even,} \\
-!>                                                                            +l^2,& \textrm{ if $l$ is odd.}
-!>                                               \end{array} \right.
-!>       \f} </li>
-!> <li> \c TT(0:Mrad,0:1,0:1) is used in routines that explicity require interface information, such as
-!>       <ul>
-!>         <li> the interface force-balance routine,                                lforce() </li>
-!>         <li> the virtual casing routine,                                         casing() </li>
-!>         <li> computing the rotational-transform on the interfaces,               tr00ab() </li>
-!>         <li> computing the covariant components of the interface magnetic field, sc00aa() </li>
-!>         <li> enforcing the constraints on the Beltrami fields,                   matrix() </li>
-!>     and <li> computing the enclosed currents of the vacuum field,                curent(). </li>
-!>       </ul> </li>
-!> </ul>
 
   SALLOCATE( TT, (0:Mrad,0:1,0:1), zero )
   SALLOCATE(RTT, (0:Lrad(1),0:Mpol,0:1,0:1), zero )
@@ -604,75 +463,20 @@ endif
 
 
 
-!> **ImagneticOK(1:Mvol): Beltrami/vacuum error flag**
-!>
-!> <ul>
-!> <li> error flags that indicate if the magnetic field in each volume has been successfully constructed </li>
-!> <li> \c ImagneticOK is initialized to \c .false. in dforce() before the Beltrami solver routines are called.
-!>       If the construction of the Beltrami field is successful
-!>       (in either ma02aa() or mp00ac() )
-!>       then \c ImagneticOK is set to \c .true. . </li>
-!> </ul>
 
   SALLOCATE( ImagneticOK, (1:Mvol), .false. )
 
 
 
-!latex \subsubsection{\type{IconstraintOK} : Global constraint flag;}
 
-!latex \begin{enumerate}
-!latex \item error flags that indicate if solution found is consistent with the global constraint
-!latex \item \type{ImagneticOK} is initialized to \type{.false.}
-!latex       If the construction the difference between the evaluated global constraint and in the input is small enough,
-!latex       then \type{ImagneticOK} is set to \type{.true.}.
-!latex \end{enumerate}
 
-!> **Lhessianallocated**
-!>
-!> <ul>
-!> <li> The internal logical variable, \c Lhessianallocated, indicates whether the ``Hessian'' matrix of second-partial derivatives
-!>       (really, the first derivatives of the force-vector) has been allocated, or not! </li>
-!> </ul>
   Lhessianallocated = .false.
 
 
 
-!> **ki(1:mn,0:1): Fourier identification**
-!>
-!> <ul>
-!> <li> Consider the "abbreviated" representation for a double Fourier series,
-!>       \f{eqnarray}{ \sum_i      f_i \cos(     m_i \theta -      n_i \zeta) \equiv                         \sum_{n=      0  }^{     N_0} f_{0,n} \cos(       -n\zeta)
-!>                                                                                   + \sum_{m=1}^{     M_0} \sum_{n=-     N_0}^{     N_0} f_{m,n} \cos(m\theta-n\zeta),
-!>       \f}
-!>       and the same representation but with enhanced resolution,
-!>       \f{eqnarray}{ \sum_k \bar f_k \cos(\bar m_k \theta - \bar n_k \zeta) \equiv                         \sum_{n=      0  }^{     N_1} f_{0,n} \cos(       -n\zeta)
-!>                                                                                   + \sum_{m=1}^{     M_1} \sum_{n=-     N_1}^{     N_1} f_{m,n} \cos(m\theta-n\zeta),
-!>       \label{eq:enhancedFourierrepresentation_preset}
-!>       \f}
-!>       with \f$M_1 \ge M_0\f$ and \f$N_1 \ge N_0\f$;
-!>       then \f$k_i\equiv\,\f$\c ki(i,0) is defined such that \f$\bar m_{k_i} = m_i\f$ and \f$\bar n_{k_i} = n_i\f$. </li>
-!> </ul>
 
 
 
-!> **kija(1:mn,1:mn,0:1), kijs(1:mn,1:mn,0:1): Fourier identification**
-!>
-!> <ul>
-!> <li> Consider the following quantities, which are computed in ma00aa(),
-!>       where \f$\bar g^{\mu\nu} = \sum_k \bar g^{\mu\nu}_k \cos \alpha_k\f$ for \f$\alpha_k \equiv m_k \theta - n_k \zeta\f$,
-!>       \f{eqnarray}{
-!>       \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \bar g^{\mu\nu} \cos\alpha_i \; \cos\alpha_j & = & \frac{1}{2} \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \bar g^{\mu\nu} ( + \cos\alpha_{k_{ij+}} + \cos\alpha_{k_{ij-}} ), \\
-!>       \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \bar g^{\mu\nu} \cos\alpha_i \; \sin\alpha_j & = & \frac{1}{2} \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \bar g^{\mu\nu} ( + \sin\alpha_{k_{ij+}} - \sin\alpha_{k_{ij-}} ), \\
-!>       \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \bar g^{\mu\nu} \sin\alpha_i \; \cos\alpha_j & = & \frac{1}{2} \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \bar g^{\mu\nu} ( + \sin\alpha_{k_{ij+}} + \sin\alpha_{k_{ij-}} ), \\
-!>       \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \bar g^{\mu\nu} \sin\alpha_i \; \sin\alpha_j & = & \frac{1}{2} \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \bar g^{\mu\nu} ( - \cos\alpha_{k_{ij+}} + \cos\alpha_{k_{ij-}} ),
-!>       \f}
-!>       where \f$(m_{k_{ij+}}, n_{k_{ij+}}) = (m_i + m_j, n_i + n_j)\f$ and \f$(m_{k_{ij-}}, n_{k_{ij-}}) = (m_i - m_j, n_i - n_j)\f$;
-!>       then \c kija(i,j,0) \f$\equiv k_{ij+}\f$ and \c kijs(i,j,0) \f$\equiv k_{ij-}\f$. </li>
-!> <li> Note that Eqn.\f$(\ref{eq:enhancedFourierrepresentation_preset})\f$ does not include \f$m<0\f$; so,
-!>       if \f$m_i - m_j < 0\f$ then \f$k_{ij-}\f$ is re-defined such that \f$(m_{k_{ij-}}, n_{k_{ij-}}) = (m_j - m_i, n_j - n_i)\f$; and
-!>       similarly for the case \f$m=0\f$ and \f$n<0\f$.
-!>       Also, take care that the sign of the sine harmonics in the above expressions will change for these cases. </li>
-!> </ul>
 
   SALLOCATE( ki, (1:mn,0:1), 0 )
   SALLOCATE( kija, (1:mn,1:mn,0:1), 0 )
@@ -716,7 +520,6 @@ endif
   enddo ! end of do ii; 29 Jan 13;
 
 
-!> **djkp**
 
   if( Igeometry.eq.2 ) then ! standard cylindrical; 04 Dec 14;
 
@@ -734,7 +537,6 @@ endif
 
 
 
-!> **iotakki**
 
   SALLOCATE( iotakkii, (1:mn      ), 0 ) ! used to identify matrix elements in straight-field-line angle transformation;
 
@@ -778,16 +580,7 @@ endif
 
 
 
-!> **cheby(0:Lrad,0:2): Chebyshev polynomial workspace**
-!>
-!> <ul>
-!> <li> \c cheby(0:Lrad,0:2) is global workspace for computing the Chebyshev polynomials, and their derivatives,
-!>       using the recurrence relations \f$T_0(s) = 1\f$, \f$T_1(s) = s\f$ and  \f$T_l(s) = 2 \, s \,T_{l-1}(s) - T_{l-2}(s)\f$. </li>
-!> <li> These are computed as required, i.e. for arbitrary \f$s\f$, in bfield(), jo00aa() and ma00aa(). </li>
-!> <li> Note that the quantities required for ma00aa() are for fixed \f$s\f$, and so these quantities should be precomputed. </li>
-!> </ul>
 
-! Allocate space for the toroidal current array in each interface
 
   SALLOCATE( IPDt, (1:Mvol), zero)
   if( Lfreebound.eq.1 ) then
@@ -801,22 +594,6 @@ endif
 
 
 
-!> **Iquad, gaussianweight, gaussianabscissae: Gauss-Legendre quadrature**
-!>
-!> <ul>
-!> <li> The volume integrals are computed using a "Fourier" integration over the angles and by Gauss-Legendre quadrature over the radial,
-!>       i.e. \f$\displaystyle \int \!\! f(s) ds = \sum_k \omega_k f(s_k)\f$. </li>
-!> <li> The quadrature resolution in each volume is give by \c Iquad(1:Mvol) which is determined as follows:
-!> <ul>
-!> <li> if \c Nquad.gt.0                                    , then \c Iquad(vvol)=Nquad                   </li>
-!> <li> if \c Nquad.le.0 and \c .not.Lcoordinatesingularity , then \c Iquad(vvol)=2*Lrad(vvol)-Nquad      </li>
-!> <li> if \c Nquad.le.0 and      \c Lcoordinatesingularity , then \c Iquad(vvol)=2*Lrad(vvol)-Nquad+Mpol </li>
-!> </ul> </li>
-!> <li> The Gaussian weights and abscissae are given by \c gaussianweight(1:maxIquad,1:Mvol) and \c gaussianabscissae(1:maxIquad,1:Mvol),
-!>       which are computed using modified Numerical Recipes routine gauleg() . </li>
-!> <li> \c Iquad\f$_v\f$ is passed through to ma00aa() to compute the volume integrals of the metric elements;
-!>       also see jo00aa(), where \c Iquad\f$_v\f$ is used to compute the volume integrals of \f$||\nabla\times{\bf B} - \mu {\bf B}||\f$. </li>
-!> </ul>
 
   SALLOCATE( Iquad, (1:Mvol), 0 ) ! 16 Jan 13;
 
@@ -832,8 +609,6 @@ endif
 
   enddo ! end of do vvol; 18 Feb 13;
 
-  ! Quick test, temporary
-  ! Iquad(1) = Iquad(1) * 4
 
   maxIquad = maxval(Iquad(1:Mvol))
 
@@ -865,11 +640,6 @@ endif
 
 
 
-!> **LBsequad, LBnewton and LBlinear**
-!>
-!> <ul>
-!> <li> \c LBsequad, \c LBnewton and \c LBlinear depend simply on \c LBeltrami , which is described in global.f90 . </li>
-!> </ul>
 
   LBsequad = .false.
   LBnewton = .false.
@@ -879,7 +649,6 @@ endif
   if( LBeltrami.eq.2 .or. LBeltrami.eq.3 .or. LBeltrami.eq.6 .or. LBeltrami.eq.7 ) LBnewton = .true.
   if( LBeltrami.eq.4 .or. LBeltrami.eq.5 .or. LBeltrami.eq.6 .or. LBeltrami.eq.7 ) LBlinear = .true.
 
-  ! if (LBnewton .or. LBsequad) Lconstraint = 2
   if ((LBnewton .or. LBsequad) .and. ( Lconstraint .ne. 2)) then
     FATAL( preset, .true., LBnewton and LBsequad require Lconstraint = 2 )
   endif
@@ -899,14 +668,6 @@ endif
 
 
 
-!> **BBweight(1:mn): weighting of force-imbalance harmonics**
-!>
-!> <ul>
-!> <li> weight on force-imbalance harmonics;
-!>       \f{eqnarray}{ \texttt{BBweight}_i \equiv \texttt{opsilon} \times \exp\left[ - \texttt{escale} \times (m_i^2 + n_i^2) \right]
-!>       \f} </li>
-!> <li> this is only used in dforce() in constructing the force-imbalance vector </li>
-!> </ul>
 
   SALLOCATE( BBweight, (1:mn), opsilon * exp( - escale * ( im(1:mn)**2 + (in(1:mn)/Nfp)**2 ) ) )
 
@@ -917,14 +678,6 @@ endif
 
 
 
-!> **mmpp(1:mn): spectral condensation weight factors**
-!>
-!> <ul>
-!> <li> spectral condensation weight factors;
-!>       \f{eqnarray}{ \texttt{mmpp(i)} \equiv m_i^p,
-!>       \f}
-!>       where \f$p \equiv\,\f$\c pcondense . </li>
-!> </ul>
 
   SALLOCATE( mmpp, (1:mn), zero )
 
@@ -938,33 +691,6 @@ endif
 
 
 
-!> **NAdof, Ate, Aze, Ato and Azo: degrees-of-freedom in magnetic vector potential**
-!>
-!> <ul>
-!> <li> \c NAdof(1:Mvol) \f$\equiv\f$ total number of degrees-of-freedom in magnetic vector potential, including Lagrange multipliers, in each volume.
-!>       This can de deduced from matrix(). </li>
-!> <li> The components of the vector potential, \f${\bf A}=A_\theta \nabla + A_\zeta \nabla \zeta\f$, are
-!>      \f{eqnarray}{
-!>        A_\theta(s,\theta,\zeta) &=& \sum_{i,l} {\color{red}  A_{\theta,e,i,l}} \; {\overline T}_{l,i}(s) \cos\alpha_i + \sum_{i,l} {\color{Orange}  A_{\theta,o,i,l}} \; {\overline T}_{l,i}(s) \sin\alpha_i, \label{eq:At_preset} \\
-!>        A_\zeta( s,\theta,\zeta) &=& \sum_{i,l} {\color{blue} A_{\zeta, e,i,l}} \; {\overline T}_{l,i}(s) \cos\alpha_i + \sum_{i,l} {\color{Cerulean}A_{\zeta ,o,i,l}} \; {\overline T}_{l,i}(s) \sin\alpha_i, \label{eq:Az_preset}
-!>      \f}
-!>      where \f${\overline T}_{l,i}(s) \equiv \bar s^{m_i/2} \, T_l(s)\f$, \f$T_l(s)\f$ is the Chebyshev polynomial, and \f$\alpha_j \equiv m_j\theta-n_j\zeta\f$.
-!>      The regularity factor, \f$\bar s^{m_i/2}\f$, where \f$\bar s \equiv (1+s)/2\f$, is only included if there is a coordinate singularity in the domain
-!>      (i.e. only in the innermost volume, and only in cylindrical and toroidal geometry.) </li>
-!> <li> The Chebyshev-Fourier harmonics of the covariant components of the magnetic vector potential are kept in
-!>      \f{eqnarray}{
-!>          {\color{red}     A_{\theta,e,i,l}} &\equiv& \texttt{Ate(v,0,j)}\%\texttt{s(l)} , \\
-!>          {\color{blue}    A_{\zeta, e,i,l}} &\equiv& \texttt{Aze(v,0,j)}\%\texttt{s(l)} , \\
-!>          {\color{Orange}  A_{\theta,o,i,l}} &\equiv& \texttt{Ato(v,0,j)}\%\texttt{s(l)} , \mathrm{and} \\
-!>          {\color{Cerulean}A_{\zeta ,o,i,l}} &\equiv& \texttt{Azo(v,0,j)}\%\texttt{s(l)} ;
-!>      \f}
-!>      where \f$v=1,\texttt{Mvol}\f$ labels volume, \f$j=1,\texttt{mn}\f$ labels Fourier harmonic, and \f$l=0,\,\f$\c Lrad \f$(v)\f$ labels Chebyshev polynomial.
-!>      (These arrays also contains derivative information.) </li>
-!> <li> If \c Linitguess=1 , a guess for the initial state for the Beltrami fields is constructed.
-!>      An initial state is required for iterative solvers of the Beltrami fields, see \c LBeltrami . </li>
-!> <li> If \c Linitguess=2 , the initial state for the Beltrami fields is read from file (see ra00aa() ).
-!>      An initial state is required for iterative solvers of the Beltrami fields, see \c LBeltrami . </li>
-!> </ul>
 
   SALLOCATE( NAdof, (1:Mvol          ), 0 ) ! Beltrami degrees-of-freedom in each annulus;
   SALLOCATE( Nfielddof,(1:Mvol       ), 0 ) ! Beltrami degrees-of-freedom in each annulus, field only;
@@ -1033,25 +759,18 @@ endif
       enddo
     endif
 
-    ! the degree of freedom in the Beltrami field without Lagrange multipliers
     Nfielddof(vvol) = zerdof
-                                     !                                     a    c      b        d      e      f      g   h
     if( YESstellsym ) NAdof(vvol) = zerdof                               + mn        + Ntor+1        + mn-1        + 1 + 0
     if( NOTstellsym ) NAdof(vvol) = zerdof                               + mn + mn-1 + Ntor+1 + Ntor + mn-1 + mn-1 + 1 + 0 ! this is broken at the moment
 
-    ! due to basis recombination, Lma will not have the m=0 and m=1 harmonics. We substract them now
-    ! m = 0
     NAdof(vvol) = NAdof(vvol) - (ntor + 1)
     if (NOTstellsym) NAdof(vvol) = NAdof(vvol) - ntor
 
-    ! m = 1
     if (Mpol .ge. 1) then
       NAdof(vvol) = NAdof(vvol) - (2 * ntor + 1)
       if (NOTstellsym) NAdof(vvol) = NAdof(vvol) - (2 * ntor + 1)
     endif
 
-    ! Guess the size of the sparse matrix ! 28 Jan 20
-    ! If an iterative method is used and requires an preconditioner, we need to construct it as a sparse matrix
     if (Lmatsolver.ge.2 .and. LGMRESprec.gt.0) then
       if( YESstellsym ) NdMASmax(vvol) = (2 * (Lrad(vvol)/2 + 1))**2 * mn + 2 * 2 * 5 * Lrad(vvol) * mn ! Ate, Aze
       if( NOTstellsym ) NdMASmax(vvol) = (4 * (Lrad(vvol)/2 + 1))**2 * mn + 2 * 4 * 8 * Lrad(vvol) * mn ! Ate, Aze, Ato, Azo
@@ -1060,12 +779,9 @@ endif
     if( YESstellsym ) NAdof(vvol) = 2 * ( mn        ) * ( Lrad(vvol)    )                            + mn-1        + 1 + 1
     if( NOTstellsym ) NAdof(vvol) = 2 * ( mn + mn-1 ) * ( Lrad(vvol)    )                            + mn-1 + mn-1 + 1 + 1
 
-    ! dof for field variables only
     if( YESstellsym ) Nfielddof(vvol) = 2 * ( mn        ) * ( Lrad(vvol)    )
     if( NOTstellsym ) Nfielddof(vvol) = 2 * ( mn + mn-1 ) * ( Lrad(vvol)    )
 
-    ! Guess the size of the sparse matrix ! 28 Jan 20
-    ! If an iterative method is used and requires an preconditioner, we need to construct it as a sparse matrix
     if (Lmatsolver.ge.2 .and. LGMRESprec.gt.0) then
       if( YESstellsym ) NdMASmax(vvol) = (2 * (Lrad(vvol) + 1))**2 * mn + 2 * 2 * 5 * Lrad(vvol) * mn        ! Ate, Aze
       if( NOTstellsym ) NdMASmax(vvol) = (4 * (Lrad(vvol) + 1))**2 * mn + 2 * 4 * 8 * Lrad(vvol) * mn        ! Ate, Aze, Ato, Azo
@@ -1130,9 +846,7 @@ endif
     do ii = 1, mn ; mi = im(ii) ; ni = in(ii)
 
      do ll = 0, Lrad(vvol)
-      ! Zernike is non zero only if ll>=mi and when they have the same parity
       if (ll>=mi .and. mod(mi+ll,2)==0)then
-      ! We use the basis combination for m=0 and 1. They don't have ll=0 component.
       if (.not.((ll==0.and.mi==0).or.(ll==1.and.mi==1))) then
                                             ; idof = idof + 1 ; Ate(vvol,0,ii)%i(ll) = idof ! Zernike 30 Jun 19
       endif
@@ -1149,27 +863,19 @@ endif
     enddo ! end of do ii
 
     do ii = 1, mn ; mi = im(ii) ; ni = in(ii)
-     ! Lma is for Ate boundary condition on axis. For m=0 and 1, the boundary condition has been satisfied by basis recombination, so they are excluded.
      if ( mi.ne.0 .and. mi.ne.1     )  then ; idof = idof + 1 ; Lma(vvol,  ii)       = idof
      endif
-     ! Lmb is for Aze boundary condition on axis. We only have that for m=0.
      if(  mi.eq.0                   ) then ; idof = idof + 1 ; Lmb(vvol,  ii)       = idof ! 18 May 16;
      endif
-     ! Lme is for B.n at the outer boundary cos component. We don't have it for m=n=0.
      if(  ii.gt.1                   ) then ; idof = idof + 1 ; Lme(vvol,  ii)       = idof
      endif
-     ! Lmg is for dtflux. We only have it for m=n=0.
      if(  ii.eq.1                   ) then ; idof = idof + 1 ; Lmg(vvol,  ii)       = idof
-!   ! ;                                    ; idof = idof + 1 ; Lmh(vvol,  ii)       = idof ! no constraint on poloidal flux in innermost volume; 11 Mar 16;
      endif
      if( NOTstellsym ) then
-      ! Lmc is for Ato boundary condition on axis. Same as Lma.
       if(  mi.ne.0 .and. mi.ne.1    ) then ; idof = idof + 1 ; Lmc(vvol,  ii)       = idof ! 18 May 16;
       endif
-      ! Lmf is for B.n at the outer boundary sin component. Same as Lme.
       if(  ii.gt.1                  ) then ; idof = idof + 1 ; Lmf(vvol,  ii)       = idof ! 18 May 16;
      endif
-     ! Lmd is for Azo on axis. We only have it for m=0, but not m=n=0.
      if(  ii.gt.1 .and. mi.eq.0     ) then ; idof = idof + 1 ; Lmd(vvol,  ii)       = idof ! 18 May 16;
      endif
      endif ! end of if( NOTstellsym ) ; 19 Jul 16;
@@ -1182,7 +888,6 @@ endif
    else ! .not.Lcoordinatesingularity;
 
     do ii = 1, mn
-     ! We use basis recombination method to ensure the inner boundary has At=Az=0. Therefore they don't have ll=0 component.
      do ll = 1, Lrad(vvol)                 ; idof = idof + 1 ; Ate(vvol,0,ii)%i(ll) = idof
       ;                                    ; idof = idof + 1 ; Aze(vvol,0,ii)%i(ll) = idof
       if( ii.gt.1 .and. NOTstellsym ) then ; idof = idof + 1 ; Ato(vvol,0,ii)%i(ll) = idof
@@ -1192,41 +897,15 @@ endif
     enddo
 
     do ii = 1, mn
-     !;                                     ; idof = idof + 1 ; Lma(vvol,  ii)       = idof
-     !;                                     ; idof = idof + 1 ; Lmb(vvol,  ii)       = idof
-     !if(  ii.gt.1 .and. NOTstellsym ) then ; idof = idof + 1 ; Lmc(vvol,  ii)       = idof
-     !;                                     ; idof = idof + 1 ; Lmd(vvol,  ii)       = idof
-     !endif
-     ! Lme is for B.n at the outer boundary cos component. We don't have it for m=n=0.
      if(  ii.gt.1                   ) then ; idof = idof + 1 ; Lme(vvol,  ii)       = idof
      endif
-     ! Lmf is for B.n at the outer boundary sin component. Same as Lme
      if(  ii.gt.1 .and. NOTstellsym ) then ; idof = idof + 1 ; Lmf(vvol,  ii)       = idof
      endif
-     ! Lmg and Lmh are the dtflux and dpflux constraint. Only present for m=n=0
      if(  ii.eq.1                   ) then ; idof = idof + 1 ; Lmg(vvol,  ii)       = idof
       ;                                    ; idof = idof + 1 ; Lmh(vvol,  ii)       = idof
      endif
     enddo ! end of do ii; 25 Jan 13;
 
-   !if( Wpreset ) then
-   ! do ii = 1, mn
-   !  do ll = 0, Lrad(vvol)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ; ll="i4" : Ate = "i7" ;")') myid, ii, ll, Ate(vvol,0,ii)%i(ll)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ; ll="i4" : Aze = "i7" ;")') myid, ii, ll, Aze(vvol,0,ii)%i(ll)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ; ll="i4" : Ato = "i7" ;")') myid, ii, ll, Ato(vvol,0,ii)%i(ll)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ; ll="i4" : Azo = "i7" ;")') myid, ii, ll, Azo(vvol,0,ii)%i(ll)
-   !  enddo
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ;    "4x" : Lma = "i7" ;")') myid, ii,     Lma(vvol,  ii)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ;    "4x" : Lmb = "i7" ;")') myid, ii,     Lmb(vvol,  ii)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ;    "4x" : Lmc = "i7" ;")') myid, ii,     Lmc(vvol,  ii)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ;    "4x" : Lmd = "i7" ;")') myid, ii,     Lmd(vvol,  ii)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ;    "4x" : Lme = "i7" ;")') myid, ii,     Lme(vvol,  ii)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ;    "4x" : Lmf = "i7" ;")') myid, ii,     Lmf(vvol,  ii)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ;    "4x" : Lmg = "i7" ;")') myid, ii,     Lmg(vvol,  ii)
-   !   write(ounit,'("preset : " 10x " : myid="i3" ; ii="i4" ;    "4x" : Lmh = "i7" ;")') myid, ii,     Lmh(vvol,  ii)
-   ! enddo
-   !endif
 
     FATAL( preset, idof.ne.NAdof(vvol), need to count degrees-of-freedom more carefully for new matrix )
     FATAL( preset, (idof+1)**2.ge.HUGE(idof)), NAdof too big, should be smaller than maximum of int32 type )
@@ -1264,14 +943,10 @@ endif
 
 
 
-!> **workspace**
 
-! Fourier transforms;
 
   Nt = max( Ndiscrete*4*Mpol, 1 ) ; Nz = max( Ndiscrete*4*Ntor, 1 ) ; Ntz = Nt*Nz ; soNtz = one / sqrt( one*Ntz ) ! exaggerated discrete resolution;
 
-  !! quick test
-  ! Nt = max( Ndiscrete*8*Mpol, 1 ) ; Nz = max( Ndiscrete*8*Ntor, 1 ) ; Ntz = Nt*Nz ; soNtz = one / sqrt( one*Ntz )
 
   ;                  ; hNt = Nt / 2
   if( Nz.gt.1 ) then ; hNz = Nz / 2
@@ -1311,27 +986,6 @@ endif
 
 
 
-!> **goomne, goomno: metric information**
-!> These are defined in metrix() , and used in ma00aa().
-!>
-!> **gssmne, gssmno: metric information**
-!> These are defined in metrix() , and used in ma00aa().
-!>
-!> **gstmne, gstmno: metric information**
-!> These are defined in metrix() , and used in ma00aa().
-!>
-!> **gszmne, gszmno: metric information**
-!> These are defined in metrix() , and used in ma00aa().
-!>
-!> **gttmne, gttmno: metric information**
-!> These are defined in metrix() , and used in ma00aa().
-!>
-!> **gtzmne, gtzmno: metric information**
-!> These are defined in metrix() , and used in ma00aa().
-!>
-!> **gzzmne, gzzmno: metric information**
-!> These are defined in metrix() , and used in ma00aa().
-!>
   SALLOCATE( goomne, (0:mne, maxIquad), zero ) ! workspace for Fourier decomposition of metric terms;
   SALLOCATE( goomno, (0:mne, maxIquad), zero )
   SALLOCATE( gssmne, (0:mne, maxIquad), zero ) ! workspace for Fourier decomposition of metric terms;
@@ -1362,7 +1016,6 @@ endif
   SALLOCATE( cplxin,  (1:Nt,1:Nz,nthreads), zero )
   SALLOCATE( cplxout, (1:Nt,1:Nz,nthreads), zero )
 
-  ! Create and save optimal plans for forward and inverse 2D fast Fourier transforms with FFTW. -JAB; 25 Jul 2017
   planf = fftw_plan_dft_2d( Nz, Nt, cplxin(:,:,1), cplxout(:,:,1), FFTW_FORWARD,  FFTW_MEASURE + FFTW_DESTROY_INPUT )
   planb = fftw_plan_dft_2d( Nz, Nt, cplxin(:,:,1), cplxout(:,:,1), FFTW_BACKWARD, FFTW_MEASURE + FFTW_DESTROY_INPUT )
 
@@ -1377,14 +1030,6 @@ endif
 
 
 
-!> **cosi(1:Ntz,1:mn) and sini(1:Ntz,1:mn)**
-!>
-!> <ul>
-!> <li> Trigonometric factors used in various Fast Fourier transforms, where
-!>       \f{eqnarray}{ \texttt{cosi}_{j,i} & = & \cos( m_i \theta_j - n_i \zeta_j ), \\
-!>                     \texttt{sini}_{j,i} & = & \sin( m_i \theta_j - n_i \zeta_j ).
-!>       \f} </li>
-!> </ul>
 
   SALLOCATE( gteta, (1:Ntz), zero )
   SALLOCATE( gzeta, (1:Ntz), zero )
@@ -1426,25 +1071,6 @@ endif
 
 
 
-!> **psifactor(1:mn,1:Mvol): coordinate "pre-conditioning" factor**
-!>
-!> <ul>
-!> <li> In toroidal geometry, the coordinate "pre-conditioning" factor is
-!>       \f{eqnarray}{ f_{j,v} \equiv \left\{
-!>       \begin{array}{lcccccc}\psi_{t,v}^{0    }&,&\mbox{for $m_j=0$}, \\
-!>                             \psi_{t,v}^{m_j/2}&,&\mbox{otherwise}.
-!>       \end{array}\right.
-!>       \f}
-!>       where \f$\psi_{t,v} \equiv\,\f$\c tflux is the (normalized?) toroidal flux enclosed by the \f$v\f$-th interface. </li>
-!> <li> \c psifactor is used in packxi(), dforce() and hesian(). </li>
-!> <li> \c inifactor is similarly constructed, with
-!>       \f{eqnarray}{ f_{j,v} \equiv \left\{
-!>       \begin{array}{lcccccc}\psi_{t,v}^{ 1 /2}&,&\mbox{for $m_j=0$}, \\
-!>                             \psi_{t,v}^{m_j/2}&,&\mbox{otherwise}.
-!>       \end{array}\right.
-!>       \f}
-!>       and used only for the initialization of the surfaces taking into account axis information if provided. </li>
-!> </ul>
 
   SALLOCATE( psifactor, (1:mn,1:Mvol), zero )
   SALLOCATE( inifactor, (1:mn,1:Mvol), zero )
@@ -1494,7 +1120,6 @@ endif
 
    case( 1 ) ! Cartesian; 29 Apr 14;
 
-   !FATAL( preset, Linitialize.ne.1, geometrical initialization under construction for Cartesian ) ! 14 Apr 17;
 
     do vvol = 1, Nvol
      ;iRbc(1:mn,vvol) = iRbc(1:mn,Mvol) * tflux(vvol) / tflux(Mvol) ! 14 Apr 17;
@@ -1522,15 +1147,6 @@ endif
 
     FATAL( preset, lvol.gt.Mvol, perhaps illegal combination of Linitialize and Lfreebound )
 
-!    do vvol = 1, Nvol-1       ! 19 Jul 16;
-!     ;iRbc(1:mn,vvol) = iRbc(1:mn,0) + ( iRbc(1:mn,Nvol) - iRbc(1:mn,0) ) * psifactor(1:mn,vvol) ! 19 Jul 16;
-!     ;iZbs(2:mn,vvol) = iZbs(2:mn,0) + ( iZbs(2:mn,Nvol) - iZbs(2:mn,0) ) * psifactor(2:mn,vvol) ! 19 Jul 16;
-!     if( NOTstellsym ) then ! 19 Jul 16;
-!      iRbs(2:mn,vvol) = iRbs(2:mn,0) + ( iRbs(2:mn,Nvol) - iRbs(2:mn,0) ) * psifactor(2:mn,vvol) ! 19 Jul 16;
-!      iZbc(1:mn,vvol) = iZbc(1:mn,0) + ( iZbc(1:mn,Nvol) - iZbc(1:mn,0) ) * psifactor(1:mn,vvol) ! 19 Jul 16;
-!     endif ! 19 Jul 16;
-!    enddo
-!
     do vvol = 1, lvol-1
      ;iRbc(1:mn,vvol) = iRbc(1:mn,0) + ( iRbc(1:mn,lvol) - iRbc(1:mn,0) ) * ( inifactor(1:mn,vvol) / Rscale ) / tflux(lvol)**halfmm(1:mn)
      ;iZbs(2:mn,vvol) = iZbs(2:mn,0) + ( iZbs(2:mn,lvol) - iZbs(2:mn,0) ) * ( inifactor(2:mn,vvol) / Rscale ) / tflux(lvol)**halfmm(2:mn)
@@ -1540,14 +1156,6 @@ endif
      endif
     enddo
 
-!   do vvol = 1, Nvol+Linitialize-1
-!    ;iRbc(1:mn,vvol) = iRbc(1:mn,0) + ( iRbc(1:mn,Nvol+Linitialize) - iRbc(1:mn,0) ) * psifactor(1:mn,vvol) / tflux(Nvol+Linitialize)**halfmm(1:mn)
-!    ;iZbs(2:mn,vvol) = iZbs(2:mn,0) + ( iZbs(2:mn,Nvol+Linitialize) - iZbs(2:mn,0) ) * psifactor(2:mn,vvol) / tflux(Nvol+Linitialize)**halfmm(2:mn)
-!    if( NOTstellsym ) then
-!     iRbs(2:mn,vvol) = iRbs(2:mn,0) + ( iRbs(2:mn,Nvol+Linitialize) - iRbs(2:mn,0) ) * psifactor(2:mn,vvol) / tflux(Nvol+Linitialize)**halfmm(2:mn)
-!     iZbc(1:mn,vvol) = iZbc(1:mn,0) + ( iZbc(1:mn,Nvol+Linitialize) - iZbc(1:mn,0) ) * psifactor(1:mn,vvol) / tflux(Nvol+Linitialize)**halfmm(1:mn)
-!    endif
-!   enddo
 
    end select ! matches select case( Igeometry ); 19 Jul 16;
 
@@ -1555,48 +1163,12 @@ endif
 
 
 
-!> **Bsupumn and Bsupvmn**
 
   SALLOCATE( Bsupumn, (1:Nvol,0:1,1:mn), zero ) ! Fourier components of {\bf B}\cdot\nabla \theta on boundary; required for virtual casing;
   SALLOCATE( Bsupvmn, (1:Nvol,0:1,1:mn), zero ) ! Fourier components of {\bf B}\cdot\nabla \zeta  on boundary;
 
 
 
-!> **diotadxup and glambda: transformation to straight fieldline angle**
-!>
-!> <ul>
-!> <li> Given the Beltrami fields in any volume, the rotational-transform on the adjacent interfaces
-!>       may be determined (in tr00ab()) by constructing the straight fieldline angle on the interfaces. </li>
-!> <li> The rotational transform on the inner or outer interface of a given volume depends on the magnetic field in that volume,
-!>       i.e. \f${{\,\iota\!\!\!}-}_\pm = {{\,\iota\!\!\!}-}({\bf B}_\pm)\f$,
-!>       so that
-!>       \f{eqnarray}{ \delta {{\,\iota\!\!\!}-}_\pm = \frac{\partial {{\,\iota\!\!\!}-}_\pm}{\partial {\bf B}_\pm} \cdot \delta {\bf B_\pm}.
-!>       \f} </li>
-!> <li> The magnetic field depends on the Fourier harmonics of both the inner and outer interface geometry (represented here as \f$x_j\f$),
-!>       the helicity multiplier, and the enclosed poloidal flux, i.e. \f${\bf B_\pm} = {\bf B_\pm}(x_j, \mu, \Delta \psi_p)\f$, so that
-!>       \f{eqnarray}{ \delta {\bf B_\pm} = \frac{\partial {\bf B}_\pm}{\partial x_j          } \delta x_j
-!>                                        + \frac{\partial {\bf B}_\pm}{\partial \mu          } \delta \mu
-!>                                        + \frac{\partial {\bf B}_\pm}{\partial \Delta \psi_p} \delta \Delta \psi_p.
-!>       \f} </li>
-!> <li> The rotational-transforms, thus, can be considered to be functions of the geometry, the helicity-multiplier and the enclosed poloidal flux,
-!>       \f${{\,\iota\!\!\!}-}_{\pm} = {{\,\iota\!\!\!}-}_{\pm}(x_j,\mu,\Delta\psi_p)\f$. </li>
-!> <li> The rotational-transform, and its derivatives, on the inner and outer interfaces of each volume is stored in
-!>       \c diotadxup(0:1,-1:2,1:Mvol) .
-!>       The indices label:
-!>       <ul>
-!>       <li> the first index labels the inner or outer interface, </li>
-!>       <li> the the second one labels derivative, with  </li>
-!>       <ul> <li>\c -1 : indicating the derivative with respect to the interface geometry,
-!>                                 i.e. \f$\displaystyle \frac{\partial {{\,\iota\!\!\!}-}_{\pm}}{\partial x_j}\f$, </li>
-!>            <li>\c 0 : the rotational-transform itself, </li>
-!>            <li>\c 1,2 : the derivatives with respec to \f$\mu\f$ and \f$\Delta \psi_p\f$,
-!>                    i.e. \f$\displaystyle \frac{\partial {{\,\iota\!\!\!}-}_{\pm}}{\partial \mu}\f$ and
-!>                         \f$\displaystyle \frac{\partial {{\,\iota\!\!\!}-}_{\pm}}{\partial \Delta \psi_p}\f$; </li>
-!>       </ul> </li>
-!>       <li>The third index labels volume. </li>
-!>       </ul> </li>
-!> <li> The values of \c diotadxup are assigned in mp00aa() after calling tr00ab(). </li>
-!> </ul>
 
   SALLOCATE( diotadxup, (0:1,-1:2,1:Mvol), zero ) ! measured rotational transform on inner/outer interfaces in each annulus;
   SALLOCATE( dItGpdxtp, (0:1,-1:2,1:Mvol), zero ) ! measured plasma and linking currents                                   ;
@@ -1605,7 +1177,6 @@ endif
 
 
 
-! Construction of ``force'';
 
   SALLOCATE( Bemn, (1:mn,1:Mvol,0:1), zero )
   SALLOCATE( Bomn, (1:mn,1:Mvol,0:1), zero )
@@ -1633,17 +1204,7 @@ endif
 
 
 
-!> **vvolume, lBBintegral and lABintegral**
-!>
-!> <ul>
-!> <li> volume integrals
-!>       \f{eqnarray}{ \texttt{vvolume(i)}     &=& \int_{{\cal V}_i}                       \, dv\\
-!>                     \texttt{lBBintegral(i)} &=& \int_{{\cal V}_i} {\bf B} \cdot {\bf B} \, dv\\
-!>                     \texttt{lABintegral(i)} &=& \int_{{\cal V}_i} {\bf A} \cdot {\bf B} \, dv
-!>       \f} </li>
-!> </ul>
 
-! Allocate matrix to store the last solution of GMRES as initialization
   LILUprecond = .false.
   if (Lmatsolver.eq.2 .or. Lmatsolver.eq.3) then ! use GMRES
     SALLOCATE(GMRESlastsolution, (MAXVAL(NAdof),0:2,1:Mvol), zero )

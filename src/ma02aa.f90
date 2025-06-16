@@ -1,13 +1,4 @@
-!> \defgroup grp_solver_driver Solver/Driver
-!>
-!> \file
-!> \brief Constructs Beltrami field in given volume consistent with flux, helicity, rotational-transform and/or parallel-current constraints.
 
-!> \brief Constructs Beltrami field in given volume consistent with flux, helicity, rotational-transform and/or parallel-current constraints.
-!> \ingroup grp_solver_driver
-!>
-!> @param[in] lvol index of nested volume for which to run this
-!> @param[in] NN   number of degrees of freedom in the (packed format) vector potential;
 subroutine ma02aa( lvol, NN )
 
 
@@ -27,9 +18,7 @@ subroutine ma02aa( lvol, NN )
   use allglobal, only : ncpu, myid, cpus, MPI_COMM_SPEC, &
                         Mvol, mn, im, in, &
                         LBlinear, LBnewton, LBsequad, &
-!                       dMA, dMB, dMC, dMD, dME, dMF, solution, &
                         dMA, dMB,      dMD,           solution, &
-!                       MBpsi, MEpsi, psiMCpsi, psiMFpsi, &
                         MBpsi,  Ate,                          &
                         ImagneticOK, &
                         lBBintegral, lABintegral, &
@@ -61,13 +50,11 @@ subroutine ma02aa( lvol, NN )
 
   external             :: mp00ac
 
-!required for hybrj1;
   INTEGER              :: ihybrj1, Ldfmuaa, lengthwork
   REAL                 :: NewtonError
   REAL   , allocatable :: DFxi(:,:), work(:)
   external             :: df00ab
 
-! required for E04UFF;
   INTEGER              :: NLinearConstraints, NNonLinearConstraints, LDA, LDCJ, LDR, iterations, LIWk, LRWk, ie04uff
   INTEGER, allocatable :: Istate(:), NEEDC(:), IWk(:)
   REAL                 :: objectivefunction
@@ -82,11 +69,6 @@ subroutine ma02aa( lvol, NN )
 
 
 
-!> **sequential quadratic programming**
-!> <ul>
-!> <li> Only relevant if \c LBsequad=T . See \c LBeltrami for details. </li>
-!> <li> Documentation on the implementation of \c E04UFF is under construction. </li>
-!> </ul>
 
   if( LBsequad ) then ! sequential quadratic programming (SQP); construct minimum energy with constrained helicity;
    lastcpu = GETTIME
@@ -144,89 +126,14 @@ subroutine ma02aa( lvol, NN )
 
    irevcm = 0 ; ie04uff = 1 ! reverse communication loop control; ifail error flag;
 
-! supply optional parameters to E04UFF; NAG calls commented out (this part of the code so far not used); 17 Nov 17
 
-!   call E04UEF('Nolist')               ! turn of screen output;
-!   call E04UEF('Print Level = 0')      ! turn of screen output;
-!   call E04UEF('Derivative Level = 3') ! assume all derivatives are provided by user;
-!   call E04UEF('Verify Level = -1')    ! do not verify derivatives using finite-differences; default is Verify Level = 0, which does verify gradients;
-!   write(optionalparameter,'("Major Iteration Limit = "i9)') 2**2 * max( 50, 3 * ( NN + NLinearConstraints ) + 10 * NNonLinearConstraints )
-!   call E04UEF(optionalparameter)
 
-! pre-calculate some matrix vector products;
 
    MBpsi(1:NN) =                         matmul( dMB(1:NN,1: 2), dpsi(1:2) )
-!  MEpsi(1:NN) = zero !                  matmul( dME(1:NN,1: 2), dpsi(1:2) )
-
-!  psiMCpsi    = zero ! half * sum( dpsi(1:2) * matmul( dMC(1: 2,1: 2), dpsi(1:2) ) )
-!  psiMFpsi    = zero ! half * sum( dpsi(1:2) * matmul( dMF(1: 2,1: 2), dpsi(1:2) ) )
 
 
-!   do ! reverse communication loop; NAG calls commented out (this part of the code so far not used); 17 Nov 17
-!
-!
-!    call E04UFF( irevcm, &
-!                 NN, NLinearConstraints, NNonLinearConstraints, LDA, LDCJ, LDR, &
-!                 LinearConstraintMatrix(1:LDA,1:1), &
-!                 LowerBound(1:NN+NLinearConstraints+NNonLinearConstraints), UpperBound(1:NN+NLinearConstraints+NNonLinearConstraints), &
-!                 iterations, Istate(1:NN+NLinearConstraints+NNonLinearConstraints), &
-!                constraintfunction(1:NNonLinearConstraints), constraintgradient(1:LDCJ,1:NN), &
-!                 multipliers(1:NN+NLinearConstraints+NNonLinearConstraints), &
-!                 objectivefunction, objectivegradient(1:NN), &
-!                 RS(1:LDR,1:NN), &
-!                 xi(1:NN), &
-!                 NEEDC(1:NNonLinearConstraints), IWk(1:LIWk), LIWk, RWk(1:LRWk), LRWk, ie04uff )
-!
-!    if( irevcm.eq.1 .or. irevcm.eq.2 .or. irevcm.eq.3 ) Mxi(1:NN) = matmul( dMA(1:NN,1:NN), xi(1:NN) ) ! calculate objective  functional and/or gradient;
-!    if( irevcm.eq.4 .or. irevcm.eq.5 .or. irevcm.eq.6 ) Mxi(1:NN) = matmul( dMD(1:NN,1:NN), xi(1:NN) ) ! calculate constraint functional and/or gradient;
-!
-!    if( irevcm.eq.1 .or. irevcm.eq.3 ) objectivefunction       = half * sum( xi(1:NN) * Mxi(1:NN) ) + sum( xi(1:NN) * MBpsi(1:NN) ) + psiMCpsi
-!    if( irevcm.eq.2 .or. irevcm.eq.3 ) objectivegradient(1:NN) =                        Mxi(1:NN)   +                 MBpsi(1:NN)
-!
-!   if( irevcm.eq.4 .or. irevcm.eq.6 .and. NEEDC(1).gt.0 ) then
-!    constraintfunction(1     ) = half * sum( xi(1:NN) * Mxi(1:NN) ) + sum( xi(1:NN) * MEpsi(1:NN) ) + psiMFpsi
-!   endif
-!
-!    if( irevcm.eq.5 .or. irevcm.eq.6 .and. NEEDC(1).gt.0 ) then
-!     constraintgradient(1,1:NN) =                        Mxi(1:NN)   +                 MEpsi(1:NN)
-!    endif
-!
-!    if( irevcm.eq.0 ) then ! final exit;
-!
-!     cput = GETTIME
-!
-!     select case(ie04uff)
-!     case( :-1 )
-!      write(ounit,1010) cput-cpus, myid, lvol, ie04uff, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "user enforced termination ;     "
-!     case(   0 )
-!     if( Wma02aa ) write(ounit,1010) cput-cpus, myid, lvol, ie04uff, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "success ;                       "
-!     case(   1 )
-!      if( Wma02aa ) write(ounit,1010) cput-cpus, myid, lvol, ie04uff, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "not converged;                  "
-!     case(   2 )
-!      write(ounit,1010) cput-cpus, myid, lvol, ie04uff, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "infeasible (linear) ;           "
-!     case(   3 )
-!      write(ounit,1010) cput-cpus, myid, lvol, ie04uff, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "infeasible (nonlinear) ;        "
-!     case(   4 )
-!      write(ounit,1010) cput-cpus, myid, lvol, ie04uff, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "major iteration limit reached ; "
-!     case(   6 )
-!     if( Wma02aa ) write(ounit,1010) cput-cpus, myid, lvol, ie04uff, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "could not be improved ;         "
-!     case(   7 )
-!     write(ounit,1010) cput-cpus, myid, lvol, ie04uff, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "derivatives appear incorrect ;  "
-!    case(   9 )
-!     write(ounit,1010) cput-cpus, myid, lvol, ie04uff, helicity(lvol), mu(lvol), dpflux(lvol), cput-lastcpu, "input error ;                   "
-!     case default
-!     FATAL( ma02aa, .true., illegal ifail returned by E04UFF )
-!    end select
 
-!    if( irevcm.eq.0 .or. irevcm.eq.1 .or. irevcm.eq.6 ) ImagneticOK(lvol) = .true. ! set error flag; used elsewhere;
-!
-!     mu(lvol) = multipliers( NN + NLinearConstraints + NNonLinearConstraints ) ! helicity multiplier, or so it seems: NAG document is not completely clear;
-!
-!     exit ! sequential quadratic programming method of constructing Beltrami field is finished;
-!
-!    endif ! end of if( irevcm.eq.0 ) then;
-!
-!   enddo ! end of do ! reverse communication loop;
+
 
 
    DALLOCATE(RWk)
@@ -256,10 +163,6 @@ subroutine ma02aa( lvol, NN )
 
 
 
-!> **Newton method**
-!> <ul>
-!> <li> Only relevant if \c LBnewton=T . See \c LBeltrami for details. </li>
-!> </ul>
 
   if( LBnewton ) then
 
@@ -273,17 +176,12 @@ subroutine ma02aa( lvol, NN )
    ideriv = 0 ; dpsi(1:2) = (/ dtflux(lvol), dpflux(lvol) /) ! these are also used below;
 
    packorunpack = 'P'
-!   CALL( ma02aa, packab ( packorunpack, lvol, NN, xi(1:NN), dpsi(1:2), ideriv ) )
    CALL( ma02aa, packab ( packorunpack, lvol, NN, xi(1:NN), ideriv ) )
 
    pNN = NN + 1 ; Ldfmuaa = pNN ; tol = mupftol ; lengthwork = pNN * ( pNN+13 ) / 2
 
-! pre-calculate some matrix vector products; these are used in df00ab;
 
    MBpsi(1:NN) =                         matmul( dMB(1:NN,1: 2), dpsi(1:2) )
-!  MEpsi(1:NN) = zero !                  matmul( dME(1:NN,1: 2), dpsi(1:2) )
-!  psiMCpsi    = zero ! half * sum( dpsi(1:2) * matmul( dMC(1: 2,1: 2), dpsi(1:2) ) )
-!  psiMFpsi    = zero ! half * sum( dpsi(1:2) * matmul( dMF(1: 2,1: 2), dpsi(1:2) ) )
 
    call hybrj1( df00ab, pNN, xi(0:NN), Fxi(0:NN), DFxi(0:NN,0:NN), Ldfmuaa, tol, ihybrj1, work(1:lengthwork), lengthwork )
 
@@ -319,9 +217,7 @@ subroutine ma02aa( lvol, NN )
    end select
 
 
-!if( NewtonError.lt.mupftol ) then
    ImagneticOK(lvol) = .true.
-!endif
 
    lBBintegral(lvol) = half * sum( xi(1:NN) * matmul( dMA(1:NN,1:NN), xi(1:NN) ) ) + sum( xi(1:NN) * MBpsi(1:NN) ) ! + psiMCpsi
    lABintegral(lvol) = half * sum( xi(1:NN) * matmul( dMD(1:NN,1:NN), xi(1:NN) ) ) ! + sum( xi(1:NN) * MEpsi(1:NN) ) ! + psiMFpsi
@@ -335,67 +231,7 @@ subroutine ma02aa( lvol, NN )
 
 
 
-!> **linear method**
 
-!> <ul>
-!> <li> Only relevant if \c LBlinear=T . See \c LBeltrami for details. </li>
-!> <li> The quantity \f$\mu\f$ is *not* not treated as a "magnetic" degree-of-freedom
-!>       equivalent to in the degrees-of-freedom in the magnetic vector potential
-!>       (as it strictly should be, because it is a Lagrange multiplier introduced to enforce the helicity constraint). </li>
-!> <li> In this case, the Beltrami equation, \f$\nabla \times {\bf B} = \mu {\bf B}\f$, is *linear* in the magnetic degrees-of-freedom. </li>
-!> <li> The algorithm proceeds as follows:
-!>
-!> **plasma volumes**
-!>
-!> <ul>
-!>
-!> <li> In addition to the enclosed toroidal flux, \f$\Delta \psi_t\f$, which is held constant in the plasma volumes,
-!>       the Beltrami field in a given volume is assumed to be parameterized by \f$\mu\f$ and \f$\Delta \psi_p\f$.
-!>       (Note that \f$\Delta \psi_p\f$ is not defined in a torus.) </li>
-!> <li> These are "packed" into an array, e.g. \f$\boldsymbol{\mu} \equiv (\mu, \Delta\psi_p)^T\f$, so that standard library routines ,
-!>       e.g. \c C05PCF, can be used to (iteratively) find the appropriately-constrained Beltrami solution, i.e. \f${\bf f}(\boldsymbol{\mu})=0\f$. </li>
-!> <li> The function \f${\bf f}(\boldsymbol{\mu})\f$, which is computed by mp00ac(), is defined by the input parameter \c Lconstraint:
-!> <ul>
-!> <li> If \c Lconstraint = -1, 0, then \f$\boldsymbol{\mu}\f$       is *not* varied and \c Nxdof=0. </li>
-!> <li> If \c Lconstraint =  1,    then \f$\boldsymbol{\mu}\f$       is       varied to satisfy the transform constraints;
-!>      and \c Nxdof=1 in the simple torus and \c Nxdof=2 in the annular regions.
-!>      (Note that in the "simple-torus" region, the enclosed poloidal flux \f$\Delta\psi_p\f$ is not well-defined,
-!>      and only \f$\mu=\boldsymbol{\mu}_1\f$ is varied in order to satisfy the transform constraint on the "outer" interface of that volume.) </li>
-!> <li> \todo If \c Lconstraint =  2,    then \f$\mu=\boldsymbol{\mu}_1\f$ is       varied in order to satisfy the helicity constraint,
-!>      and \f$\Delta\psi_p=\boldsymbol{\mu}_2\f$ is *not* varied, and \c Nxdof=1.
-!>      (under re-construction)
-!>
-!> </li>
-!> </ul> </li>
-!>
-!> </ul>
-!>
-!> **vacuum volume**
-!>
-!> <ul>
-!>
-!> <li> In the vacuum, \f$\mu=0\f$, and the enclosed fluxes, \f$\Delta \psi_t\f$ and \f$\Delta \psi_p\f$, are considered to parameterize the family of solutions.
-!>      (These quantities may not be well-defined if \f${\bf B}\cdot{\bf n}\ne 0\f$ on the computational boundary.) </li>
-!> <li> These are "packed" into an array, \f$\boldsymbol{\mu} \equiv (\Delta\psi_t,\Delta\psi_p)^T\f$, so that, as above, standard routines can be used
-!>      to iteratively find the appropriately constrained solution, i.e. \f${\bf f}(\boldsymbol{\mu})=0\f$. </li>
-!> <li> The function \f${\bf f}(\boldsymbol{\mu})\f$, which is computed by mp00ac(), is defined by the input parameter \c Lconstraint:
-!> <ul>
-!> <li> If \c Lconstraint = -1,   then \f$\boldsymbol{\mu}\f$ is *not* varied and \c Nxdof=0. </li>
-!> <li> If \c Lconstraint =  0,2, then \f$\boldsymbol{\mu}\f$ is varied to satisfy the enclosed current constraints, and \c Nxdof=2. </li>
-!> <li> If \c Lconstraint =  1,   then \f$\boldsymbol{\mu}\f$ is varied to satisfy
-!>      the constraint on the transform on the inner boundary \f$\equiv\f$ plasma boundary and the "linking" current, and \c Nxdof=2.  </li>
-!> </ul> </li>
-!>
-!> </ul>  </li>
-!>
-!> <li> The Beltrami fields, and the rotational-transform and helicity etc. as required to determine the function \f${\bf f}(\boldsymbol{\mu})\f$
-!>      are calculated in mp00ac(). </li>
-!> <li> This routine, mp00ac(), is called iteratively if \c Nxdof>1 via
-!>      \c C05PCF to determine the appropriately constrained Beltrami field, \f${\bf B}_{\boldsymbol{\mu}}\f$, so that \f${\bf f}(\boldsymbol{\mu})=0\f$. </li>
-!> <li> The input variables \c mupftol and \c mupfits control the required accuracy and maximum number of iterations. </li>
-!> <li> If \c Nxdof=1, then mp00ac() is called only once to provide the Beltrami fields with the given value of \f$\boldsymbol{\mu}\f$. </li>
-!>
-!> </ul>
 
 
   if( LBlinear ) then ! assume Beltrami field is parameterized by helicity multiplier (and poloidal flux);
@@ -529,8 +365,6 @@ subroutine ma02aa( lvol, NN )
   "error="es7.0" ; ":,a18)
 1040 format("ma02aa : ",f10.2," : myid=",i3," ; lvol=",i3," ; Linear : ihybrj =",i3," hel="es12.4" mu="es12.4" dpflux="es12.4" time="f9.1" ; "&
   :,a16" ; F="2es08.0)
-!050 format("ma02aa : ",f10.2," : myid=",i3," ; lvol=",i3," ; Linear : ihybrj =",i3,"     "  12x " I ="es12.4"        "  12x " time="f9.1" ; "&
-! :,a16" ; F="2es08.0)
 
 
 

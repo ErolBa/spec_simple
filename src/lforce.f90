@@ -1,146 +1,4 @@
-!> \defgroup grp_local_force "local" force
-!>
-!> \file
-!> \brief Computes \f$B^2\f$, and the spectral condensation constraints if required, on the interfaces, \f${\cal I}_i\f$.
 
-!> \brief Computes \f$B^2\f$, and the spectral condensation constraints if required, on the interfaces, \f${\cal I}_i\f$.
-!> \ingroup grp_local_force
-!>
-!> **field strength**
-!>
-!> <ul>
-!> <li> The field strength is given by \f$B^2 = B^s B_s + B^\theta B_\theta + B^\zeta B_\zeta\f$, and on the interfaces \f$B^s=0\f$ by construction. </li>
-!> <li> The magnetic field is
-!>       \f$\sqrt g \; {\bf B} = (\partial_\theta A_\zeta - \partial_\zeta A_\theta ) {\bf e}_s - \partial_s A_\zeta {\bf e}_\theta + \partial_s A_\theta {\bf e}_\zeta\f$. </li>
-!> <li> The covariant components of the field are computed via \f$B_\theta = B^\theta g_{\theta\theta} + B^\zeta g_{\theta\zeta}\f$ and \f$B_\zeta = B^\theta g_{\theta\zeta} + B^\zeta g_{\zeta\zeta}\f$. </li>
-!> <li> The expression for \f$B^2\f$ is
-!>       \f{eqnarray}{
-!>       (\sqrt g)^2 B^2 = A_\zeta^\prime \; A_\zeta^\prime \; g_{\theta\theta} - 2 \; A_\zeta^\prime \; A_\theta^\prime \; g_{\theta\zeta} + A_\theta^\prime \; A_\theta^\prime \; g_{\zeta\zeta},
-!>       \f}
-!>       where the \f$"\prime"\f$ denotes derivative with respect to \f$s\f$. </li>
-!> <li> The quantity returned is
-!>       \f{eqnarray}{ F \equiv \texttt{pscale} \times \frac{P}{V^\gamma} + \frac{B^2}{2},
-!>       \f}
-!>       where \f$P\equiv\f$ \c adiabatic  and \f$V\equiv\f$ volume. </li>
-!> </ul>
-!>
-!> **spectral constraints**
-!>
-!> <ul>
-!> <li> In addition to the physical-force-balance constraints, namely that \f$[[p+B^2/2]]=0\f$ across the interfaces,
-!>       additional angle constraints are required to obtain a unique Fourier representation of the interface geometry. </li>
-!> <li> Introducing the angle functional: a weighted combination of the "polar" constraint;
-!>       the normalized, poloidal, spectral width (Hirshman & Meier (1985) \cite y1985_hirshman, Hirshman & Breslau (1998) \cite y1998_hirshman)
-!>       the poloidal-angle origin constraint; and the "length" of the angle curves
-!>       \f{eqnarray}{ F \!\equiv\! \sum_{i=1}^{N-1} \alpha_i \underbrace{\oint\!\!\!\oint \!d\theta d\zeta \,\,\, \!\! \frac{1}{\Theta_{i,\theta}}}_{polar-angle}
-!>                            +     \sum_{i=1}^{N-1} \beta_i \, \underbrace{\;\; M_i \;\;}_{spectral-width}
-!>                            +     \sum_{i=1}^{N-1} \gamma_i \int_{0}^{2\pi} \! \frac{1}{2}\left[Z_i(0,\zeta)-Z_{i,0}\right]^2 d\zeta
-!>                            +     {\color{red}{\oint\!\!\!\oint \!d\theta d\zeta \,\,\, \!\! \sum_{i=1}^{N} \delta_i \, \underbrace{\;\;\;\; L_i \;\;\;\;}_{poloidal-length}}}
-!>       \f}
-!>       where \f$i\f$ labels the interfaces, and
-!>       \f{eqnarray}{ \Theta_{i,\theta} & \equiv & \frac{x \, y_\theta - x_\theta \, y}{x^2+y^2}, \\
-!>       M_i          & \equiv & \frac{\sum_j m_j^p ( R_{j,i}^2 + Z_{j,i}^2 )}{\sum_j       ( R_{j,i}^2 + Z_{j,i}^2 )} ,\\
-!>       {\color{red}{L_i}}          & \equiv & {\color{red}{\sqrt{      [R_{i}(\theta,\zeta)-R_{i-1}(\theta,\zeta)]^2+[Z_{i}(\theta,\zeta)-Z_{i-1}(\theta,\zeta)]^2}}},
-!>       \f}
-!>       and where \f$j\f$ labels the Fourier harmonics.
-!>       The \f$\alpha_i\f$, \f$\beta_i\f$, \f$\gamma_i\f$ and \f$\delta_i \equiv \f$ \c sweight are user-supplied weight factors. </li>
-!> <li> The polar constraint is derived from defining \f$\tan \Theta \equiv y/x\f$, where
-!>       \f{eqnarray}{ x(\theta,\zeta) &  \equiv &  R_{i}(\theta,\zeta)-R_{i,0}(\zeta), \\
-!>           y(\theta,\zeta) &  \equiv &  Z_{i}(\theta,\zeta)-Z_{i,0}(\zeta),
-!>       \f}
-!>       and where the geometric center of each interface is given by the arc-length weighted integrals, see rzaxis(),
-!>       \f{eqnarray}{
-!>           R_{i,0} & \equiv & \int_0^{2\pi} \!\!\!\! d\theta \; R_i(\theta,\zeta) \sqrt{R_{i,\theta}(\theta,\zeta)^2+Z_{i,\theta}(\theta,\zeta)^2}, \\
-!>           Z_{i,0} & \equiv & \int_0^{2\pi} \!\!\!\! d\theta \; Z_i(\theta,\zeta) \sqrt{R_{i,\theta}(\theta,\zeta)^2+Z_{i,\theta}(\theta,\zeta)^2},
-!>       \f}
-!>       and \f$\cos \Theta = x / \sqrt{x^2+y^2}\f$ has been used to simplify the expressions and to avoid divide-by-zero. </li>
-!> <li> Only "poloidal tangential" variations will be allowed to find the extremum of \f$F\f$, which are described by
-!>       \f{eqnarray}{
-!>           \delta R_i(\theta,\zeta) & \equiv & R_{i,\theta}(\theta,\zeta) \, \delta u_i(\theta,\zeta),\\
-!>           \delta Z_i(\theta,\zeta) & \equiv & Z_{i,\theta}(\theta,\zeta) \, \delta u_i(\theta,\zeta),
-!>       \f}
-!>       from which it follows that the variation in each Fourier harmonic is
-!>       \f{eqnarray}{
-!>           \delta R_{j,i} = \displaystyle \oint\!\!\!\oint \!d\theta d\zeta \,\,\, R_{i,\theta}(\theta,\zeta) \, \delta u_i(\theta,\zeta) \, \cos(m_j\theta-n_j\zeta), \\
-!>           \delta Z_{j,i} = \displaystyle \oint\!\!\!\oint \!d\theta d\zeta \,\,\, Z_{i,\theta}(\theta,\zeta) \, \delta u_i(\theta,\zeta) \, \sin(m_j\theta-n_j\zeta),
-!>       \f}
-!>       and
-!>       \f{eqnarray}{
-!>           \delta R_{i,\theta}(\theta,\zeta) & \equiv & R_{i,\theta\theta}(\theta,\zeta) \, \delta u_i(\theta,\zeta) + R_{i,\theta}(\theta,\zeta) \, \delta u_{i,\theta} (\theta,\zeta) \\
-!>           \delta Z_{i,\theta}(\theta,\zeta) & \equiv & Z_{i,\theta\theta}(\theta,\zeta) \, \delta u_i(\theta,\zeta) + Z_{i,\theta}(\theta,\zeta) \, \delta u_{i,\theta} (\theta,\zeta)
-!>       \f} </li>
-!> <li> The variation in \f$F\f$ is
-!>       \f{eqnarray}{ \delta F
-!>       & = & \sum_{i=1}^{N-1} \alpha_i \;\;\;\oint\!\!\!\oint \!d\theta d\zeta \,\,\, \!\! \left( \frac{-2\Theta_{i,\theta\theta}}{\Theta_{i,\theta}^2} \right) \delta u_i \nonumber \\
-!>       & + & \sum_{i=1}^{N-1} \beta_i  \;\;\;\oint\!\!\!\oint \!d\theta d\zeta \,\,\, \!\! \left( R_{i,\theta} X_i + Z_{i,\theta} Y_i \right) \delta u_i \nonumber \\
-!>       & + & \sum_{i=1}^{N-1} \gamma_i  \;\;\; \int \! d\zeta \;   \left( Z_{i}(0,\zeta)-Z_{i,0} \right) Z_{i,\theta} \; \delta u_i \nonumber \\
-!>       & + & {\color{red}{\sum_{i=1}^{N-1} \delta_i \;\;\;\oint\!\!\!\oint \!d\theta d\zeta \,\,\, \!\! \left( \frac{\Delta R_{i  } R_{i,\theta} + \Delta Z_{i  } Z_{i,\theta}}{L_{i  }} \right)
-!>             \delta u_i}}
-!>       \nonumber \\
-!>       & - & {\color{red}{\sum_{i=1}^{N-1} \delta_{i+1}   \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \!\! \left( \frac{\Delta R_{i+1} R_{i,\theta} + \Delta Z_{i+1} Z_{i,\theta}}{L_{i+1}} \right)
-!>             \delta u_i}}
-!>       \label{eq:firstvariation_lforce}
-!>       \f}
-!>       where, for the stellarator symmetric case,
-!>       \f{eqnarray}{
-!>           X_i & \equiv & \displaystyle \sum\nolimits_j ( m_j^p - M_i ) \, R_{j,i} \cos(m_j\theta-n_j\zeta), \\
-!>           Y_i & \equiv & \displaystyle \sum\nolimits_j ( m_j^p - M_i ) \, Z_{j,i} \sin(m_j\theta-n_j\zeta),
-!>       \f}
-!>       and
-!>       \f{eqnarray}{ {\color{red}{\Delta R_{i}}} & \equiv & {\color{red}{R_{i}(\theta,\zeta)-R_{i-1}(\theta,\zeta)}},\\
-!>           {\color{red}{\Delta Z_{i}}} & \equiv & {\color{red}{Z_{i}(\theta,\zeta)-Z_{i-1}(\theta,\zeta)}},
-!>       \f} </li>
-!> <li> The spectral constraints derived from Eqn.\f$(\ref{eq:firstvariation_lforce})\f$ are
-!>       \f{eqnarray}{ I_i(\theta,\zeta) & \equiv & - 2 \alpha_i \frac{\Theta_{i,\theta\theta}}{\Theta_{i,\theta}^{2}}
-!>               + \beta_i \left( R_{i,\theta} X_i + Z_{i,\theta} Y_i \right)
-!>               + \gamma_i \left( Z_{i}(0,\zeta) - Z_{i,0} \right) Z_{i,\theta}(0,\zeta) \nonumber \\
-!>             & + & {\color{red}{\delta_{i  } \frac{\Delta R_{i  } R_{i,\theta} + \Delta Z_{i  } Z_{i,\theta}}{L_i}}}
-!>               -   {\color{red}{\delta_{i+1} \frac{\Delta R_{i+1} R_{i,\theta} + \Delta Z_{i+1} Z_{i,\theta}}{L_{i+1} } } }
-!>       \label{eq:spectralconstraints_lforce}
-!>       \f} </li>
-!> <li> Note that choosing \f$p=2\f$ gives \f$X=-R_{\theta\theta}\f$ and \f$Y=-Z_{\theta\theta}\f$, and the spectrally condensed angle constraint, \f$R_\theta X + Z_\theta Y=0\f$,
-!>       becomes \f$\partial_\theta (R_\theta^2+Z_\theta^2)=0\f$,
-!>       which defines the equal arc length angle. </li>
-!> <li> The poloidal-angle origin term, namely \f$\gamma_i \left( Z_{i}(0,\zeta) - Z_{i,0} \right) Z_{i,\theta}(0,\zeta)\f$
-!>       is only used to constrain the \f$m_j=0\f$ harmonics. </li>
-!> <li> The construction of the angle functional was influenced by the following considerations: </li>
-!>       <ul>
-!>       <li>The minimal spectral width constraint is very desirable as it reduces the required Fourier resolution,
-!>             but it does not constrain the \f$m=0\f$ harmonics
-!>             and the minimizing spectral-width poloidal-angle may not be consistent with the poloidal angle used on adjacent interfaces. </li>
-!>       <li>  The regularization of the vector potential and the coordinate interpolation near the coordinate origin (see elsewhere)
-!>             assumes that the poloidal angle is the polar angle. </li>
-!>       <li> The user will provide the Fourier harmonics of the boundary, and thus the user will implicitly define the poloidal angle used on the boundary. </li>
-!>       <li>  Minimizing the length term will ensure that the poloidal angle used on each interface
-!>             is smoothly connected to the poloidal angle used on adjacent interfaces. </li>
-!>       </ul> </li>
-!> <li> A suitable choice of the weight factors, \f$\alpha_i\f$, \f$\beta_i\f$, \f$\gamma_i\f$ and \f$\delta_i\f$, will ensure
-!>       that the polar constraint dominates for the innermost surfaces and that this constraint rapidly becomes insignificant away from the origin;
-!>       that the minimal spectral constraint dominates in the "middle";
-!>       and that the minimizing length constraint will be significant near the origin and dominant near the edge,
-!>       so that the minimizing spectral width angle will be continuously connected to the polar angle on the innermost surfaces
-!>       and the user-implied angle at the plasma boundary.
-!>       The length constraint should not be insignificant where the spectral constraint is dominant (so that the \f$m=0\f$ harmonics are constrained). </li>
-!> <li> The polar constraint does not need normalization.
-!>       The spectral width constraint has already been normalized.
-!>       The length constraint is not yet normalized, but perhaps it should be. </li>
-!> <li> The spectral constraints given in Eqn.\f$(\ref{eq:spectralconstraints_lforce})\f$ need to be differentiated
-!>       with respect to the interface Fourier harmonics, \f$R_{j,i}\f$ and \f$Z_{j,i}\f$.
-!>       The first and second terms lead to a block diagonal hessian, and the length term leads to a block tri-diagonal hessian. </li>
-!> <li> Including the poloidal-angle origin constraint means that the polar angle constraint can probably be ignored, i.e. \f$\alpha_i=0\f$. </li>
-!> </ul>
-!>
-!> @param[in] lvol
-!> @param[in] iocons
-!> @param[in] ideriv
-!> @param[in] Ntz
-!> @param dBB
-!> @param XX
-!> @param YY
-!> @param length
-!> @param DDl
-!> @param MMl
-!> @param[in] iflag
 subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, iflag )
 
 
@@ -201,19 +59,11 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
 
 
 
-! if( lvol.eq.Mvol .and. ideriv.eq.0 ) then
-!  ii = 1
-!  write(ounit,'("lforce : ", 10x ," : sum(Ate(",i3,",",i2,",",i2,")%s) =",99es23.15)') lvol, ideriv, ii, sum(Ate(lvol,ideriv,ii)%s(0:Lrad(lvol)))
-! endif
 
 
 
-! compute B^2 on interface;
-  ! Compute covariant vector potential. Stored in efmn, ofmn, cfmn, sfmn.
-  !                                         ideriv, tderiv
   call build_vector_potential(lvol, iocons,      0,      1)
 
-  ! Map to real space
   call invfft( mn, im, in, efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, dAt(1:Ntz, 0), dAz(1:Ntz, 0) )
 
   id = ideriv
@@ -224,9 +74,7 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
                             +       dAt(1:Ntz, id)*dAt(1:Ntz, id)*guvij(1:Ntz,3,3,id)  ) / sg(1:Ntz,0)**2
 
   else
-    ! Compute covariant vector potential. Stored in efmn, ofmn, cfmn, sfmn.
     call build_vector_potential(lvol, iocons, id, 1)
-    ! Map to real space
     call invfft( mn, im, in, efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, dAt(1:Ntz, id), dAz(1:Ntz, id) )
 
     dBB(1:Ntz,id) = half * (        dAz(1:Ntz,id)*dAz(1:Ntz, 0)*guvij(1:Ntz,2,2,0) &
@@ -237,9 +85,7 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
                             +       dAt(1:Ntz, 0)*dAt(1:Ntz,id)*guvij(1:Ntz,3,3,0)  ) / sg(1:Ntz,0)**2
   endif ! end of if( ideriv.gt.0 ) ;
 
-  ! If derivatives w.r.t geometry, take into account metric derivatives
   if( ideriv.eq.-1 ) then
-    ! Get coordinate metrics and their derivatives wrt Rj, Zj on interface;
     lss = two * iocons - one ; Lcurvature = 4
     WCALL( lforce, coords, ( lvol, lss, Lcurvature, Ntz, mn ) )
 
@@ -256,7 +102,6 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
 
 
 
-! compute spectral constraints;
 
   select case( Igeometry )
 
@@ -315,7 +160,6 @@ subroutine lforce( lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifl
 
 
 
-!  ijreal(1:Ntz) contains the pressure + magnetic energy term;
 
 
   ;ifail = 0

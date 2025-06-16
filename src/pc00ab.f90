@@ -1,83 +1,4 @@
-!> \file
-!> \brief Returns the energy functional and it's derivatives with respect to geometry.
 
-!> \brief Returns the energy functional and it's derivatives with respect to geometry.
-!> \ingroup grp_conjugate_gradient
-!>
-!> **Energy functional**
-!>
-!> <ul>
-!> <li> The energy functional is
-!>      \f{eqnarray}{ F \equiv \sum_{l=1}^{N} \int_{\cal V} \left( \frac{p}{\gamma-1} + \frac{B^2}{2} \right) dv,
-!>      \label{eq:energyfunctional_pc00ab}
-!>      \f}
-!>      where \f$N \equiv\,\f$\c Nvol is the number of interfaces. </li>
-!> <li> Assuming that the toroidal and poloidal fluxes, \f$\psi_t\f$ and \f$\psi_p\f$, the helicity, \f${\cal K}\f$, the helicity multiplier, \f$\mu\f$,
-!>      and/or the interface rotational-transforms, \f${{\,\iota\!\!\!}-}\f$, are appropriately constrained,
-!>      the Beltrami fields in each volume depend only the geometry of the adjacent interfaces.
-!>      So, the energy functional is assumed to be a function of "position", i.e. \f$F = F(R_{l,j},Z_{l,j})\f$. </li>
-!> <li> Introducing a ficitious time, \f$t\f$, the position may be advanced according to
-!>       \f{eqnarray}{ \begin{array}{cccccccccccccccccccccccc}
-!>                     \displaystyle \frac{\partial R_j}{\partial t} & \equiv & \displaystyle
-!>                     - \frac{\partial }{\partial R_j} \sum_{l=1}^{N} \int \left( \frac{p}{\gamma-1} + \frac{B^2}{2} \right) dv,\\
-!>                     \displaystyle \frac{\partial Z_j}{\partial t} & \equiv & \displaystyle
-!>                     - \frac{\partial }{\partial Z_j} \sum_{l=1}^{N} \int \left( \frac{p}{\gamma-1} + \frac{B^2}{2} \right) dv.
-!>       \end{array} \label{eq:descent_pc00ab} \f} </li>
-!> <li> There remain degrees of freedom in the angle representation of the interfaces. </li>
-!> </ul>
-!>
-!> **Spectral energy minimization**
-!>
-!> <ul>
-!> <li> Consider variations which do not affect the geometry of the surfaces,
-!>       \f{eqnarray}{ \delta R &=& R_\theta \; u,\\
-!>                     \delta Z &=& Z_\theta \; u,
-!>       \f}
-!>       where \f$u\f$ is a angle variation. </li>
-!> <li> The corresponding variation in each of the Fourier harmonics is
-!>       \f{eqnarray}{ \delta R_j &\equiv& \oint\!\!\!\oint \!d\theta d\zeta \,\,\, R_\theta \; u \; \cos \alpha_j,\\
-!>                     \delta Z_j &\equiv& \oint\!\!\!\oint \!d\theta d\zeta \,\,\, Z_\theta \; u \; \sin \alpha_j,
-!>       \f} </li>
-!> <li> Following Hirshman et al., introducing the normalized spectral width
-!>       \f{eqnarray}{ M \equiv \frac{\sum_j ( m_j^p + n_j^q ) ( R_{l,j}^2+Z_{l,j}^2 )}{\sum_j ( R_{l,j}^2+Z_{l,j}^2 )},
-!>       \f} </li>
-!> <li> Using the notation
-!>       \f{eqnarray}{ N &\equiv& \sum_j \lambda_j ( R_{l,j}^2+Z_{l,j}^2 ), \\
-!>                     D &\equiv& \sum_j           ( R_{l,j}^2+Z_{l,j}^2 ),
-!>       \f}
-!>       where \f$\lambda_j \equiv m_j^p + n_j^q\f$,
-!>       the variation in the normalized spectral width is
-!>       \f{eqnarray}{ \delta M = (\delta N - M \delta D)/D.
-!>       \f} </li>
-!> <li> For tangential variations,
-!>       \f{eqnarray}{ \delta N &=& 2 \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \; u \left(R_\theta \sum_j \lambda_j R_j \cos \alpha_j + Z_\theta \sum_j \lambda_j Z_j \sin \alpha_j \right),\\
-!>                     \delta D &=& 2 \oint\!\!\!\oint \!d\theta d\zeta \,\,\, \; u \left(R_\theta \sum_j           R_j \cos \alpha_j + Z_\theta \sum_j           Z_j \sin \alpha_j \right).
-!>       \f} </li>
-!> <li> The "tangential spectral-width descent direction" is thus
-!>       \f{eqnarray}{ \frac{\partial u}{\partial t} &=& -\left[ R_\theta \sum_j(\lambda_j - M) R_j \cos \alpha_j / D + Z_\theta \sum_j(\lambda_j - M)Z_j \sin \alpha_j / D \right].
-!>       \f} </li>
-!> <li> This suggests that position should be advanced according to
-!>       \f{eqnarray}{ \frac{\partial R_j}{\partial t} & \equiv &
-!>       - \frac{\partial }{\partial R_j} \sum_{l=1}^{N} \int \left( \frac{p}{\gamma-1} + \frac{B^2}{2} \right) dv - [R_\theta (R_\theta X + Z_\theta Y)]_j,\\
-!>           \frac{\partial Z_j}{\partial t} & \equiv &
-!>       - \frac{\partial }{\partial Z_j} \sum_{l=1}^{N} \int \left( \frac{p}{\gamma-1} + \frac{B^2}{2} \right) dv - [Z_\theta (R_\theta X + Z_\theta Y)]_j,
-!>       \f}
-!>       where \f$X \equiv \sum_j (\lambda_j - M)R_j \cos\alpha_j / D\f$ and \f$Y \equiv \sum_j (\lambda_j - M)Z_j \sin\alpha_j / D\f$. </li>
-!> </ul>
-!>
-!> **numerical implementation**
-!>
-!> <ul>
-!> <li> The spectral condensation terms,
-!> \f{eqnarray}{ R_\theta (R_\theta X + Z_\theta Y) &=& \sum_{j,k,l} m_j m_k (\lambda_l-M) R_j ( + R_k R_l \sin\alpha_j\sin\alpha_k\cos\alpha_l - Z_k Z_l \sin\alpha_j\cos\alpha_k\sin\alpha_l)/D,\\
-!>               Z_\theta (R_\theta X + Z_\theta Y) &=& \sum_{j,k,l} m_j m_k (\lambda_l-M) Z_j ( - R_k R_l \cos\alpha_j\sin\alpha_k\cos\alpha_l + Z_k Z_l \cos\alpha_j\cos\alpha_k\sin\alpha_l)/D,
-!> \f}
-!> are calculated using triple angle expressions...
-!> \todo IT IS VERY LIKELY THAT FFTs WOULD BE FASTER!!!
-!>
-!> </li>
-!> </ul>
-!>
 subroutine pc00ab( mode, NGdof, Position, Energy, Gradient, nstate, iuser, ruser ) ! argument fixed by NAG; see pc00aa;
 
   use constants, only : zero, half, one
@@ -223,5 +144,4 @@ subroutine pc00ab( mode, NGdof, Position, Energy, Gradient, nstate, iuser, ruser
 end subroutine pc00ab
 
 
-!latex \end{enumerate}
 

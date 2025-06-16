@@ -1,43 +1,4 @@
-!> \defgroup grp_conjugate_gradient Conjugate-Gradient method
-!>
-!> \file
-!> \brief Use preconditioned conjugate gradient method to find minimum of energy functional.
 
-!> \brief Use preconditioned conjugate gradient method to find minimum of energy functional.
-!> \ingroup grp_conjugate_gradient
-!>
-!> **energy functional**
-!>
-!> The energy functional is described in pc00ab() .
-!>
-!> **relevant input variables**
-!>
-!> <ul>
-!> <li> The following input variables control the operation of \c E04DGF :
-!>      <ul>
-!>      <li> \c epsilon :
-!>           weighting of "spectral energy"; see pc00ab() </li>
-!>      <li> \c maxstep :
-!>           this is given to \c E04DGF for the \f$\texttt{Maximum Step Length}\f$ </li>
-!>      <li> \c maxiter :
-!>           upper limit on derivative calculations used in the conjugate gradient iterations </li>
-!>      <li> \c verify :
-!>           if \c verify=1, then \c E04DGF
-!>           will confirm user supplied gradients (provided by pc00ab() ) are correct; </li>
-!>      </ul> </li>
-!> <li> \todo Unfortunately, \c E04DGF
-!>       seems to require approximately \f$3 N\f$ function evaluations before proceeding to minimize the energy functional,
-!>       where there are \f$N\f$ degrees of freedom.
-!>       I don't know how to turn this off!
-!>
-!> </li>
-!> </ul>
-!>
-!> @param[in]    NGdof
-!> @param[inout] position
-!> @param[in]    Nvol
-!> @param[in]    mn
-!> @param        ie04dgf
 subroutine pc00aa( NGdof, position, Nvol, mn, ie04dgf ) ! argument list is optional;
 
 
@@ -88,22 +49,6 @@ subroutine pc00aa( NGdof, position, Nvol, mn, ie04dgf ) ! argument list is optio
 
 
 
-!  if( Lexit ) then
-!
-!   LComputeDerivatives= .false.
-!   WCALL(pc00aa,dforce,( NGdof, position(0:NGdof), Gradient(0:NGdof), LComputeDerivatives ))
-!
-!   if( myid.eq.0 ) then
-!    cput = GETTIME
-!    write(ounit,'("pc00aa : ", 10x ," : ")')
-!    write(ounit,'("pc00aa : ",f10.2," : iterations="2i8" ;      "3x" ; Energy="es23.15" ;      " 13x  " ; ForceErr="es23.15" ;")') &
-!    cput-cpus, iuser(1:2), Energy, ForceErr
-!   endif
-!
-!   if( ForceErr.lt.abs(forcetol) ) then ; ie04dgf=0 ; goto 9999 ! force-balance is satisfied;
-!   endif
-!
-!  endif
 
 
 
@@ -114,8 +59,6 @@ subroutine pc00aa( NGdof, position, Nvol, mn, ie04dgf ) ! argument list is optio
    call E04DKF('Print Level = 0')
    call E04DKF('Verify = -1')
   case(  0 ) ! simple check;
-  !call E04DKF('Nolist')
-  !call E04DKF('Print Level = 0')
    call E04DKF('Verify =  0') ! simple check
   case(  1 ) ! extensive test;
    call E04DKF('Verify =  1') ! extensive test;

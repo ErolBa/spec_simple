@@ -1,95 +1,4 @@
-!> \defgroup grp_global_force "global" force
-!>
-!> \file
-!> \brief Calculates \f${\bf F}({\bf x})\f$, where \f${\bf x} \equiv \{\mbox{geometry}\} \equiv \{ R_{i,v}, Z_{i,v}\}\f$
-!>        and \f${\bf F}\equiv[[p+B^2/2]] + \{\mbox{spectral constraints}\} \f$, and \f$\nabla {\bf F}\f$.
 
-!> \brief Calculates \f${\bf F}({\bf x})\f$, where \f${\bf x} \equiv \{\mbox{geometry}\} \equiv \{ R_{i,v}, Z_{i,v}\}\f$
-!>        and \f${\bf F}\equiv[[p+B^2/2]] + \{\mbox{spectral constraints}\} \f$, and \f$\nabla {\bf F}\f$.
-!> \ingroup grp_global_force
-!>
-!> **unpacking**
-!>
-!> <ul>
-!> <li> The geometrical degrees of freedom are represented as a vector, \f${\bf x} \equiv \{ R_{i,v}, Z_{i,v}\}\f$,
-!>       where \f$i=1,\f$ \c mn labels the Fourier harmonic and \f$v=1,\f$ \c Mvol\f$-1\f$ is the interface label.
-!>       This vector is "unpacked" using packxi().
-!>       (Note that packxi() also sets the coordinate axis, i.e. the \f$R_{i,0}\f$ and \f$Z_{i,0}\f$.) </li>
-!> </ul>
-!>
-!> **Matrices computation**
-!>
-!> <ul>
-!> <li> the volume-integrated metric arrays, \c DToocc, etc. are evaluated in each volume by calling ma00aa() </li>
-!> <li> the energy and helicity matrices, \c dMA(0:NN,0:NN), \c dMB(0:NN,0:2), etc. are evaluated in each volume by calling matrix() </li>
-!> </ul>
-!>
-!> **parallelization over volumes**
-!>
-!> Two different cases emerge: either a local constraint or a global constraint is considered.
-!> This condition is determined by the flag \c LocalConstraint.
-!>
-!> <ul>
-!> <li> Local constraint
-!>      <ul>
-!>      <li> In each volume, \c vvol=1,Mvol ,
-!>            <ul>
-!>            <li> the logical array \c ImagneticOK(vvol) is set to \c .false. </li>
-!>            <li> The MPI node associated to the volume calls dfp100().
-!>                 This routine calls ma02aa() (and might iterate on mp00ac()) and computes the
-!>                 field solution in each volume consistent with the constraint. </li>
-!>            <li> The MPI node associated to the volume calls dfp200().
-!>                 This computes \f$p+B^2/2\f$ (and the spectral constraints if required) at the interfaces in
-!>                 each volumes, as well as the derivatives of the force-balance if \c LComputeDerivatives=1. </li>
-!>            </ul> </li>
-!>      <li> After the parallelization loop over the volumes, brcast() is called to broadcast the required information. </li>
-!>      </ul> </li>
-!> <li> Global constraint <br/>
-!>      The MPI node \f$0\f$ minimizes the constraint with HYBRID1() by iterating on dfp100() until the field matches the constraint.
-!>      Other MPI nodes enter the subroutine loop_dfp100(). In loop_dfp100(), each MPI node
-!>      <ul>
-!>      <li> calls dfp100(), </li>
-!>      <li> solves the field in its associated volumes, </li>
-!>      <li> communicates the field to the node \f$0\f$ and </li>
-!>      <li> repeats this loop until the node \f$0\f$ sends a flag \c iflag=5. </li>
-!>      </ul> </li>
-!> </ul>
-!>
-!> **broadcasting**
-!>
-!> <ul>
-!> <li> The required quantities are broadcast by brcast(). </li>
-!> </ul>
-!>
-!> **construction of force**
-!>
-!> <ul>
-!> <li> The force vector, \f${\bf F}({\bf x})\f$, is a combination of the pressure-imbalance Fourier harmonics, \f$[[p+B^2/2]]_{i,v}\f$,
-!>       where \f$i\f$ labels Fourier harmonic and \f$v\f$ is the interface label:
-!>       \f{eqnarray}{ F_{i,v} \equiv \left[ ( p_{v+1}+B^2_{i,v+1}/2 ) - ( p_v + B^2_{i,v}/2 ) \right] \times \texttt{BBweight}_i,
-!>       \f}
-!>       where \c BBweight_i is defined in preset() ;
-!>       and the spectral condensation constraints,
-!>       \f{eqnarray}{ F_{i,v} \equiv I_{i,v} \times \texttt{epsilon} + S_{i,v,1} \times \texttt{sweight}_v - S_{i,v+1,0} \times \texttt{sweight}_{v+1},
-!>       \f}
-!>       where the spectral condensation constraints, \f$I_{i,v}\f$, and the "star-like" poloidal angle constraints, \f$S_{i,v,\pm 1}\f$,
-!>       are calculated and defined in lforce() ;
-!>       and the \c sweight\f$_v\f$ are defined in preset(). All quantities local to a volume are computed in dfp200(),
-!>       information is then broadcasted to the MPI node \f$0\f$ in dforce() and the global force is evaluated. </li>
-!> </ul>
-!>
-!> **construct derivatives of matrix equation**
-!>
-!> <ul>
-!> <li> Matrix perturbation theory is used to compute the derivatives of the solution, i.e. the Beltrami fields, as the geometry of the
-!>       interfaces changes: </li>
-!> </ul>
-!>
-!> @param[in] NGdof number of global degrees of freedom
-!> @param[in] position degrees-of-freedom = internal geometry (packed by packxi)
-!> @param[out] force output: Fourier harmonics of B_mn^2 and spectral constraint forces
-!> @param[in] LComputeDerivatives indicates whether derivatives are to be calculated; 0: no derivatives, 1:
-!> @param[inout] LComputeAxis
 subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
 
@@ -187,14 +96,9 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
 
 
-! Unpack position to generate arrays iRbc, iZbs, IRbs, iZbc.
-! This also computes the axis geometry.
 
   packorunpack = 'U' ! unpack geometrical degrees-of-freedom;
 
-#ifndef DEBUG
-  LComputeAxis = .true.
-#endif
 
   WCALL( dforce, packxi,( NGdof, position(0:NGdof), Mvol, mn, iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), &
                           iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol), packorunpack, LcomputeDerivatives, LComputeAxis ) )
@@ -208,18 +112,8 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
 
 
-! SOLVE FIELD IN AGREEMENT WITH CONSTRAINTS AND GEOMETRY
-! ------------------------------------------------------
-! Two different cases, both with their own parallelization.
-! If LOCAL constraint, each process iterates on the local poloidal flux and Lagrange multiplier
-! to match the local constraint. Then all information is broadcasted by the master thread
-! If GLOBAL constraint, only the master thread iterates on all Lagrange multipliers and poloidal
-! fluxes. Over threads are stuck in an infinite loop where they "help" the master thread compute
-! each iteration. At the last iteration, master thread send IconstraintOK=.TRUE. to all threads, and
-! they exit their infinite loops.
 
 
-! Local constraint case - simply call dfp100 and then dfp200
   Xdof(1:Mvol-1) = zero;
 
   if( LocalConstraint ) then
@@ -229,27 +123,19 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
     Ndofgl = 0; Fvec(1:Mvol-1) = 0; dfp100_logical = .FALSE.;
     Xdof(1:Mvol-1) = dpflux(2:Mvol) + xoffset
 
-    ! Solve for field
     dBdX%L = LComputeDerivatives
     WCALL(dforce, dfp100, (Ndofgl, Xdof, Fvec, dfp100_logical) )
 
     DALLOCATE( Fvec )
 
-    !do vvol=1,Mvol
-    !  WCALL(dforce, brcast, (vvol) )
-    !enddo
-! --------------------------------------------------------------------------------------------------
-! Global constraint - call the master thread calls hybrd1 on dfp100, others call dfp100_loop.
   else
 
     IPDtdPf = zero
     Xdof(1:Mvol-1)   = dpflux(2:Mvol) + xoffset
 
     if( Lfreebound.eq.1 ) then
-      ! Mvol-1 surface current plus 1 poloidal linking current constraints
       Ndofgl = Mvol
     else
-      ! Mvol-1 surface current constraints
       Ndofgl = Mvol-1
     endif
 
@@ -265,14 +151,12 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
         dpfluxout = Fvec
         call DGESV( Ndofgl, 1, IPdtdPf, Ndofgl, ipiv, dpfluxout, Ndofgl, idgesv )
 
-        ! one step Newton's method
         dpflux(2:Mvol) = dpflux(2:Mvol) - dpfluxout(1:Mvol-1)
         if( Lfreebound.eq.1 ) then
           dtflux(Mvol) = dtflux(Mvol  ) - dpfluxout(Mvol    )
         endif
     endif
 
-    ! Broadcast the field and pflux
     RlBCAST(dpfluxout(1:Ndofgl), Ndofgl, 0)
     RlBCAST(dpflux(1:Mvol)   , Mvol, 0)
     if( Lfreebound.eq.1 ) then
@@ -293,12 +177,10 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
       SALLOCATE( solution, (1:NN, 0:2), zero)
 
-      ! Pack field and its derivatives
       packorunpack = 'P'
       WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,0), 0 ) ) ! packing;
       WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,2), 2 ) ) ! packing;
 
-      ! compute the field with renewed dpflux via single Newton method step
       if( Lfreebound.eq.1 .and.(vvol.eq.Mvol) ) then
         WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,1), 1 ) ) ! packing;
         solution(1:NN, 0) = solution(1:NN, 0) - dpfluxout(vvol-1) * solution(1:NN, 2) & ! derivative w.r.t pflux
@@ -307,7 +189,6 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
         solution(1:NN, 0) = solution(1:NN, 0) - dpfluxout(vvol-1) * solution(1:NN, 2)
       endif
 
-      ! Unpack field in vector potential Fourier harmonics
       packorunpack = 'U'
       WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,0), 0 ) ) ! unpacking;
 
@@ -321,17 +202,10 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
   endif !matches if( LocalConstraint )
 
-! --------------------------------------------------------------------------------------------------
-!                                    MPI COMMUNICATIONS
 
-! Finally broadcast the field information to all threads from the thread which did the computation
-! TODO: improve MPI communication
   do vvol = 1, Mvol
     call WhichCpuID(vvol, cpu_id)
 
-    ! Broadcast all ImagneticOK
-    !write(ounit,'("dforce : " 10x " : myid="i3"; vvol="i3"; ; ImagneticOK="999L2)') myid, vvol, ImagneticOK(1:Mvol)
-    !write(ounit,'("dforce : " 10x " : cpu_id="i3"; vvol="i3"; ; ImagneticOK="999L2)') cpu_id, vvol, ImagneticOK(vvol)
     LlBCAST( ImagneticOK(vvol)         , 1, cpu_id)
 
     do ideriv=0,2
@@ -356,13 +230,10 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
 
 
-  ! Compute local force and derivatives
-  !Compuatation of Hessian2d is cleared at this point.
   WCALL(dforce, dfp200, ( LcomputeDerivatives, vvol) )
 
 
 
-! Broadcast information to all CPUs
   do vvol = 1, Mvol
 
     LREGION( vvol )
@@ -381,9 +252,6 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
 
 
-! ---------------
-! CONSTRUCT FORCE
-! ---------------
 
   ;   force(0:NGdof) = zero
 
@@ -414,9 +282,6 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
                                             + (                         + Somn(2:mn    ,vvol+0,1) ) * sweight(vvol+0) & ! poloidal length constraint;
                                             - ( Somn(2:mn    ,vvol+1,0)                           ) * sweight(vvol+1)
 
-  !     if( Ntor.gt.0 ) then ! poloidal angle origin is not otherwise constrained ;
-  !      force(tdoc+idoc+1:tdoc+idoc+Ntor  ) = ( Pomn(2:Ntor+1,vvol+1,0) - Pomn(2:Ntor+1,vvol+0,1) ) * apsilon ! choice of spectral constraint can be enforced;
-  !     endif
 
         IIo(vvol) = max( sum( abs( force(tdoc+idoc+1:tdoc+idoc+mn-1) ) ) / (mn-1), logtolerance ) ! screen diagnostics;
 
@@ -438,9 +303,6 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
                                               + (                         + Semn(1:mn    ,vvol+0,1) ) * sweight(vvol+0) & ! poloidal length constraint;
                                               - ( Semn(1:mn    ,vvol+1,0)                           ) * sweight(vvol+1)
 
-  !     if( Ntor.ge.0 ) then
-  !      force(tdoc+idoc+1:tdoc+idoc+Ntor+1) = ( Pemn(1:Ntor+1,vvol+1,0) - Pemn(1:Ntor+1,vvol+0,1) ) * apsilon ! choice of spectral constraint can be enforced;
-  !     endif
 
           IIe(vvol) = max( sum( abs( force(tdoc+idoc+1:tdoc+idoc+mn  ) ) ) / (mn  ), logtolerance ) ! screen diagnostics;
 
@@ -498,7 +360,6 @@ if( Lhessian3Dallocated .and. Igeometry.ge.3) then ! construct Hessian3D;
 
             do irz = 0, 1 ! Fourier harmonic of R, Fourier harmonic of Z;
 
-              !if( irz.eq.1 .and. Igeometry.lt.3 ) cycle ! no dependence on Z;
 
               do issym = 0, 1 ! stellarator symmetry;
 
@@ -509,14 +370,12 @@ if( Lhessian3Dallocated .and. Igeometry.ge.3) then ! construct Hessian3D;
 
                 idof = idof + 1 ! labels degree-of-freedom;
 
-                !if( LocalConstraint) then
 
                    if (irz.eq.0) then
                        idofr = idofr + 1 ! labels degree-of-freedom;
                    else
                        idofz = idofz + 1
                    endif
-                       ! use tdof for number of volume more than 2
                     if ( vvol.gt.1 ) then
                        tdofr = (vvol-2) * LGdof + idofr ! labels degree-of-freedom in internal interface geometry   ;
                        tdofz = (vvol-2) * LGdof + idofz
@@ -535,10 +394,8 @@ if( Lhessian3Dallocated .and. Igeometry.ge.3) then ! construct Hessian3D;
                         ;idoc = 0 ! diagonal elements;
                        if (irz .eq. 0) then
                           ;hessian2D(tdoc+1:tdoc+LGdof,tdofr) = denergydrr(idoc+1:idoc+LGdof,vvol+1,0,idof,0) - denergydrr(idoc+1:idoc+LGdof,vvol+0,1,idof,1)! &
-                          !write(ounit,*) im(ii), hessian2D(1,tdofr) !vvol, im(ii), in(ii), irz, issym, tdofr, tdofz
                         else
                           ;hessian2D(tdoc+1:tdoc+LGdof,tdofz+mn) = denergydzr(idoc+1:idoc+LGdof,vvol+1,0,idof,0) - denergydzr(idoc+1:idoc+LGdof,vvol+0,1,idof,1)
-                          !write(ounit,*) im(ii), hessian2D(1,tdofr) !vvol, im(ii), in(ii), irz, issym, tdofr, tdofz
 
                       endif
 
@@ -548,9 +405,6 @@ if( Lhessian3Dallocated .and. Igeometry.ge.3) then ! construct Hessian3D;
                          tdofz = (vvol+0) * LGdof + idofz
                          tdoc = (vvol-1) * LGdof ! shorthand;
                          idoc = 0
-                               !  if    ( im(idof).le.0 ) then ; hessian(tdoc+idof,tdof) = - one
-                                    !  else                    ; hessian(tdoc+idof,tdof) = - one
-                                  !  endif
                         if (irz.eq.0) then
                              hessian2D(tdoc+idoc+1:tdoc+idoc+LGdof,tdofr) = denergydrr(idoc+1:idoc+LGdof ,vvol+1,0,idof,1)
                         else
@@ -558,22 +412,11 @@ if( Lhessian3Dallocated .and. Igeometry.ge.3) then ! construct Hessian3D;
                         endif ! end of if( vvol.lt.Mvol-1 ) ;
                      endif
 
-                  ! Case of last interface in case of boundary variation ?
-                  !if( vvol.eq.Mvol-1 ) then
-                    !tdof = (vvol+0) * LGdof + idof
-                   ! tdoc = (vvol-1) * LGdof ! shorthand ;
-                    !idoc = 0
-                    !dessian3D(tdoc+idoc+1:tdoc+idoc+LGdof,idof) = HdFFdRZ(idoc+1:idoc+LGdof,0,idof,1,vvol+1)
 
-                  !endif ! end of if( vvol.lt.Mvol-1 ) ;
 
-                !else ! Global constraint
 
-                  ! In the general case of global constraint, there are no zero element in the hessian. We thus loop again on all volumes
 
-                  !FATAL( dforce, .true., incorrect choice of Lconstraint in SPEC)
 
-                !endif ! matches if( LocalConstraint );
 
               enddo ! matches do issym ;
 
@@ -624,7 +467,6 @@ if( LHmatrix .and. Lhessian2Dallocated .and. Igeometry.eq.2) then ! construct He
 
 
                 if( LocalConstraint) then
-                  ! Derivative with respect to previous interface
                   if( vvol.gt.1 ) then
                     tdof = (vvol-2) * LGdof + idof ! labels degree-of-freedom in internal interface geometry   ;
                     tdoc = (vvol-1) * LGdof        ! labels force-balance constraint across internal interfaces;
@@ -633,7 +475,6 @@ if( LHmatrix .and. Lhessian2Dallocated .and. Igeometry.eq.2) then ! construct He
 
                   endif ! end of if( vvol.gt.1 ) ;
 
-                  ! Derivative with respect to current interface
                   ;tdof = (vvol-1) * LGdof + idof
                   ;tdoc = (vvol-1) * LGdof ! shorthand;
                   ;idoc = 0
@@ -645,7 +486,6 @@ if( LHmatrix .and. Lhessian2Dallocated .and. Igeometry.eq.2) then ! construct He
                   endif ! end of if( Lextrap.eq.1 .and. vvol.eq.1 )
 
 
-                  ! Derivative with respect to next interface
                   if( vvol.lt.Mvol-1 ) then
                     tdof = (vvol+0) * LGdof + idof
                     tdoc = (vvol-1) * LGdof ! shorthand;
@@ -660,9 +500,7 @@ if( LHmatrix .and. Lhessian2Dallocated .and. Igeometry.eq.2) then ! construct He
                   endif ! end of if( vvol.lt.Mvol-1 ) ;
 
 
-                  ! Case of last interface in case of boundary variation ?
                   if( vvol.eq.Mvol-1 ) then
-                    !tdof = (vvol+0) * LGdof + idof
                     tdoc = (vvol-1) * LGdof ! shorthand ;
                     idoc = 0
                     dessian2D(tdoc+idoc+1:tdoc+idoc+LGdof,idof) = HdFFdRZ(idoc+1:idoc+LGdof,0,idof,1,vvol+1)
@@ -671,7 +509,6 @@ if( LHmatrix .and. Lhessian2Dallocated .and. Igeometry.eq.2) then ! construct He
 
                 else ! Global constraint
 
-                  ! In the general case of global constraint, there are no zero element in the hessian. We thus loop again on all volumes
 
                   FATAL( dforce, .true., incorrect choice of Lconstraint in SPEC)
 
@@ -698,8 +535,6 @@ endif ! end of if( LcomputeDerivatives ) ;
 
 
 
-! CONSTRUCT FORCE GRADIENT
-! ------------------------
 
   if( LcomputeDerivatives .and. Lhessianallocated) then ! construct Hessian;
 
@@ -736,7 +571,6 @@ endif ! end of if( LcomputeDerivatives ) ;
 
 
               if( LocalConstraint ) then
-                ! Derivative with respect to previous interface
                 if( vvol.gt.1 ) then
                   tdof = (vvol-2) * LGdof + idof ! labels degree-of-freedom in internal interface geometry   ;
                   tdoc = (vvol-1) * LGdof        ! labels force-balance constraint across internal interfaces;
@@ -749,7 +583,6 @@ endif ! end of if( LcomputeDerivatives ) ;
                   endif ! end of if( Lconstraint.eq.1 ) ;
                 endif ! end of if( vvol.gt.1 ) ;
 
-                ! Derivative with respect to current interface
                 ;tdof = (vvol-1) * LGdof + idof
                 ;tdoc = (vvol-1) * LGdof ! shorthand;
                 ;idoc = 0
@@ -768,7 +601,6 @@ endif ! end of if( LcomputeDerivatives ) ;
                 endif ! end of if( Lextrap.eq.1 .and. vvol.eq.1 )
 
 
-                ! Derivative with respect to next interface
                 if( vvol.lt.Mvol-1 ) then
                   tdof = (vvol+0) * LGdof + idof
                   tdoc = (vvol-1) * LGdof ! shorthand;
@@ -788,9 +620,7 @@ endif ! end of if( LcomputeDerivatives ) ;
                 endif ! end of if( vvol.lt.Mvol-1 ) ;
 
 
-                ! Case of last interface in case of boundary variation ?
                 if( vvol.eq.Mvol-1 ) then
-                  !tdof = (vvol+0) * LGdof + idof
                   tdoc = (vvol-1) * LGdof ! shorthand ;
                   idoc = 0
                   dessian(tdoc+idoc+1:tdoc+idoc+LGdof,idof) = dFFdRZ(idoc+1:idoc+LGdof,0,idof,1,vvol+1)
@@ -804,7 +634,6 @@ endif ! end of if( LcomputeDerivatives ) ;
 
               else ! Global constraint
 
-                ! In the general case of global constraint, there are no zero element in the hessian. We thus loop again on all volumes
 
                 do ivol = 1, Mvol-1
                   tdoc = (ivol-1) * LGdof ! shorthand ;
@@ -840,18 +669,10 @@ endif ! end of if( LcomputeDerivatives ) ;
       endif ! end of if( ImagneticOK(vvol) .and. ImagneticOK(vvol+1) ) ;
     enddo ! end of do vvol;
 
-    ! Evaluate force gradient
 
   endif ! end of if( LcomputeDerivatives ) ;
 
-  !call MPI_BARRIER( MPI_COMM_WORLD, ierr )
 
-  ! DALLOCATE( dFFdRZ)
-  ! DALLOCATE( dBBdmp)
-  ! DALLOCATE( dmupfdx)
-  ! DALLOCATE( hessian)
-  ! DALLOCATE( dessian)
-  ! Lhessianallocated = .false.
 
 
 
@@ -937,13 +758,11 @@ BEGIN(dforce)
 
             if( isymdiff.eq.0 ) cycle
 
-            ! Reset initial geometry
             iRbc(1:mn,0:Mvol) = oRbc(1:mn,0:Mvol)
             iZbs(1:mn,0:Mvol) = oZbs(1:mn,0:Mvol)
             iRbs(1:mn,0:Mvol) = oRbs(1:mn,0:Mvol)
             iZbc(1:mn,0:Mvol) = oZbc(1:mn,0:Mvol)
 
-            ! Perturb geometry
             if( issym.eq.0 .and. irz.eq.0 ) then
               iRbc(ii,vvol) = iRbc(ii,vvol) + dRZ * isymdiff ! perturb geometry;
             else if( issym.eq.0 .and. irz.eq.1 ) then
@@ -955,7 +774,6 @@ BEGIN(dforce)
             endif
 
             packorunpack = 'P' ! pack geometrical degrees-of-freedom;
-            !LComputeAxis = .false. ! keep axis fixed
             LComputeAxis = .true.
 
             WCALL(dforce, packxi,( NGdof, iposition(isymdiff,0:NGdof), Mvol, mn,iRbc(1:mn,0:Mvol),iZbs(1:mn,0:Mvol),iRbs(1:mn,0:Mvol),&
@@ -963,7 +781,6 @@ BEGIN(dforce)
             WCALL(dforce, dforce,( NGdof, iposition(isymdiff,0:NGdof), iforce(isymdiff,0:NGdof), .false., LComputeAxis) )
           enddo
 
-          ! Fourth order centered finite difference scheme
           iforce(0, 0:NGdof)  = ( - 1 * iforce( 2,0:NGdof) &
                                   + 8 * iforce( 1,0:NGdof) &
                                   - 8 * iforce(-1,0:NGdof) &
@@ -985,9 +802,7 @@ BEGIN(dforce)
   DALLOCATE(oZbs)
   DALLOCATE(oRbc)
 
-  ! Print in file for diagnostics
   if(myid.eq.0) then
-    ! Print hessian
     open(10, file=trim(ext)//'.Lcheck6_output.txt', status='unknown')
     write(ounit,'(A)') NEW_LINE('A')
 
@@ -999,7 +814,6 @@ BEGIN(dforce)
 
     write(ounit,'(A)') NEW_LINE('A')
 
-    ! Print finite differences
     open(10, file=trim(ext)//'.Lcheck6_output.FiniteDiff.txt', status='unknown')
     do ii=1, SIZE(im)
       write(ounit,1346) myid, im(ii), in(ii), finitediff_estimate(ii,:)

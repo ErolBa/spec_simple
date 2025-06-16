@@ -1,59 +1,4 @@
-!> \file
-!> \brief Packs, and unpacks, geometrical degrees of freedom; and sets coordinate axis.
 
-!> \ingroup grp_packing
-!> \brief Packs, and unpacks, geometrical degrees of freedom; and sets coordinate axis.
-!>
-!> **geometrical degrees of freedom**
-!> <ul>
-!> <li> The geometrical degrees-of-freedom,
-!>      namely the \f$R_{j,v}\f$ and \f$Z_{j,v}\f$ where \f$v\f$ labels the interface and \f$j\f$ labels the Fourier harmonic,
-!>      must be "packxi", and "unpackxi", into a single vector, \f$\boldsymbol{\xi}\f$, so that standard numerical routines can be
-!>      called to find solutions to force-balance, i.e. \f${\bf F}[\boldsymbol{\xi}]=0\f$. </li>
-!> <li> A coordinate "pre-conditioning" factor is included:
-!>      \f{eqnarray}{ \boldsymbol{\xi}_k \equiv \frac{R_{j,v}}{\Psi_{j,v}},
-!>      \f}
-!>      where \f$\Psi_{j,v} \equiv\,\f$\c psifactor(j,v) , which is defined in global.f90 . </li>
-!> </ul>
-!>
-!> **coordinate axis**
-!> <ul>
-!> <li> The coordinate axis is not an independent degree-of-freedom of the geometry.
-!>      It is constructed by extrapolating the geometry of the innermost interface down to a line. </li>
-!> <li> Note that if the coordinate axis depends only on the geometry of the innermost interface
-!>      then the block tridiagonal structure of the the force-derivative matrix is preserved. </li>
-!> <li> Define the arc-length weighted averages,
-!>      \f{eqnarray}{ R_0(\zeta) \equiv \frac{\int_{0}^{2\pi} R_1(\theta,\zeta) dl}{L(\zeta)}, \qquad
-!>                    Z_0(\zeta) \equiv \frac{\int_{0}^{2\pi} Z_1(\theta,\zeta) dl}{L(\zeta)},
-!>      \f}
-!>      where \f$L(\zeta)\equiv \int_{0}^{2\pi} dl\f$ and \f$dl \equiv \sqrt{ \partial_\theta R_1(\theta,\zeta)^2 + \partial_\theta Z_1(\theta,\zeta)^2 } \, d\theta\f$. </li>
-!> <li> Note that if \f$dl\f$ does not depend on \f$\theta\f$, i.e. if \f$\theta\f$ is the equal arc-length angle, then the expressions simplify. </li>
-!> <li> Note that the geometry of the coordinate axis thus constructed only depends on the geometry of the innermost interface, by which I
-!>      mean that the geometry of the coordinate axis is independent of the angle parameterization. </li>
-!> </ul>
-!>
-!> **some numerical comments**
-!> <ul>
-!> <li> First, the differential poloidal length, \f$dl \equiv \sqrt{ R_\theta^2 + Z_\theta^2 }\f$, is computed in real space using
-!>      an inverse FFT from the Fourier harmonics of \f$R\f$ and \f$Z\f$. </li>
-!> <li> Second, the Fourier harmonics of the \f$dl\f$ are computed using an FFT.
-!>      The integration over \f$\theta\f$ to construct \f$L\equiv \int dl\f$ is now trivial: just multiply the \f$m=0\f$ harmonics of \f$dl\f$ by \f$2\pi\f$.
-!>      The \c ajk(1:mn) variable is used. </li>
-!> <li> Next, the weighted \f$R\,dl\f$ and \f$Z\,dl\f$ are computed in real space, and the poloidal integral is similarly taken. </li>
-!> <li> Lastly, the Fourier harmonics are constructed using an FFT after dividing in real space. </li>
-!> </ul>
-!>
-!> @param[in] NGdof
-!> @param position
-!> @param[in] Mvol
-!> @param[in] mn
-!> @param iRbc
-!> @param iZbs
-!> @param iRbs
-!> @param iZbc
-!> @param packorunpack
-!> @param[in] LComputeDerivatives
-!> @param[in] LComputeAxis
 subroutine packxi( NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpack, LComputeDerivatives, LComputeAxis )
 
 
@@ -159,11 +104,6 @@ subroutine packxi( NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpa
 
    ivol = 1 ! take care with ivol: this variable name might be a global variable, but here it is local; 19 Jul 16;
 
-  !  if( (Mvol .ne. 1) .and. (Lfindzero .ne. 0) ) then
-    ! if (LComputeAxis) then
-    !   WCALL( packxi, rzaxis, ( Mvol, mn, iRbc(1:mn,0:Mvol), iZbs(1:mn,0:Mvol), iRbs(1:mn,0:Mvol), iZbc(1:mn,0:Mvol), ivol, LComputeDerivatives ) ) ! set coordinate axis; 19 Jul 16;
-    ! endif
-  !  endif
 
   end select
 
