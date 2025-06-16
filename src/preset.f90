@@ -46,11 +46,6 @@ subroutine preset
    FATAL( readin, .true., illegal Istellsym )
   end select
 
-
-
-
-  FATAL( readin, Lfreebound.lt.0 .or. Lfreebound.gt.1, illegal Lfreebound )
-
   Mvol = Nvol + Lfreebound
 
 
@@ -187,30 +182,6 @@ subroutine preset
      ;iZbc(ii,Nvol) = zero
       endif
 
-     if( Lfreebound.eq.1 ) then
-
-      iRbc(ii,Mvol) = Rwc( nn, mm)                         ! computational boundary is ALWAYS given by namelist Rwc & Zws;
-      iZbs(ii,Mvol) = zero
-      if( NOTstellsym ) then
-      iRbs(ii,Mvol) = zero
-      iZbc(ii,Mvol) = Zwc( nn, mm)
-      else
-      iRbs(ii,Mvol) = zero
-      iZbc(ii,Mvol) = zero
-      endif
-
-      iVns(ii     ) = zero
-      iBns(ii     ) = zero
-      if( NOTstellsym ) then
-      iVnc(ii     ) = Vnc( nn, mm)                         ! I guess that this must be zero, because \div B = 0 ;
-      iBnc(ii     ) = Bnc( nn, mm)                         ! I guess that this must be zero, because \div B = 0 ;
-      else
-      iVnc(ii     ) = zero
-      iBnc(ii     ) = zero
-      endif
-
-     endif ! end of if( Lfreebound.eq.1 ) ;
-
     else ! if( mm.eq.0 .and. nn.eq.0 ) then ; matches
 
      ;iRbc(ii,Nvol) =   Rbc( kk, mm) + Rbc(-kk,-mm)        ! plasma        boundary is ALWAYS given by namelist Rbc & Zbs;
@@ -222,30 +193,6 @@ subroutine preset
      ;iRbs(ii,Nvol) =   zero
      ;iZbc(ii,Nvol) =   zero
       endif
-
-     if( Lfreebound.eq.1 ) then
-
-      iRbc(ii,Mvol) =   Rwc( kk, mm) + Rwc(-kk,-mm)        ! computational boundary is ALWAYS given by namelist Rwc & Zws;
-      iZbs(ii,Mvol) = ( Zws( kk, mm) - Zws(-kk,-mm) ) * jj
-      if( NOTstellsym ) then
-      iRbs(ii,Mvol) = ( Rws( kk, mm) - Rws(-kk,-mm) ) * jj
-      iZbc(ii,Mvol) =   Zwc( kk, mm) + Zwc(-kk,-mm)
-      else
-      iRbs(ii,Mvol) =   zero
-      iZbc(ii,Mvol) =   zero
-      endif
-
-      iVns(ii     ) = ( Vns( kk, mm) - Vns(-kk,-mm) ) * jj
-      iBns(ii     ) = ( Bns( kk, mm) - Bns(-kk,-mm) ) * jj
-      if( NOTstellsym ) then
-      iVnc(ii     ) =   Vnc( kk, mm) + Vnc(-kk,-mm)
-      iBnc(ii     ) =   Bnc( kk, mm) + Bnc(-kk,-mm)
-      else
-      iVnc(ii     ) =   zero
-      iBnc(ii     ) =   zero
-      endif
-
-     endif ! matches if( Lfreebound.eq.1 ) ;
 
     endif ! end of if( mm.eq.0 .and. nn.eq.0 ) ;
 
@@ -314,15 +261,6 @@ subroutine preset
    ;RlBCAST( iRbs(1:mn,0:Mvol), (Mvol+1)*mn, 0 ) ! only required for ii > 1 ;
    if( Igeometry.eq.3 ) then
     RlBCAST( iZbc(1:mn,0:Mvol), (Mvol+1)*mn, 0 )
-   endif
-  endif
-
-  if( Lfreebound.eq.1 ) then
-   ;RlBCAST( iVns(1:mn), mn, 0 ) ! only required for ii > 1 ;
-   ;RlBCAST( iBns(1:mn), mn, 0 ) ! only required for ii > 1 ;
-   if( NOTstellsym ) then
-    RlBCAST( iVnc(1:mn), mn, 0 )
-    RlBCAST( iBnc(1:mn), mn, 0 )
    endif
   endif
 
@@ -583,11 +521,7 @@ endif
 
 
   SALLOCATE( IPDt, (1:Mvol), zero)
-  if( Lfreebound.eq.1 ) then
-    SALLOCATE( IPDtDpf, (1:Mvol  , 1:Mvol  ), zero)
-  else
-    SALLOCATE( IPDtDpf, (1:Mvol-1, 1:Mvol-1), zero)
-  endif
+  SALLOCATE( IPDtDpf, (1:Mvol-1, 1:Mvol-1), zero)
 
   SALLOCATE( cheby, (0:Mrad,0:2), zero )
   SALLOCATE( zernike, (0:Lrad(1), 0:Mpol, 0:2), zero )
@@ -1210,14 +1144,6 @@ endif
     SALLOCATE(GMRESlastsolution, (MAXVAL(NAdof),0:2,1:Mvol), zero )
     GMRESlastsolution = zero
     if (LGMRESprec .eq. 1) LILUprecond = .true.
-  endif
-
-  if (Lmatsolver.eq.3) then
-    YESMatrixFree = .true.
-    NOTMatrixFree = .false.
-  else
-    YESMatrixFree = .false.
-    NOTMatrixFree = .true.
   endif
 
   SALLOCATE( vvolume    , (1:Mvol), zero ) ! volume integral of \sqrt g;

@@ -220,8 +220,6 @@ module allglobal
   LOGICAL              :: YESstellsym !< internal shorthand copies of Istellsym, which is an integer input;
   LOGICAL              :: NOTstellsym !< internal shorthand copies of Istellsym, which is an integer input;
 
-  LOGICAL              :: YESMatrixFree, NOTMatrixFree !< to use matrix-free method or not
-
   REAL   , allocatable :: cheby(:,:) !< local workspace for evaluation of Chebychev polynomials
   REAL   , allocatable :: zernike(:,:,:) !< local workspace for evaluation of Zernike polynomials
 
@@ -993,31 +991,6 @@ subroutine check_inputs()
    do vvol = 2, Mvol
    enddo
 
-
-
-
-    if ((Lfreebound.EQ.1) .and. (Lconstraint.EQ.3)) then
-
-        Ivolume(Mvol) = Ivolume(Mvol-1) ! Ensure vacuum in vacuum region
-
-        toroidalcurrent = Ivolume(Mvol) + sum(Isurf(1:Mvol-1))
-
-        if( curtor.NE.0 ) then
-            FATAL( readin, toroidalcurrent.EQ.0 , Incompatible current profiles and toroidal linking current)
-
-            Ivolume(1:Mvol) = Ivolume(1:Mvol) * curtor / toroidalcurrent
-            Isurf(1:Mvol-1) = Isurf(1:Mvol-1) * curtor / toroidalcurrent
-
-        else
-            FATAL( readin, toroidalcurrent.NE.0, Incompatible current profiles and toroidal linking current)
-
-        endif
-    endif
-
-
-
-
-
    do vvol = 1, Mvol
     FATAL( readin, Lrad(vvol ).lt.2, require Chebyshev resolution Lrad > 2 so that Lagrange constraints can be satisfied )
    enddo
@@ -1359,15 +1332,6 @@ subroutine wrtend
   write(iunit,'(" Lreflect    = ",i9        )') Lreflect
   write(iunit,'(" rpol        = ",es23.15   )') rpol
   write(iunit,'(" rtor        = ",es23.15   )') rtor
-
-  if( Lfreebound.eq.1 .or. Zbs(0,1).gt.zero ) then
-   do ii = 1, mn ; mm = im(ii) ; nn = in(ii) / Nfp ; Rbc(nn,mm) = iRbc(ii,Nvol) ; Zbs(nn,mm) = iZbs(ii,Nvol) ; Vns(nn,mm) = iVns(ii) ; Bns(nn,mm) = iBns(ii)
-                                                   ; Rbs(nn,mm) = iRbs(ii,Nvol) ; Zbc(nn,mm) = iZbc(ii,Nvol) ; Vnc(nn,mm) = iVnc(ii) ; Bnc(nn,mm) = iBnc(ii)
-                                                   ; Rwc(nn,mm) = iRbc(ii,Mvol) ; Zws(nn,mm) = iZbs(ii,Mvol)
-                                                   ; Rws(nn,mm) = iRbs(ii,Mvol) ; Zwc(nn,mm) = iZbc(ii,Mvol)
-   enddo ! end of do ii = 1, mn;
-  endif ! end of if( Lfreebound.eq.1 .or. . . . ) ;
-
 
  write(iunit,'(" Rac         = ",99es23.15)') iRbc(1:Ntor+1,0)
  write(iunit,'(" Zas         = ",99es23.15)') iZbs(1:Ntor+1,0)

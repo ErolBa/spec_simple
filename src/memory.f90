@@ -19,13 +19,8 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
   NN = NAdof(vvol) ! shorthand;
 
-  if (NOTMatrixFree .or. LcomputeDerivatives) then
-      SALLOCATE( dMA, (0:NN,0:NN), zero ) ! required for both plasma region and vacuum region;
-      SALLOCATE( dMD, (0:NN,0:NN), zero )
-  else
-      SALLOCATE( Adotx, (0:NN), zero)
-      SALLOCATE( Ddotx, (0:NN), zero)
-  endif
+  SALLOCATE( Adotx, (0:NN), zero)
+  SALLOCATE( Ddotx, (0:NN), zero)
 
   SALLOCATE( dMB, (0:NN,0: 2), zero )
   SALLOCATE( dMG, (0:NN     ), zero )
@@ -63,13 +58,9 @@ subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
   BEGIN(memory)
 
-  if (NOTMatrixFree .or. LcomputeDerivatives) then
     DALLOCATE(dMA)
     DALLOCATE(dMD)
-  else
-    DALLOCATE(Adotx)
-    DALLOCATE(Ddotx)
-  endif
+
 
   DALLOCATE(dMB)
 
@@ -121,22 +112,13 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
 
   if (Lcoordinatesingularity) then ! different radial dof for Zernike; 02 Jul 19
     lldof = (Lrad(vvol) - mod(Lrad(vvol),2)) / 2
-    if (YESMatrixFree .and. .not. LcomputeDerivatives) then
-      iidof = Mpol + 1
-      jjdof = 1
-    else
       iidof = mn
       jjdof = mn
-    endif
   else
     lldof = Lrad(vvol)
-    if (YESMatrixFree .and. .not. LcomputeDerivatives) then
-      iidof = 1
-      jjdof = 1
-    else
+    
       iidof = mn
       jjdof = mn
-    endif
   end if
 
   SALLOCATE( guvijsave, (1:Ntz,1:3,1:3,1:Iquad(vvol)), zero)

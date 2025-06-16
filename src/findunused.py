@@ -37,7 +37,7 @@ def main(directory='.'):
         all_words.extend(word.lower() for word in words)
 
     # Pass 2: Count how often each subroutine name appears
-    unused = [name for name in subroutines if all_words.count(name) == 4]
+    unused = [name for name in subroutines if all_words.count(name) < 3]
 
     # Report
     if unused:

@@ -15,7 +15,7 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
   use fileunits, only : ounit
 
   use inputlist, only : Wmacros, Wdfp100, Igeometry, Nvol, Lrad, Isurf, &
-                        Lconstraint, Lfreebound, curpol
+                        Lconstraint, curpol
 
   use cputiming, only : Tdfp100
 
@@ -35,7 +35,7 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
                         DDtzcc, DDtzcs, DDtzsc, DDtzss, &
                         DDzzcc, DDzzcs, DDzzsc, DDzzss, &
                         dMA, dMB, dMD, dMG, MBpsi, solution, &
-                        Nt, Nz, LILUprecond, Lsavedguvij, NOTMatrixFree, guvijsave, izbs
+                        Nt, Nz, LILUprecond, Lsavedguvij, guvijsave, izbs
 
   LOCALS
 
@@ -83,12 +83,8 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
       WCALL( dfp100, spsmat, ( vvol, mn, ll) )
     endif
 
-    if (NOTMatrixFree) then ! construct Beltrami matrix
-      WCALL( dfp100, ma00aa, ( Iquad(vvol), mn, vvol, ll ) ) ! compute volume integrals of metric elements;
-      WCALL( dfp100, matrix, ( vvol, mn, ll ) )
-    else ! matrix free, so construct something else
-      WCALL( dfp100, matrixBG, ( vvol, mn, ll ) )
-    endif
+    WCALL( dfp100, ma00aa, ( Iquad(vvol), mn, vvol, ll ) ) ! compute volume integrals of metric elements;
+    WCALL( dfp100, matrix, ( vvol, mn, ll ) )
 
     WCALL( dfp100, ma02aa, ( vvol, NN ) )
 
@@ -151,20 +147,6 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
         if( myid.EQ.0 ) then
             Fvec(1:Mvol-1) = IPDt(1:Mvol-1) - Isurf(1:Mvol-1)
         endif
-
-        if ( Lfreebound.eq.1 ) then
-
-          call WhichCpuID(Mvol, cpu_send_one)
-          RlBCAST( ldItGp(0:1, -1:2), 8, cpu_send_one )
-          RlBCAST( Bt00(Mvol, 0:1, 1), 2, cpu_send_one )
-
-          Fvec(Mvol    ) = ldItGp(1, 0) - curpol
-
-          IPDtdPf(Mvol-1, Mvol  ) = pi2 * Bt00(Mvol, 0, 1)
-          IPDtdPf(Mvol  , Mvol-1) = ldItGp(1, 2)
-          IPDtdPf(Mvol  , Mvol  ) = ldItGp(1, 1)
-        endif
-
 
       case default
         FATAL(dfp100, .true., Unaccepted value for Lconstraint)

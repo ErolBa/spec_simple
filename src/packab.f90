@@ -15,7 +15,7 @@ subroutine packab( packorunpack, lvol, NN, solution, ideriv )
 
   use allglobal, only : myid, ncpu, cpus, MPI_COMM_SPEC, &
                         mn, im, in, Ate, Aze, Ato, Azo, YESstellsym, NOTstellsym, &
-                        TT, YESMatrixFree, &
+                        TT, &
                         Lma, Lmb, Lmc, Lmd, Lme, Lmf, Lmg, Lmh, &
                         Lmavalue, Lmbvalue, Lmcvalue, Lmdvalue, Lmevalue, Lmfvalue, Lmgvalue, Lmhvalue
 
@@ -57,36 +57,6 @@ subroutine packab( packorunpack, lvol, NN, solution, ideriv )
      enddo ! end of do ll;
     enddo ! end of do ii;
 
-    if (YESMatrixFree) then
-      do ii = 1, mn
-        ;                  ; id = Lma(lvol,ii)
-        if (id/=0) then; Lmavalue(lvol,ii) = solution(id)
-        else           ; Lmavalue(lvol,ii) = zero
-        endif
-
-        ;                  ; id = Lmb(lvol,ii)
-        if (id/=0) then; Lmbvalue(lvol,ii) = solution(id)
-        else           ; Lmbvalue(lvol,ii) = zero
-        endif
-
-        if( ii.gt.1 ) then
-          ;                ; id = Lme(lvol,ii)
-          if (id/=0) then; Lmevalue(lvol,ii) = solution(id)
-          else           ; Lmevalue(lvol,ii) = zero
-          endif
-
-        else               ; id = Lmg(lvol,ii)
-          if (id/=0) then; Lmgvalue(lvol,ii) = solution(id)
-          else           ; Lmgvalue(lvol,ii) = zero
-          endif
-
-          ;                ; id = Lmh(lvol,ii)
-          if (id/=0) then; Lmhvalue(lvol,ii) = solution(id)
-          else           ; Lmhvalue(lvol,ii) = zero
-          endif
-        endif
-      enddo ! ii
-    endif ! YESMatrixFree
    else ! NOTstellsym;
 
     ;  ii = 1
@@ -121,50 +91,6 @@ subroutine packab( packorunpack, lvol, NN, solution, ideriv )
      enddo ! end of do ll;
     enddo ! end of do ii;
 
-    if (YESMatrixFree) then
-      do ii = 1, mn
-        ;                  ; id = Lma(lvol,ii)
-        if (id/=0) then; Lmavalue(lvol,ii) = solution(id)
-        else           ; Lmavalue(lvol,ii) = zero
-        endif
-
-        ;                  ; id = Lmb(lvol,ii)
-        if (id/=0) then; Lmbvalue(lvol,ii) = solution(id)
-        else           ; Lmbvalue(lvol,ii) = zero
-        endif
-
-        if( ii.gt.1 ) then ; id = Lmc(lvol,ii)
-          if (id/=0) then; Lmcvalue(lvol,ii) = solution(id)
-          else           ; Lmcvalue(lvol,ii) = zero
-          endif
-
-          ;                ; id = Lmd(lvol,ii)
-          if (id/=0) then; Lmdvalue(lvol,ii) = solution(id)
-          else           ; Lmdvalue(lvol,ii) = zero
-          endif
-
-          ;                ; id = Lme(lvol,ii)
-          if (id/=0) then; Lmevalue(lvol,ii) = solution(id)
-          else           ; Lmevalue(lvol,ii) = zero
-          endif
-
-          ;                ; id = Lmf(lvol,ii)
-          if (id/=0) then; Lmfvalue(lvol,ii) = solution(id)
-          else           ; Lmfvalue(lvol,ii) = zero
-          endif
-
-        else               ; id = Lmg(lvol,ii)
-          if (id/=0) then; Lmgvalue(lvol,ii) = solution(id)
-          else           ; Lmgvalue(lvol,ii) = zero
-          endif
-
-          ;                ; id = Lmh(lvol,ii)
-          if (id/=0) then; Lmhvalue(lvol,ii) = solution(id)
-          else           ; Lmhvalue(lvol,ii) = zero
-          endif
-        endif
-      enddo ! ii
-    endif ! YESMatrixFree
    endif ! end of if( YESstellsym );
 
   case( 'P' )

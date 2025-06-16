@@ -14,7 +14,7 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
                         Lconstraint, Lcheck, dRZ, &
                         Lextrap, &
                         mupftol, &
-                        Lfreebound, LHmatrix
+                        LHmatrix
 
   use cputiming, only : Tdforce
 
@@ -133,11 +133,8 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
     IPDtdPf = zero
     Xdof(1:Mvol-1)   = dpflux(2:Mvol) + xoffset
 
-    if( Lfreebound.eq.1 ) then
-      Ndofgl = Mvol
-    else
       Ndofgl = Mvol-1
-    endif
+
 
     SALLOCATE( Fvec, (1:Ndofgl), zero )
 
@@ -152,17 +149,10 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
         call DGESV( Ndofgl, 1, IPdtdPf, Ndofgl, ipiv, dpfluxout, Ndofgl, idgesv )
 
         dpflux(2:Mvol) = dpflux(2:Mvol) - dpfluxout(1:Mvol-1)
-        if( Lfreebound.eq.1 ) then
-          dtflux(Mvol) = dtflux(Mvol  ) - dpfluxout(Mvol    )
-        endif
     endif
 
     RlBCAST(dpfluxout(1:Ndofgl), Ndofgl, 0)
     RlBCAST(dpflux(1:Mvol)   , Mvol, 0)
-    if( Lfreebound.eq.1 ) then
-      RlBCAST(dtflux(Mvol), 1, 0)
-    endif
-
     do vvol = 2, Mvol
 
       WCALL(dforce, IsMyVolume, (vvol))
@@ -181,13 +171,8 @@ subroutine dforce( NGdof, position, force, LComputeDerivatives, LComputeAxis)
       WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,0), 0 ) ) ! packing;
       WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,2), 2 ) ) ! packing;
 
-      if( Lfreebound.eq.1 .and.(vvol.eq.Mvol) ) then
-        WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,1), 1 ) ) ! packing;
-        solution(1:NN, 0) = solution(1:NN, 0) - dpfluxout(vvol-1) * solution(1:NN, 2) & ! derivative w.r.t pflux
-                                              - dpfluxout(vvol  ) * solution(1:NN, 1)   ! derivative w.r.t tflux
-      else
-        solution(1:NN, 0) = solution(1:NN, 0) - dpfluxout(vvol-1) * solution(1:NN, 2)
-      endif
+      solution(1:NN, 0) = solution(1:NN, 0) - dpfluxout(vvol-1) * solution(1:NN, 2)
+
 
       packorunpack = 'U'
       WCALL( dforce, packab, ( packorunpack, vvol, NN, solution(1:NN,0), 0 ) ) ! unpacking;
@@ -576,7 +561,7 @@ endif ! end of if( LcomputeDerivatives ) ;
                   tdoc = (vvol-1) * LGdof        ! labels force-balance constraint across internal interfaces;
                   idoc = 0                       ! local  force-balance constraint across internal interface ;
                   hessian(tdoc+idoc+1:tdoc+idoc+LGdof,tdof) =                                           - dFFdRZ(idoc+1:idoc+LGdof,1,idof,0,vvol+0)
-                  if( Lconstraint.eq.1 ) then ! this is a little clumsy; could include Lfreebound or something . . . ;
+                  if( Lconstraint.eq.1 ) then ! this is a little clumsy; could include  or something . . . ;
                     hessian(tdoc+idoc+1:tdoc+idoc+LGdof,tdof) =  hessian(tdoc+idoc+1:tdoc+idoc+LGdof,tdof)                     &
                                                                 - dBBdmp(idoc+1:idoc+LGdof,vvol+0,1,1) * dmupfdx(vvol,1,1,idof,0) &
                                                                 - dBBdmp(idoc+1:idoc+LGdof,vvol+0,1,2) * dmupfdx(vvol,1,2,idof,0)

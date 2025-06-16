@@ -259,23 +259,6 @@ else ! CASE SEMI GLOBAL CONSTRAINT
     if( LComputeDerivatives ) then
         dBdX%L = .true. ! will need derivatives;
 
-        if( Lfreebound.eq.1 ) then
-            do ideriv = 0, 2
-                do ii = 1, mn
-
-                    call WhichCpuID(Mvol, cpu_id)
-
-                    RlBCAST( Ate(Mvol,ideriv,ii)%s(0:Lrad(Mvol)), Lrad(Mvol)+1, cpu_id )
-                    RlBCAST( Aze(Mvol,ideriv,ii)%s(0:Lrad(Mvol)), Lrad(Mvol)+1, cpu_id )
-                enddo
-             enddo
-        endif
-
-
-
-
-
-
         do vvol = 1, Mvol
             LREGION(vvol) ! assigns Lcoordinatesingularity, Lplasmaregion, etc. ; TODO: maybe not necessary, remove
             NN = NAdof(vvol) ! shorthand;
@@ -760,11 +743,8 @@ subroutine evaluate_dmupfdx(innout, idof, ii, issym, irz)
 
         if (Lconstraint.eq.3) then
 
-            if( Lfreebound.eq.1 ) then
-                order = Mvol
-            else
-                order = Mvol-1
-            endif
+            order = Mvol-1
+
 
             SALLOCATE(dBdmpf , ( 1:order, 1:order ), zero)
             SALLOCATE(dBdx2  , ( 1:order ), zero)
@@ -815,37 +795,11 @@ subroutine evaluate_dmupfdx(innout, idof, ii, issym, irz)
             endif
 
 
-            if( Lfreebound.eq.1 ) then ! Need to modify last two equations
-
-                dBdmpf(1:Mvol, Mvol  ) = zero
-
-                iocons = 0
-                WCALL(dfp200, lbpol, (Mvol, Bt00(1:Mvol, 0:1, -1:2), 1, iocons))
-
-                iflag =  2 ; WCALL( dfp200, curent, ( Mvol, mn, Nt, Nz, iflag, dItGpdxtp(0:1,-1:2,Mvol) ) )
-
-                dBdmpf(Mvol-1, Mvol  ) =  Bt00(Mvol, 0, 1)         !dBdpsit
-                dBdmpf(Mvol  , Mvol-1) =  dItGpdxtp( 1, 2, Mvol)    !dIpdpsip
-                dBdmpf(Mvol  , Mvol  ) =  dItGpdxtp( 1, 1, Mvol)    !dIpdpsit
-
-                if( vvol.eq.Mvol-1 ) then ! Plasma interface is perturbed
-                    iflag = -1 ; WCALL( dfp200, curent, ( Mvol, mn, Nt, Nz, iflag, dItGpdxtp(0:1,-1:2,Mvol) ) )
-                    dBdx2( Mvol ) = -dItGpdxtp( 1,-1, Mvol)    !-dIpdxj
-                else ! Inner interface is perturbed
-                    dBdx2( Mvol ) = zero
-                endif
-            endif
-
-
 
             call DGESV(order, 1   , dBdmpf(1:order,1:order), order, IPIV, dBdx2(1:order), order, IDGESV )
 
             dmupfdx(1     , vvol, 2, idof, 1) = zero ! First poloidal flux is always zero
             dmupfdx(2:Mvol, vvol, 2, idof, 1) = lfactor * dBdx2(1:Mvol-1) ! These are the derivatives of pflux
-
-            if( Lfreebound.eq.1 ) then
-                dmupfdx(Mvol, vvol, 1, idof, 1) = lfactor * dBdx2(Mvol) ! This is the derivative of tflux
-            endif
 
             DALLOCATE( dBdmpf )
             DALLOCATE( dBdx2  )

@@ -33,7 +33,7 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
                         xoffset, &
                         ImagneticOK, &
                         Ate, Aze, Ato, Azo, Mvol, Iquad, &
-                        LILUprecond, GMRESlastsolution, NOTMatrixFree, ext
+                        LILUprecond, GMRESlastsolution, ext
 
 
 
@@ -98,11 +98,8 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
   else ! Lvacuumregion;
 
-#ifdef FORCEFREEVACUUM
-   ;                    ; lmu  = mu(lvol)           ! generalize for arbitrary force-free field;
-#else
+
    ;                    ; lmu  = zero               ! restrict attention to strict vacuum field;
-#endif
 
    ;                    ; dtf  = Xdof(1) - xoffset
    if( Ndof.eq.2 ) then ; dpf  = Xdof(2) - xoffset
@@ -125,11 +122,8 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
   NN = NAdof(lvol) ! shorthand;
 
   SALLOCATE( rhs   , (1:NN,0:2 ), zero )
-  if (NOTMatrixFree) then ! create the full size matrix
     SALLOCATE( matrix, (1:NN,1:NN), zero )
-  else                    ! create a dummy variable
-    SALLOCATE( matrix, (1:1,1:1), zero )
-  endif
+
 
   solution(1:NN,-1:2) = zero ! this is a global array allocated in dforce;
 
@@ -182,19 +176,14 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
    if( Lcoordinatesingularity ) then
 
-    if (NOTMatrixFree) then
       ;matrix(1:NN,1:NN) = dMA(1:NN,1:NN) - lmu * dMD(1:NN,1:NN)
-    endif
+
 
 
     ;select case( ideriv )
     ;case( 0 )    ; rhs(1:NN,0) = - matmul(  dMB(1:NN,1:2)                       , dpsi(1:2) )
     ;case( 1 )    ! construct dMD*solution
-    if (NOTMatrixFree) then
     ; ;           ; rhs(1:NN,1) =                                                              - matmul( - one  * dMD(1:NN,1:NN), solution(1:NN,0) )
-    else ! Matrix free version
-    ; ;           ; rhs(1:NN,1) = Ddotx(1:NN)
-    endif ! NOTMatrixFree
     ; ;           ; rhs(1:NN,2) = - matmul(  dMB(1:NN,1:2)                       , ppsi(1:2) )
     ;end select
 
@@ -202,37 +191,26 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
     if( Lplasmaregion ) then
 
-     if (NOTMatrixFree) then
        matrix(1:NN,1:NN) = dMA(1:NN,1:NN) - lmu * dMD(1:NN,1:NN)
-     endif
+
 
     ;select case( ideriv )
     ;case( 0 )    ; rhs(1:NN,0) = - matmul(  dMB(1:NN,1:2)                       , dpsi(1:2) )
     ;case( 1 )    ! construct dMD*solution
-    if (NOTMatrixFree) then
     ; ;           ; rhs(1:NN,1) =                                                              - matmul( - one  * dMD(1:NN,1:NN), solution(1:NN,0) )
-    else ! Matrix free version
-    ; ;           ; rhs(1:NN,1) = Ddotx(1:NN)
-    endif ! NOTMatrixFree
+
     ; ;           ; rhs(1:NN,2) = - matmul(  dMB(1:NN,1:2)                       , ppsi(1:2) )
     ;end select
 
     else ! Lvacuumregion ;
 
-#ifdef FORCEFREEVACUUM
-     FATAL( mp00ac, .true., need to revise Beltrami matrices in vacuum region for arbitrary force-free field )
-#else
-
-     if (NOTMatrixFree) then
-       matrix(1:NN,1:NN) = dMA(1:NN,1:NN) ! - lmu * dMD(1:NN,1:NN) ;
-     endif
+      matrix(1:NN,1:NN) = dMA(1:NN,1:NN) ! - lmu * dMD(1:NN,1:NN) ;
 
      select case( ideriv )
      case( 0 )    ; rhs(1:NN,0) = - dMG(1:NN) - matmul( dMB(1:NN,1:2), dpsi(1:2) ) ! perhaps there is an lmu term missing here;
      case( 1 )    ; rhs(1:NN,1) =             - matmul( dMB(1:NN,1:2), tpsi(1:2) ) ! perhaps there is an lmu term missing here;
       ;           ; rhs(1:NN,2) =             - matmul( dMB(1:NN,1:2), ppsi(1:2) ) ! perhaps there is an lmu term missing here;
      end select
-#endif
 
     endif ! end of if( Lplasmaregion ) ;
 
@@ -305,22 +283,10 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
   enddo ! do ideriv = 0, 2;
 
-
-
-  if (NOTMatrixFree) then
-
    lBBintegral(lvol) = half * sum( solution(1:NN,0) * matmul( dMA(1:NN,1:NN), solution(1:NN,0) ) ) &
                      +        sum( solution(1:NN,0) * matmul( dMB(1:NN,1: 2),     dpsi(1: 2  ) ) ) !
 
    lABintegral(lvol) = half * sum( solution(1:NN,0) * matmul( dMD(1:NN,1:NN), solution(1:NN,0) ) ) !
-  else
-
-    lBBintegral(lvol) = half * sum( solution(1:NN,0) * Adotx(1:NN) ) &
-                      +        sum( solution(1:NN,0) * matmul( dMB(1:NN,1: 2),     dpsi(1: 2  ) ) ) !
-
-    lABintegral(lvol) = half * sum( solution(1:NN,0) * Ddotx(1:NN) )
-  endif
-
 
   DALLOCATE( matrix )
   DALLOCATE( rhs    )
@@ -458,14 +424,9 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
 
    if ( iflag.eq.1 ) Fdof(1     ) = lABintegral(lvol) - helicity(lvol)
 
-   if (NOTMatrixFree) then
+
     if ( iflag.eq.2 ) Ddof(1   ,1) = half * sum( solution(1:NN,1) * matmul( dMD(1:NN,1:NN), solution(1:NN,0) ) ) &
                                     + half * sum( solution(1:NN,0) * matmul( dMD(1:NN,1:NN), solution(1:NN,1) ) )
-   else
-    if ( iflag.eq.2 ) then
-      Ddof(1   ,1) = sum( solution(1:NN,1) * Ddotx(1:NN) )
-    endif
-   endif
 
   case(  3 )
 
@@ -525,11 +486,9 @@ subroutine mp00ac( Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag ) ! argument list is fi
    if( sum( abs( Fdof(1:Ndof) ) ) / Ndof .lt. mupftol ) then ! satisfactory;
 
     if ( Lplasmaregion ) then ; mu(lvol) = lmu  ;                    ; dpflux(lvol) = dpf
-#ifdef FORCEFREEVACUUM
-    else                      ; mu(lvol) = lmu  ; dtflux(lvol) = dtf ; dpflux(lvol) = dpf
-#else
+
     else                      ; mu(lvol) = zero ; dtflux(lvol) = dtf ; dpflux(lvol) = dpf
-#endif
+
     endif
 
     iflag = -2 ! return "acceptance" flag through to ma02aa via ifail; early termination;

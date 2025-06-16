@@ -90,14 +90,14 @@ subroutine init_outfile
 
  if (myid.eq.0 .and. .not.skip_write) then
 
-  H5CALL( sphdf5, h5open_f, (hdfier), __FILE__, __LINE__)
+  H5CALL( sphdf5, h5open_f, (hdfier), sphdf5.f90, 93)
 
-  H5CALL( sphdf5, h5eset_auto_f, (internalHdf5Msg, hdfier), __FILE__, __LINE__)
+  H5CALL( sphdf5, h5eset_auto_f, (internalHdf5Msg, hdfier), sphdf5.f90, 95)
 
-  H5CALL( sphdf5, h5fcreate_f, (trim(ext)//".sp.h5", H5F_ACC_TRUNC_F, file_id, hdfier ), __FILE__, __LINE__ )
+  H5CALL( sphdf5, h5fcreate_f, (trim(ext)//".sp.h5", H5F_ACC_TRUNC_F, file_id, hdfier ), sphdf5.f90, 97 )
 
-  HWRITERV_LO( file_id, 1, version, (/ version /), __FILE__, __LINE__)
-  H5DESCR_CDSET( /version, version of SPEC,        __FILE__, __LINE__)
+  HWRITERV_LO( file_id, 1, version, (/ version /), sphdf5.f90, 99)
+  H5DESCR_CDSET( /version, version of SPEC,        sphdf5.f90, 100)
 
  endif ! myid.eq.0
 
@@ -117,134 +117,134 @@ subroutine mirror_input_to_outfile
 
  if (myid.eq.0 .and. .not.skip_write) then
 
-  HDEFGRP( file_id, input, grpInput,                        __FILE__, __LINE__ )
-  H5DESCR( grpInput, /input, group for mirrored input data, __FILE__, __LINE__ )
+  HDEFGRP( file_id, input, grpInput,                        sphdf5.f90, 120 )
+  H5DESCR( grpInput, /input, group for mirrored input data, sphdf5.f90, 121 )
 
 
 
-  HDEFGRP( grpInput, physics, grpInputPhysics,                                                                                         __FILE__, __LINE__)
-  H5DESCR( grpInputPhysics, /input/physics, physics inputs,                                                                            __FILE__, __LINE__)
+  HDEFGRP( grpInput, physics, grpInputPhysics,                                                                                         sphdf5.f90, 125)
+  H5DESCR( grpInputPhysics, /input/physics, physics inputs,                                                                            sphdf5.f90, 126)
 
-  HWRITEIV_LO( grpInputPhysics,         1, Igeometry  , (/ Igeometry      /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Igeometry, geometry identifier,                                                                        __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,         1, Istellsym  , (/ Istellsym      /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Istellsym, stellarator symmetry flag,                                                                  __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,         1, Lfreebound , (/ Lfreebound     /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Lfreebound, free boundary flag,                                                                        __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,         1, phiedge    , (/ phiedge        /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/phiedge, total enclosed toroidal magnetic flux,                                                        __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,         1, curtor     , (/ curtor         /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/curtor, total enclosed toroidal current,                                                               __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,         1, curpol     , (/ curpol         /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/curpol, total enclosed poloidal current,                                                               __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,         1, gamma      , (/ gamma          /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/gamma, adiabatic index,                                                                                __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,         1, Nfp        , (/ Nfp            /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Nfp, number of stellarator field periods,                                                              __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,         1, Nvol       , (/ Nvol           /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Nvol, number of volumes,                                                                               __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,         1, Mpol       , (/ Mpol           /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Mpol, maximum poloidal mode number,                                                                    __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,         1, Ntor       , (/ Ntor           /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Ntor, maximum toroidal mode number,                                                                    __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,      Mvol, Lrad       ,      Lrad(1:Mvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Lrad, degree of radial Chebychev polynomials,                                                          __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,         1, Lconstraint, (/ Lconstraint    /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Lconstraint, type of constraint to enforce,                                                            __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,         1, Lreflect,    (/ Lreflect       /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Lreflect, whether to reflect the perturbation on both boundaries for slab geometry                     __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,      Mvol, tflux      ,     tflux(1:Mvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/tflux, toroidal magnetic flux in volumes,                                                              __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,      Mvol, pflux      ,     pflux(1:Mvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/pflux, poloidal magnetic flux in volumes,                                                              __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,      Nvol, helicity   ,  helicity(1:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/helicity, helicity profile,                                                                            __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,         1, pscale     , (/ pscale         /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/pscale, scaling factor for pressure,                                                                   __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,      Nvol, pressure   ,  pressure(1:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/pressure, pressure profile,                                                                            __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,         1, Ladiabatic , (/ Ladiabatic     /),                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Ladiabatic, adiabatic flag,                                                                            __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,      Mvol, adiabatic  , adiabatic(1:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/adiabatic, adiabatic profile (?),                                                                      __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,  (1+Nvol), mu         ,        mu(1:Mvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/mu, Beltrami parameter{,} parallel current profile,                                                    __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,  (1+Nvol), Ivolume    ,   Ivolume(1:Mvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Ivolume, Volume current{,} externally driven, parallel current profile,                                __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,  (Mvol  ), Isurf      ,   Isurf(1:Mvol  )   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/mu, Surface current{,} currents that are not volume currents (pressure driven, shielding currents) ,   __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), pl         ,        pl(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/pl, pl ?,                                                                                              __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), ql         ,        ql(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/ql, ql ?,                                                                                              __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), pr         ,        pr(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/pr, pr ?,                                                                                              __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), qr         ,        qr(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/qr, qr ?,                                                                                              __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,  (1+Nvol), iota       ,      iota(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/iota, rotational transform profile on inside of ideal interfaces,                                      __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), lp         ,        lp(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/lp, lp ?,                                                                                              __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), lq         ,        lq(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/lq, lq ?,                                                                                              __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), rp         ,        rp(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/rp, rp ?,                                                                                              __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), rq         ,        rq(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/rq, rq ?,                                                                                              __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,  (1+Nvol), oita       ,      oita(0:Nvol)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/oita, rotational transform profile on outside of ideal interfaces,                                     __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,         1, rtor  , (/ rtor      /),                                                                    __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/rpol, for aspect ratio in slab,                                                                        __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,         1, rpol  , (/ rpol      /),                                                                    __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/rpol, for aspect ratio in slab,                                                                        __FILE__, __LINE__)
+  HWRITEIV_LO( grpInputPhysics,         1, Igeometry  , (/ Igeometry      /),                                                          sphdf5.f90, 128)
+  H5DESCR_CDSET( /input/physics/Igeometry, geometry identifier,                                                                        sphdf5.f90, 129)
+  HWRITEIV_LO( grpInputPhysics,         1, Istellsym  , (/ Istellsym      /),                                                          sphdf5.f90, 130)
+  H5DESCR_CDSET( /input/physics/Istellsym, stellarator symmetry flag,                                                                  sphdf5.f90, 131)
+  HWRITEIV_LO( grpInputPhysics,         1, Lfreebound , (/ Lfreebound     /),                                                          sphdf5.f90, 132)
+  H5DESCR_CDSET( /input/physics/Lfreebound, free boundary flag,                                                                        sphdf5.f90, 133)
+  HWRITERV_LO( grpInputPhysics,         1, phiedge    , (/ phiedge        /),                                                          sphdf5.f90, 134)
+  H5DESCR_CDSET( /input/physics/phiedge, total enclosed toroidal magnetic flux,                                                        sphdf5.f90, 135)
+  HWRITERV_LO( grpInputPhysics,         1, curtor     , (/ curtor         /),                                                          sphdf5.f90, 136)
+  H5DESCR_CDSET( /input/physics/curtor, total enclosed toroidal current,                                                               sphdf5.f90, 137)
+  HWRITERV_LO( grpInputPhysics,         1, curpol     , (/ curpol         /),                                                          sphdf5.f90, 138)
+  H5DESCR_CDSET( /input/physics/curpol, total enclosed poloidal current,                                                               sphdf5.f90, 139)
+  HWRITERV_LO( grpInputPhysics,         1, gamma      , (/ gamma          /),                                                          sphdf5.f90, 140)
+  H5DESCR_CDSET( /input/physics/gamma, adiabatic index,                                                                                sphdf5.f90, 141)
+  HWRITEIV_LO( grpInputPhysics,         1, Nfp        , (/ Nfp            /),                                                          sphdf5.f90, 142)
+  H5DESCR_CDSET( /input/physics/Nfp, number of stellarator field periods,                                                              sphdf5.f90, 143)
+  HWRITEIV_LO( grpInputPhysics,         1, Nvol       , (/ Nvol           /),                                                          sphdf5.f90, 144)
+  H5DESCR_CDSET( /input/physics/Nvol, number of volumes,                                                                               sphdf5.f90, 145)
+  HWRITEIV_LO( grpInputPhysics,         1, Mpol       , (/ Mpol           /),                                                          sphdf5.f90, 146)
+  H5DESCR_CDSET( /input/physics/Mpol, maximum poloidal mode number,                                                                    sphdf5.f90, 147)
+  HWRITEIV_LO( grpInputPhysics,         1, Ntor       , (/ Ntor           /),                                                          sphdf5.f90, 148)
+  H5DESCR_CDSET( /input/physics/Ntor, maximum toroidal mode number,                                                                    sphdf5.f90, 149)
+  HWRITEIV_LO( grpInputPhysics,      Mvol, Lrad       ,      Lrad(1:Mvol)   ,                                                          sphdf5.f90, 150)
+  H5DESCR_CDSET( /input/physics/Lrad, degree of radial Chebychev polynomials,                                                          sphdf5.f90, 151)
+  HWRITEIV_LO( grpInputPhysics,         1, Lconstraint, (/ Lconstraint    /),                                                          sphdf5.f90, 152)
+  H5DESCR_CDSET( /input/physics/Lconstraint, type of constraint to enforce,                                                            sphdf5.f90, 153)
+  HWRITEIV_LO( grpInputPhysics,         1, Lreflect,    (/ Lreflect       /),                                                          sphdf5.f90, 154)
+  H5DESCR_CDSET( /input/physics/Lreflect, whether to reflect the perturbation on both boundaries for slab geometry                     sphdf5.f90, 155)
+  HWRITERV_LO( grpInputPhysics,      Mvol, tflux      ,     tflux(1:Mvol)   ,                                                          sphdf5.f90, 156)
+  H5DESCR_CDSET( /input/physics/tflux, toroidal magnetic flux in volumes,                                                              sphdf5.f90, 157)
+  HWRITERV_LO( grpInputPhysics,      Mvol, pflux      ,     pflux(1:Mvol)   ,                                                          sphdf5.f90, 158)
+  H5DESCR_CDSET( /input/physics/pflux, poloidal magnetic flux in volumes,                                                              sphdf5.f90, 159)
+  HWRITERV_LO( grpInputPhysics,      Nvol, helicity   ,  helicity(1:Nvol)   ,                                                          sphdf5.f90, 160)
+  H5DESCR_CDSET( /input/physics/helicity, helicity profile,                                                                            sphdf5.f90, 161)
+  HWRITERV_LO( grpInputPhysics,         1, pscale     , (/ pscale         /),                                                          sphdf5.f90, 162)
+  H5DESCR_CDSET( /input/physics/pscale, scaling factor for pressure,                                                                   sphdf5.f90, 163)
+  HWRITERV_LO( grpInputPhysics,      Nvol, pressure   ,  pressure(1:Nvol)   ,                                                          sphdf5.f90, 164)
+  H5DESCR_CDSET( /input/physics/pressure, pressure profile,                                                                            sphdf5.f90, 165)
+  HWRITEIV_LO( grpInputPhysics,         1, Ladiabatic , (/ Ladiabatic     /),                                                          sphdf5.f90, 166)
+  H5DESCR_CDSET( /input/physics/Ladiabatic, adiabatic flag,                                                                            sphdf5.f90, 167)
+  HWRITERV_LO( grpInputPhysics,      Mvol, adiabatic  , adiabatic(1:Nvol)   ,                                                          sphdf5.f90, 168)
+  H5DESCR_CDSET( /input/physics/adiabatic, adiabatic profile (?),                                                                      sphdf5.f90, 169)
+  HWRITERV_LO( grpInputPhysics,  (1+Nvol), mu         ,        mu(1:Mvol)   ,                                                          sphdf5.f90, 170)
+  H5DESCR_CDSET( /input/physics/mu, Beltrami parameter{,} parallel current profile,                                                    sphdf5.f90, 171)
+  HWRITERV_LO( grpInputPhysics,  (1+Nvol), Ivolume    ,   Ivolume(1:Mvol)   ,                                                          sphdf5.f90, 172)
+  H5DESCR_CDSET( /input/physics/Ivolume, Volume current{,} externally driven, parallel current profile,                                sphdf5.f90, 173)
+  HWRITERV_LO( grpInputPhysics,  (Mvol  ), Isurf      ,   Isurf(1:Mvol  )   ,                                                          sphdf5.f90, 174)
+  H5DESCR_CDSET( /input/physics/mu, Surface current{,} currents that are not volume currents (pressure driven, shielding currents) ,   sphdf5.f90, 175)
+  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), pl         ,        pl(0:Nvol)   ,                                                          sphdf5.f90, 176)
+  H5DESCR_CDSET( /input/physics/pl, pl ?,                                                                                              sphdf5.f90, 177)
+  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), ql         ,        ql(0:Nvol)   ,                                                          sphdf5.f90, 178)
+  H5DESCR_CDSET( /input/physics/ql, ql ?,                                                                                              sphdf5.f90, 179)
+  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), pr         ,        pr(0:Nvol)   ,                                                          sphdf5.f90, 180)
+  H5DESCR_CDSET( /input/physics/pr, pr ?,                                                                                              sphdf5.f90, 181)
+  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), qr         ,        qr(0:Nvol)   ,                                                          sphdf5.f90, 182)
+  H5DESCR_CDSET( /input/physics/qr, qr ?,                                                                                              sphdf5.f90, 183)
+  HWRITERV_LO( grpInputPhysics,  (1+Nvol), iota       ,      iota(0:Nvol)   ,                                                          sphdf5.f90, 184)
+  H5DESCR_CDSET( /input/physics/iota, rotational transform profile on inside of ideal interfaces,                                      sphdf5.f90, 185)
+  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), lp         ,        lp(0:Nvol)   ,                                                          sphdf5.f90, 186)
+  H5DESCR_CDSET( /input/physics/lp, lp ?,                                                                                              sphdf5.f90, 187)
+  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), lq         ,        lq(0:Nvol)   ,                                                          sphdf5.f90, 188)
+  H5DESCR_CDSET( /input/physics/lq, lq ?,                                                                                              sphdf5.f90, 189)
+  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), rp         ,        rp(0:Nvol)   ,                                                          sphdf5.f90, 190)
+  H5DESCR_CDSET( /input/physics/rp, rp ?,                                                                                              sphdf5.f90, 191)
+  HWRITEIV_LO( grpInputPhysics,  (1+Mvol), rq         ,        rq(0:Nvol)   ,                                                          sphdf5.f90, 192)
+  H5DESCR_CDSET( /input/physics/rq, rq ?,                                                                                              sphdf5.f90, 193)
+  HWRITERV_LO( grpInputPhysics,  (1+Nvol), oita       ,      oita(0:Nvol)   ,                                                          sphdf5.f90, 194)
+  H5DESCR_CDSET( /input/physics/oita, rotational transform profile on outside of ideal interfaces,                                     sphdf5.f90, 195)
+  HWRITERV_LO( grpInputPhysics,         1, rtor  , (/ rtor      /),                                                                    sphdf5.f90, 196)
+  H5DESCR_CDSET( /input/physics/rpol, for aspect ratio in slab,                                                                        sphdf5.f90, 197)
+  HWRITERV_LO( grpInputPhysics,         1, rpol  , (/ rpol      /),                                                                    sphdf5.f90, 198)
+  H5DESCR_CDSET( /input/physics/rpol, for aspect ratio in slab,                                                                        sphdf5.f90, 199)
 
-  HWRITERV_LO( grpInputPhysics,  (1+Ntor), Rac        ,       Rac(0:Ntor)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Rac,     stellarator symmetric coordinate axis R cosine Fourier coefficients,                          __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,  (1+Ntor), Zas        ,       Zas(0:Ntor)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Zas,     stellarator symmetric coordinate axis Z   sine Fourier coefficients,                          __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,  (1+Ntor), Ras        ,       Ras(0:Ntor)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Ras, non-stellarator symmetric coordinate axis R   sine Fourier coefficients,                          __FILE__, __LINE__)
-  HWRITERV_LO( grpInputPhysics,  (1+Ntor), Zac        ,       Zac(0:Ntor)   ,                                                          __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Zac, non-stellarator symmetric coordinate axis Z cosine Fourier coefficients,                          __FILE__, __LINE__)
+  HWRITERV_LO( grpInputPhysics,  (1+Ntor), Rac        ,       Rac(0:Ntor)   ,                                                          sphdf5.f90, 201)
+  H5DESCR_CDSET( /input/physics/Rac,     stellarator symmetric coordinate axis R cosine Fourier coefficients,                          sphdf5.f90, 202)
+  HWRITERV_LO( grpInputPhysics,  (1+Ntor), Zas        ,       Zas(0:Ntor)   ,                                                          sphdf5.f90, 203)
+  H5DESCR_CDSET( /input/physics/Zas,     stellarator symmetric coordinate axis Z   sine Fourier coefficients,                          sphdf5.f90, 204)
+  HWRITERV_LO( grpInputPhysics,  (1+Ntor), Ras        ,       Ras(0:Ntor)   ,                                                          sphdf5.f90, 205)
+  H5DESCR_CDSET( /input/physics/Ras, non-stellarator symmetric coordinate axis R   sine Fourier coefficients,                          sphdf5.f90, 206)
+  HWRITERV_LO( grpInputPhysics,  (1+Ntor), Zac        ,       Zac(0:Ntor)   ,                                                          sphdf5.f90, 207)
+  H5DESCR_CDSET( /input/physics/Zac, non-stellarator symmetric coordinate axis Z cosine Fourier coefficients,                          sphdf5.f90, 208)
 
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Rbc, Rbc(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Rbc,     stellarator symmetric boundary R cosine Fourier coefficients,                                 __FILE__, __LINE__)
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Zbs, Zbs(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Zbs,     stellarator symmetric boundary Z   sine Fourier coefficients,                                 __FILE__, __LINE__)
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Rbs, Rbs(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Rbs, non-stellarator symmetric boundary R   sine Fourier coefficients,                                 __FILE__, __LINE__)
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Zbc, Zbc(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Zbc, non-stellarator symmetric boundary Z cosine Fourier coefficients,                                 __FILE__, __LINE__)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Rbc, Rbc(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 210)
+  H5DESCR_CDSET( /input/physics/Rbc,     stellarator symmetric boundary R cosine Fourier coefficients,                                 sphdf5.f90, 211)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Zbs, Zbs(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 212)
+  H5DESCR_CDSET( /input/physics/Zbs,     stellarator symmetric boundary Z   sine Fourier coefficients,                                 sphdf5.f90, 213)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Rbs, Rbs(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 214)
+  H5DESCR_CDSET( /input/physics/Rbs, non-stellarator symmetric boundary R   sine Fourier coefficients,                                 sphdf5.f90, 215)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Zbc, Zbc(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 216)
+  H5DESCR_CDSET( /input/physics/Zbc, non-stellarator symmetric boundary Z cosine Fourier coefficients,                                 sphdf5.f90, 217)
 
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Rwc, Rwc(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Rwc,     stellarator symmetric boundary R cosine Fourier coefficients of wall,                         __FILE__, __LINE__)
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Zws, Zws(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Zws,     stellarator symmetric boundary Z   sine Fourier coefficients of wall,                         __FILE__, __LINE__)
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Rws, Rws(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Rws, non-stellarator symmetric boundary R   sine Fourier coefficients of wall,                         __FILE__, __LINE__)
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Zwc, Zwc(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Zwc, non-stellarator symmetric boundary Z cosine Fourier coefficients of wall,                         __FILE__, __LINE__)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Rwc, Rwc(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 219)
+  H5DESCR_CDSET( /input/physics/Rwc,     stellarator symmetric boundary R cosine Fourier coefficients of wall,                         sphdf5.f90, 220)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Zws, Zws(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 221)
+  H5DESCR_CDSET( /input/physics/Zws,     stellarator symmetric boundary Z   sine Fourier coefficients of wall,                         sphdf5.f90, 222)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Rws, Rws(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 223)
+  H5DESCR_CDSET( /input/physics/Rws, non-stellarator symmetric boundary R   sine Fourier coefficients of wall,                         sphdf5.f90, 224)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Zwc, Zwc(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 225)
+  H5DESCR_CDSET( /input/physics/Zwc, non-stellarator symmetric boundary Z cosine Fourier coefficients of wall,                         sphdf5.f90, 226)
 
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Vns, Vns(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Vns,     stellarator symmetric normal field   sine Fourier coefficients at boundary; vacuum component, __FILE__, __LINE__)
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Bns, Bns(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Bns,     stellarator symmetric normal field   sine Fourier coefficients at boundary; plasma component, __FILE__, __LINE__)
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Vnc, Vnc(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Vnc, non-stellarator symmetric normal field cosine Fourier coefficients at boundary; vacuum component, __FILE__, __LINE__)
-  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Bnc, Bnc(-Ntor:Ntor,-Mpol:Mpol),                                              __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/Bnc, non-stellarator symmetric normal field cosine Fourier coefficients at boundary; plasma component, __FILE__, __LINE__)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Vns, Vns(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 228)
+  H5DESCR_CDSET( /input/physics/Vns,     stellarator symmetric normal field   sine Fourier coefficients at boundary; vacuum component, sphdf5.f90, 229)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Bns, Bns(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 230)
+  H5DESCR_CDSET( /input/physics/Bns,     stellarator symmetric normal field   sine Fourier coefficients at boundary; plasma component, sphdf5.f90, 231)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Vnc, Vnc(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 232)
+  H5DESCR_CDSET( /input/physics/Vnc, non-stellarator symmetric normal field cosine Fourier coefficients at boundary; vacuum component, sphdf5.f90, 233)
+  HWRITERA_LO( grpInputPhysics, (2*Ntor+1), (2*Mpol+1),  Bnc, Bnc(-Ntor:Ntor,-Mpol:Mpol),                                              sphdf5.f90, 234)
+  H5DESCR_CDSET( /input/physics/Bnc, non-stellarator symmetric normal field cosine Fourier coefficients at boundary; plasma component, sphdf5.f90, 235)
 
-  HWRITERV_LO( grpInputPhysics,           1,   mupftol, (/ mupftol /),                                                                 __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/mupftol, mupftol   ,                                                                                   __FILE__, __LINE__)
-  HWRITEIV_LO( grpInputPhysics,           1,   mupfits, (/ mupfits /),                                                                 __FILE__, __LINE__)
-  H5DESCR_CDSET( /input/physics/mupfits, mupfits   ,                                                                                   __FILE__, __LINE__)
+  HWRITERV_LO( grpInputPhysics,           1,   mupftol, (/ mupftol /),                                                                 sphdf5.f90, 237)
+  H5DESCR_CDSET( /input/physics/mupftol, mupftol   ,                                                                                   sphdf5.f90, 238)
+  HWRITEIV_LO( grpInputPhysics,           1,   mupfits, (/ mupfits /),                                                                 sphdf5.f90, 239)
+  H5DESCR_CDSET( /input/physics/mupfits, mupfits   ,                                                                                   sphdf5.f90, 240)
 
-  HCLOSEGRP( grpInputPhysics , __FILE__, __LINE__)
-
-
+  HCLOSEGRP( grpInputPhysics , sphdf5.f90, 242)
 
 
-  HDEFGRP( grpInput, numerics, grpInputNumerics, __FILE__, __LINE__)
+
+
+  HDEFGRP( grpInput, numerics, grpInputNumerics, sphdf5.f90, 247)
 
   HWRITEIV( grpInputNumerics,          1, Linitialize        , (/ Linitialize /))
   HWRITEIV( grpInputNumerics,          1, Lzerovac           , (/ Lzerovac    /))
@@ -263,7 +263,7 @@ subroutine mirror_input_to_outfile
   HWRITEIV( grpInputNumerics,          1, Lrzaxis            , (/ Lrzaxis     /))
   HWRITEIV( grpInputNumerics,          1, Ntoraxis           , (/ Ntoraxis    /))
 
-  HCLOSEGRP( grpInputNumerics, __FILE__, __LINE__)
+  HCLOSEGRP( grpInputNumerics, sphdf5.f90, 266)
 
 
 
@@ -732,57 +732,57 @@ subroutine finish_outfile
 
  if (myid.eq.0 .and. .not.skip_write) then
 
-  H5CALL( sphdf5, h5tclose_f, (dt_nDcalls_id, hdfier)    , __FILE__, __LINE__)
-  H5CALL( sphdf5, h5tclose_f, (dt_Energy_id, hdfier)     , __FILE__, __LINE__)
-  H5CALL( sphdf5, h5tclose_f, (dt_ForceErr_id, hdfier)   , __FILE__, __LINE__)
-  H5CALL( sphdf5, h5tclose_f, (dt_iRbc_id, hdfier)       , __FILE__, __LINE__)
-  H5CALL( sphdf5, h5tclose_f, (dt_iZbs_id, hdfier)       , __FILE__, __LINE__)
-  H5CALL( sphdf5, h5tclose_f, (dt_iRbs_id, hdfier)       , __FILE__, __LINE__)
-  H5CALL( sphdf5, h5tclose_f, (dt_iZbc_id, hdfier)       , __FILE__, __LINE__)
-  H5CALL( sphdf5, h5dclose_f, (iteration_dset_id, hdfier), __FILE__, __LINE__) ! End access to the dataset and release resources used by it.
-  H5CALL( sphdf5, h5pclose_f, (plist_id, hdfier)         , __FILE__, __LINE__) ! close plist used for 'preserve' flag (does not show up in obj_count below)
+  H5CALL( sphdf5, h5tclose_f, (dt_nDcalls_id, hdfier)    , sphdf5.f90, 735)
+  H5CALL( sphdf5, h5tclose_f, (dt_Energy_id, hdfier)     , sphdf5.f90, 736)
+  H5CALL( sphdf5, h5tclose_f, (dt_ForceErr_id, hdfier)   , sphdf5.f90, 737)
+  H5CALL( sphdf5, h5tclose_f, (dt_iRbc_id, hdfier)       , sphdf5.f90, 738)
+  H5CALL( sphdf5, h5tclose_f, (dt_iZbs_id, hdfier)       , sphdf5.f90, 739)
+  H5CALL( sphdf5, h5tclose_f, (dt_iRbs_id, hdfier)       , sphdf5.f90, 740)
+  H5CALL( sphdf5, h5tclose_f, (dt_iZbc_id, hdfier)       , sphdf5.f90, 741)
+  H5CALL( sphdf5, h5dclose_f, (iteration_dset_id, hdfier), sphdf5.f90, 742) ! End access to the dataset and release resources used by it.
+  H5CALL( sphdf5, h5pclose_f, (plist_id, hdfier)         , sphdf5.f90, 743) ! close plist used for 'preserve' flag (does not show up in obj_count below)
 
-  H5CALL( sphdf5, h5fget_obj_count_f, (file_id, ior(H5F_OBJ_GROUP_F, ior(H5F_OBJ_DATASET_F, H5F_OBJ_DATATYPE_F)), obj_count, hdfier), __FILE__, __LINE__ )
+  H5CALL( sphdf5, h5fget_obj_count_f, (file_id, ior(H5F_OBJ_GROUP_F, ior(H5F_OBJ_DATASET_F, H5F_OBJ_DATATYPE_F)), obj_count, hdfier), sphdf5.f90, 745 )
 
   if (obj_count.gt.0) then
     write(*,'("There are still ",i3," hdf5 objects open")') obj_count
     allocate(obj_ids(1:obj_count))
 
-    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_GROUP_F, obj_count, obj_ids, hdfier, num_objs), __FILE__, __LINE__) ! get for open objects
+    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_GROUP_F, obj_count, obj_ids, hdfier, num_objs), sphdf5.f90, 751) ! get for open objects
     if (num_objs.gt.0) then
       write(*,'("There are still ",i3," HDF5 groups open:")') num_objs
       do iObj=1,num_objs
         openLength=0
-        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), dummyName, dummySize, openLength, hdfier), __FILE__, __LINE__)
+        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), dummyName, dummySize, openLength, hdfier), sphdf5.f90, 756)
         allocate(character(len=openLength+1) :: openName)
-        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), openName, openLength, openLength, hdfier), __FILE__, __LINE__)
+        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), openName, openLength, openLength, hdfier), sphdf5.f90, 758)
         write(*,*) openName
         deallocate(openName)
 
-        H5CALL( sphdf5, h5gclose_f, (obj_ids(iObj), hdfier), __FILE__, __LINE__)
+        H5CALL( sphdf5, h5gclose_f, (obj_ids(iObj), hdfier), sphdf5.f90, 762)
       enddo
     endif
 
-    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_DATASET_F, obj_count, obj_ids, hdfier, num_objs), __FILE__, __LINE__) ! get for open objects
+    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_DATASET_F, obj_count, obj_ids, hdfier, num_objs), sphdf5.f90, 766) ! get for open objects
     if (num_objs.gt.0) then
       write(*,'("There are still ",i3," HDF5 datasets open:")') num_objs
       do iObj=1,num_objs
         openLength=0
-        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), dummyName, dummySize, openLength, hdfier), __FILE__, __LINE__)
+        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), dummyName, dummySize, openLength, hdfier), sphdf5.f90, 771)
         allocate(character(len=openLength+1) :: openName)
-        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), openName, openLength, openLength, hdfier), __FILE__, __LINE__)
+        H5CALL( sphdf5, h5iget_name_f, (obj_ids(iObj), openName, openLength, openLength, hdfier), sphdf5.f90, 773)
         write(*,*) openName(1:openLength)
         deallocate(openName)
 
-        H5CALL( sphdf5, h5dclose_f, (obj_ids(iObj), hdfier), __FILE__, __LINE__)
+        H5CALL( sphdf5, h5dclose_f, (obj_ids(iObj), hdfier), sphdf5.f90, 777)
       enddo
     endif
 
-    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_DATATYPE_F, obj_count, obj_ids, hdfier, num_objs), __FILE__, __LINE__) ! get for open objects
+    H5CALL( sphdf5, h5fget_obj_ids_f, (file_id, H5F_OBJ_DATATYPE_F, obj_count, obj_ids, hdfier, num_objs), sphdf5.f90, 781) ! get for open objects
     if (num_objs.gt.0) then
       write(*,'("There are still ",i3," HDF5 datatypes open:")') num_objs
       do iObj=1,num_objs
-        H5CALL( sphdf5, h5tget_class_f, (obj_ids(iObj), typeClass, hdfier), __LINE__, __FILE__) ! determine class of open datatype
+        H5CALL( sphdf5, h5tget_class_f, (obj_ids(iObj), typeClass, hdfier), 785, sphdf5.f90) ! determine class of open datatype
         if      (typeClass.eq.H5T_NO_CLASS_F ) then ; write(*,*) "H5T_NO_CLASS_F"
         else if (typeClass.eq.H5T_INTEGER_F  ) then ; write(*,*) "H5T_INTEGER_F"
         else if (typeClass.eq.H5T_FLOAT_F    ) then ; write(*,*) "H5T_FLOAT_F"
@@ -797,15 +797,15 @@ subroutine finish_outfile
         else ; write(*,*) "UNKNOWN TYPE!"
         endif
 
-        H5CALL( sphdf5, h5tclose_f, (obj_ids(iObj), hdfier), __FILE__, __LINE__)
+        H5CALL( sphdf5, h5tclose_f, (obj_ids(iObj), hdfier), sphdf5.f90, 800)
       enddo
     endif
 
     deallocate(obj_ids)
   endif ! (obj_count.gt.0)
 
-  H5CALL( sphdf5, h5fclose_f, ( file_id, hdfier ), __FILE__, __LINE__ ) ! terminate access on output file;
-  H5CALL( sphdf5, h5close_f,  ( hdfier ),          __FILE__, __LINE__ ) ! close Fortran interface to the HDF5 library;
+  H5CALL( sphdf5, h5fclose_f, ( file_id, hdfier ), sphdf5.f90, 807 ) ! terminate access on output file;
+  H5CALL( sphdf5, h5close_f,  ( hdfier ),          sphdf5.f90, 808 ) ! close Fortran interface to the HDF5 library;
 
  endif ! myid.eq.0
 
