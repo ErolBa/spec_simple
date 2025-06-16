@@ -1097,7 +1097,7 @@ m4_define(RETURN,{! macro expansion of return;
 
   return
 
-  ! macro expansion of return; end;})m4_dnl ; can put comments here;
+  })m4_dnl ; can put comments here;
 m4_define(SUMTIME,{! macro expansion of sumtime;
 
 
