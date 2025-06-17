@@ -16,7 +16,7 @@ subroutine dfp200(LcomputeDerivatives, vvol)
 
     use cputiming, only: Tdfp200
 
-    use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, &
+    use allglobal, only: ncpu, myid, cpus, &
                          Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, &
                          Mvol, &
                          Iquad, &
@@ -46,11 +46,10 @@ subroutine dfp200(LcomputeDerivatives, vvol)
                          mn, mne, &
                          dRodR, dRodZ, dZodR, dZodZ, &
                          LocalConstraint, solution, &
-                         IsMyVolume, IsMyVolumeValue, Btemn, WhichCpuID
+                         Btemn
 
     use typedefns
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -62,7 +61,7 @@ subroutine dfp200(LcomputeDerivatives, vvol)
     integer :: vvol, innout, ii, jj, irz, issym, iocons, idoc, idof, imn, ll
     integer :: Lcurvature, ideriv, id
     integer :: iflag, cpu_id, cpu_id1, even_or_odd, vol_parity
-    integer :: stat(MPI_STATUS_SIZE), tag, tag2, req1, req2, req3, req4
+    integer :: tag, tag2, req1, req2, req3, req4
 
     real(8) :: lastcpu, lss, lfactor, DDl, MMl
     real(8) :: det
@@ -88,18 +87,6 @@ subroutine dfp200(LcomputeDerivatives, vvol)
     if (LocalConstraint) then
 
         do vvol = 1, Mvol
-
-            call IsMyVolume(vvol)
-
-            if (IsMyVolumeValue == 0) then
-                cycle
-            else if (IsMyVolumeValue == -1) then
-                if (.true.) then
-                    write (6, '("dfp200 :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
-                    stop "dfp200 : .true. : Unassociated volume ;"
-                end if
-            end if
 
             if (Igeometry == 1 .or. vvol > 1) then; Lcoordinatesingularity = .false.
             else; Lcoordinatesingularity = .true.
@@ -128,18 +115,6 @@ subroutine dfp200(LcomputeDerivatives, vvol)
     else
 
         do vvol = 1, Mvol
-            call IsMyVolume(vvol)
-
-            if (IsMyVolumeValue == 0) then
-                cycle
-            else if (IsMyVolumeValue == -1) then
-                if (.true.) then
-                    write (6, '("dfp200 :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
-                    stop "dfp200 : .true. : Unassociated volume ;"
-                end if
-            end if
-
             if (Igeometry == 1 .or. vvol > 1) then; Lcoordinatesingularity = .false.
             else; Lcoordinatesingularity = .true.
             end if

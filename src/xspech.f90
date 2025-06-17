@@ -7,30 +7,25 @@ end program spec_main
 subroutine xspech
 
     use numerical
-    use allglobal, only: set_mpi_comm, myid, ncpu, cpus, version, MPI_COMM_SPEC, &
+    use allglobal, only: myid, ncpu, cpus, version, &
                          wrtend, read_inputlists_from_file, check_inputs, broadcast_inputs, skip_write, &
                          ext
     use inputlist, only: initialize_inputs, Wxspech
     use fileunits, only: ounit
     use cputiming, only: Txspech
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
 
     character :: ldate*8, ltime*10, arg*100
 
-    call MPI_INIT(ierr)
-
-    call set_mpi_comm(MPI_COMM_WORLD)
-
-    cpus = MPI_WTIME()
+    cpus = 0
     cpuo = cpus
 
     skip_write = .false.
 
-    cput = MPI_WTIME()
+    cput = 0
     if (myid == 0) then
 
         write (ounit, '("xspech : ", 10x ," : version = "F5.2)') version
@@ -71,15 +66,11 @@ subroutine xspech
         call wrtend()
     end if
 
-    call MPI_Barrier(MPI_COMM_SPEC, ierr)
-
     if (myid == 0) then
-        cput = MPI_WTIME()
+        cput = 0
         write (ounit, '("xspech : ", 10x ," :")')
         write (ounit, '("xspech : ",f10.2," : myid=",i3," : time="f8.2"m = "f6.2"h = "f5.2"d ;")') cput - cpus, myid, (cput - cpus)/(/60, 60*60, 24*60*60/)
     end if
-
-    call MPI_FINALIZE(ierr)
 
     stop
 
@@ -91,9 +82,8 @@ subroutine read_command_args
 
     use fileunits, only: ounit
     use inputlist, only: Wreadin
-    use allglobal, only: cpus, myid, ext, MPI_COMM_SPEC, write_spec_namelist
+    use allglobal, only: cpus, myid, ext, write_spec_namelist
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -105,7 +95,7 @@ subroutine read_command_args
 
     if (myid == 0) then
 
-        cput = MPI_WTIME()
+        cput = 0
 
         call getarg(1, arg)
 
@@ -119,11 +109,11 @@ subroutine read_command_args
             write (ounit, '("rdcmdl : ", 10x ," :     -i / --init :  generate a template input file.")')
             write (ounit, '("rdcmdl : ", 10x ," : Additional arguments:")')
             write (ounit, '("rdcmdl : ", 10x ," :     -readin : print debugging information during reading inputs")')
-            call MPI_ABORT(MPI_COMM_SPEC, 0, ierr)
+
         case ("-i", "--init")
             write (ounit, '("rdcmdl : ", 10x ," : write a template input file in example.sp")')
             call write_spec_namelist()
-            call MPI_ABORT(MPI_COMM_SPEC, 0, ierr)
+
         case default
             extlen = len_trim(arg)
             sppos = index(arg, ".sp", .true.)
@@ -198,11 +188,9 @@ subroutine spec
                          first_free_bound, &
                          dMA, dMB, dMD, dMG, MBpsi, solution, IPDt, &
                          version, &
-                         MPI_COMM_SPEC, &
                          force_final, LocalConstraint, dBBdmp, dFFdRZ, dmupfdx, &
                          dRodR, dRodZ, dZodR, dZodZ
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -217,11 +205,11 @@ subroutine spec
     real(8) :: gBnbld_old
     integer :: lnPtrj, numTrajTotal
 
-    cpuo = MPI_WTIME()
+    cpuo = 0
 
     if (NGdof < 0) then
         write (6, '("xspech :      fatal : myid=",i3," ; NGdof.lt.0 ; counting error;")') myid
-        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
         stop "xspech : NGdof.lt.0 : counting error ;"
     end if
 
@@ -257,14 +245,9 @@ subroutine spec
     if (Mvol > Nvol) then; adiabatic(Mvol) = zero; pressure(Mvol) = zero
     end if
 
-    if (Wxspech .and. myid == 0) then
-        cput = MPI_WTIME()
-        write (ounit, '("xspech : ",f10.2," : myid=",i3," ; adiabatic constants = "999es13.5)') cput - cpus, myid, adiabatic(1:Mvol)
-    end if
-
     pressure(1:Mvol) = adiabatic(1:Mvol)/vvolume(1:Mvol)**gamma
 
-    lastcpu = MPI_WTIME()
+    lastcpu = 0
 
     if (allocated(force_final)) deallocate (force_final)
     allocate (force_final(0:NGdof), stat=astat)
@@ -304,16 +287,14 @@ subroutine final_diagnostics
                          Isurf, Ivolume, mu, Wmacros, Ltransform, Lsvdiota, Lconstraint
     use fileunits, only: ounit
     use constants, only: zero
-    use allglobal, only: pi2, myid, ncpu, MPI_COMM_SPEC, cpus, Mvol, Ntz, mn, &
+    use allglobal, only: pi2, myid, ncpu, cpus, Mvol, Ntz, mn, &
                          beltramierror, Lcoordinatesingularity, &
                          Lplasmaregion, Lvacuumregion, &
                          Btemn, Bzemn, Btomn, Bzomn, &
                          efmn, ofmn, cfmn, sfmn, &
                          IPDt, ImagneticOK, dtflux, Iquad, lmns, Nt, Nz, diotadxup, &
-                         IsMyVolume, IsMyVolumeValue, WhichCpuID, &
                          dlambdaout, diotadxup
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -327,38 +308,18 @@ subroutine final_diagnostics
 
         if (Lsvdiota /= 1) then
             write (6, '("xspech :      fatal : myid=",i3," ; Lsvdiota.ne.1 ; Lsvdiota needs to be one for s.f.l transformation;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "xspech : Lsvdiota.ne.1 : Lsvdiota needs to be one for s.f.l transformation ;"
         end if
 
-        do vvol = 1, Mvol
-            call brcast(vvol)
-        end do
-
         iflag = -1
         do vvol = 1, Mvol
-            call IsMyVolume(vvol)
-            if (IsMyVolumeValue == 0) then
-                cycle
-            elseif (IsMyVolumeValue == -1) then
-                if (.true.) then
-                    write (6, '("xspech :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
-                    stop "xspech : .true. : Unassociated volume ;"
-                end if
-            end if
 
             if (Igeometry == 1 .or. vvol > 1) then; Lcoordinatesingularity = .false.
             else; Lcoordinatesingularity = .true.
             end if
 
             call tr00ab(vvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1, -1:2, vvol))
-        end do
-
-        do vvol = 1, Mvol
-            call WhichCpuID(vvol, cpu_id)
-            call MPI_BCAST(diotadxup(0:1, -1:2, vvol), 8, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
-            call MPI_BCAST(dlambdaout(1:lmns, vvol, 0:1), 2*lmns, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
         end do
 
     end if
@@ -398,7 +359,7 @@ subroutine final_diagnostics
     end do
 
     if (myid == 0) then
-        cput = MPI_WTIME()
+        cput = 0
 
         if (nPpts > 0) then
             write (ounit, '("xspech : ", 10x ," :")')
@@ -418,28 +379,9 @@ subroutine final_diagnostics
         else; Lcoordinatesingularity = .true.
         end if
 
-        if (myid == modulo(vvol - 1, ncpu) .and. myid < Mvol) then
-
-            if (.not. ImagneticOK(vvol)) then; cput = MPI_WTIME(); write (ounit, 1002) cput - cpus; write (ounit, 1002) cput - cpus, myid, vvol, ImagneticOK(vvol); cycle
-            end if
-
-            if (Lcheck == 1) then
-                call jo00aa(vvol, Ntz, Iquad(vvol), mn)
-            end if
-
+        if (Lcheck == 1) then
+            call jo00aa(vvol, Ntz, Iquad(vvol), mn)
         end if
-    end do
-
-1002 format("xspech : ", f10.2, " :":" myid=", i3, " ; vvol=", i3, " ; IBeltrami="L2" ; construction of Beltrami field failed ;")
-
-    do vvol = 1, Mvol; llmodnp = modulo(vvol - 1, ncpu)
-
-        call MPI_BCAST(Btemn(1:mn, 0:1, vvol), mn*2, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Bzemn(1:mn, 0:1, vvol), mn*2, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Btomn(1:mn, 0:1, vvol), mn*2, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Bzomn(1:mn, 0:1, vvol), mn*2, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
-
-        call MPI_BCAST(beltramierror(vvol, 1:9), 9, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
 
     end do
 

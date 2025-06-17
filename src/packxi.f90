@@ -11,13 +11,12 @@ subroutine packxi(NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpac
 
     use cputiming, only: Tpackxi
 
-    use allglobal, only: ncpu, myid, cpus, im, in, MPI_COMM_SPEC, &
+    use allglobal, only: ncpu, myid, cpus, im, in, &
                          YESstellsym, NOTstellsym, &
                          ajk, Nt, Nz, Ntz, iRij, iZij, tRij, tZij, &
                          ijreal, ijimag, jireal, jiimag, efmn, ofmn, cfmn, sfmn, evmn, odmn, comn, simn, &
                          psifactor, Rscale
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0

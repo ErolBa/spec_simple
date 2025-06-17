@@ -9,7 +9,6 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
     use cputiming
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -54,7 +53,6 @@ subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
     use cputiming
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -86,7 +84,6 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
 
     use cputiming
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -259,7 +256,6 @@ subroutine deallocate_geometry_matrices(LcomputeDerivatives)
 
     use cputiming
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0

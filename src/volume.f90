@@ -11,7 +11,7 @@ subroutine volume(lvol, vflag)
 
     use cputiming
 
-    use allglobal, only: myid, cpus, MPI_COMM_SPEC, &
+    use allglobal, only: myid, cpus, &
                          YESstellsym, Mvol, &
                          Ntz, mn, im, in, iRbc, iZbs, iRbs, iZbc, &
                          djkp, djkm, &
@@ -20,7 +20,6 @@ subroutine volume(lvol, vflag)
                          dBdX, &
                          pi2nfp, pi2pi2nfp, pi2pi2nfpquart
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -89,7 +88,7 @@ subroutine volume(lvol, vflag)
                             else
                                 if (.true.) then
                                     write (6, '("volume :      fatal : myid=",i3," ; .true. ; derivatives of volume under construction;")') myid
-                                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                                     stop "volume : .true. : derivatives of volume under construction ;"
                                 end if
                                 dvolume = dvolume + iRbs(jj, jvol)*(djkp(jj, ii) - djkm(jj, ii) + djkp(ii, jj) - djkm(ii, jj))
@@ -164,27 +163,22 @@ subroutine volume(lvol, vflag)
     case (4); vvolume(lvol) = one; dvolume = zero
         if (abs(pscale) > vsmall) then
             write (6, '("volume :      fatal : myid=",i3," ; abs(pscale).gt.vsmall ; need to compute volume;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "volume : abs(pscale).gt.vsmall : need to compute volume ;"
         end if
     case default
         if (.true.) then
             write (6, '("volume :      fatal : myid=",i3," ; .true. ; invalid Igeometry;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "volume : .true. : invalid Igeometry ;"
         end if
     end select
 
     if (dBdX%innout == 0) dvolume = -dvolume
 
-    if (Wvolume) then
-        cput = MPI_WTIME()
-        write (ounit, '("volume : ",f10.2," : myid=",i3," ; Igeometry=",i2," ; vvolume(",i3," ) =",es23.15" ;")') cput - cpus, myid, Igeometry, lvol, vvolume(lvol)
-    end if
-
     if (vflag == 0 .and. vvolume(lvol) < small) then
         write (6, '("volume :      fatal : myid=",i3," ; vflag.eq.0 .and. vvolume(lvol).lt.small ; volume cannot be zero or negative;")') myid
-        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
         stop "volume : vflag.eq.0 .and. vvolume(lvol).lt.small : volume cannot be zero or negative ;"
     end if
 

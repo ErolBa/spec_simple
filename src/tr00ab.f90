@@ -12,7 +12,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
 
     use cputiming, only: Ttr00ab
 
-    use allglobal, only: ncpu, cpus, myid, MPI_COMM_SPEC, &
+    use allglobal, only: ncpu, cpus, myid, &
                          pi2nfp, &
                          Mvol, im, in, mns, ims, ins, &
                          YESstellsym, NOTstellsym, &
@@ -22,7 +22,6 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
                          Ate, Aze, Ato, Azo, TT, RTT, &
                          Lcoordinatesingularity, Lvacuumregion, regumm, dlambdaout
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -162,7 +161,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
                         if (NOTstellsym) then
                             if (ii + mns - 1 < 1 .or. ii + mns - 1 > NN .or. jj + mns - 1 < 1 .or. jj + mns - 1 > NN) then
                                 write (6, '("tr00ab :      fatal : myid=",i3," ; ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ; illegal subscript;")') myid
-                                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                                 stop "tr00ab : ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN : illegal subscript ;"
                             end if
                             dmatrix(ii + mns - 1, jj, ideriv) = dmatrix(ii + mns - 1, jj, ideriv) + (-mj*lAzo(kk, ideriv) + nj*lAto(kk, ideriv))*half
@@ -180,14 +179,14 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
 
                         if (ii > NN .or. jj > NN) then
                             write (6, '("tr00ab :      fatal : myid=",i3," ; ii.gt.NN .or. jj.gt.NN ; illegal subscript;")') myid
-                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                             stop "tr00ab : ii.gt.NN .or. jj.gt.NN : illegal subscript ;"
                         end if
                         dmatrix(ii, jj, ideriv) = dmatrix(ii, jj, ideriv) + (-mj*lAze(kk, ideriv) + nj*lAte(kk, ideriv))*half
                         if (NOTstellsym) then
                             if (ii + mns - 1 < 1 .or. ii + mns - 1 > NN .or. jj + mns - 1 < 1 .or. jj + mns - 1 > NN) then
                                 write (6, '("tr00ab :      fatal : myid=",i3," ; ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ; illegal subscript;")') myid
-                                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                                 stop "tr00ab : ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN : illegal subscript ;"
                             end if
                             dmatrix(ii + mns - 1, jj, ideriv) = dmatrix(ii + mns - 1, jj, ideriv) + (-mj*lAzo(kk, ideriv) + nj*lAto(kk, ideriv))*half*iotaksgn(kk, jj)
@@ -217,12 +216,12 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
                 case default
                     if (.true.) then
                         write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
-                        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                         stop "tr00ab : .true. : invalid jderiv ;"
                     end if
                 end select
 
-                lcpu = MPI_WTIME()
+                lcpu = 0
 
                 select case (Lsvdiota)
 
@@ -263,29 +262,29 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
 
                         if (.true.) then
                             write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
-                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                             stop "tr00ab : .true. : invalid jderiv ;"
                         end if
 
                     end select
 
-                    cput = MPI_WTIME()
+                    cput = 0
 
                     select case (idgesvx)
-                    case (0); if (Wtr00ab) write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput - lcpu, "solved Fourier ; ", dlambda(1, 0)
+                    case (0); 
                     case (1:); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput - lcpu, "singular ;       "
                     case (:-1); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput - lcpu, "input error ;    "
                     case default; 
                         if (.true.) then
                             write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; illegal ifail returned by dgesvx;")') myid
-                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                             stop "tr00ab : .true. : illegal ifail returned by dgesvx ;"
                         end if
                     end select
 
                     if (idgesvx /= 0) then
                         write (6, '("tr00ab :      fatal : myid=",i3," ; idgesvx.ne.0 ; failed to construct straight-fieldline angle using dgesvx;")') myid
-                        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                         stop "tr00ab : idgesvx.ne.0 : failed to construct straight-fieldline angle using dgesvx ;"
                     end if
 
@@ -340,7 +339,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
                         else
                             if (.true.) then
                                 write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; invalid iflag;")') myid
-                                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                                 stop "tr00ab : .true. : invalid iflag ;"
                             end if
                         end if
@@ -349,7 +348,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
 
                         if (.true.) then
                             write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
-                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                             stop "tr00ab : .true. : invalid jderiv ;"
                         end if
 
@@ -357,23 +356,23 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
 
                     deallocate (work, stat=astat)
 
-                    cput = MPI_WTIME()
+                    cput = 0
 
                     select case (idgelsd)
-                    case (0); if (Wtr00ab) write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput - lcpu, "solved Fourier ; ", dlambda(1, 0)
+                    case (0); 
                     case (:-1); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput - lcpu, "input error ;    "
                     case (1:); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput - lcpu, "QR failed ;      "
                     case default
                         if (.true.) then
                             write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; illegal ifail returned by f04arf;")') myid
-                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                             stop "tr00ab : .true. : $illegal ifail returned by f04arf ;"
                         end if
                     end select
 
                     if (idgelsd /= 0) then
                         write (6, '("tr00ab :      fatal : myid=",i3," ; idgelsd.ne.0 ; failed to construct straight-fieldline angle using dgelsd;")') myid
-                        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                         stop "tr00ab : idgelsd.ne.0 : failed to construct straight-fieldline angle using dgelsd ;"
                     end if
 
@@ -383,7 +382,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
 
                     if (.true.) then
                         write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; illegal Lsvdiota;")') myid
-                        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                         stop "tr00ab : .true. : illegal Lsvdiota ;"
                     end if
 

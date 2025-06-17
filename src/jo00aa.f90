@@ -9,7 +9,7 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
 
     use cputiming, only: Tjo00aa
 
-    use allglobal, only: myid, cpus, MPI_COMM_SPEC, ext, ivol, &
+    use allglobal, only: myid, cpus, ext, ivol, &
                          im, in, regumm, &
                          Mvol, &
                          cheby, zernike, &
@@ -21,7 +21,6 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
                          beltramierror, Rij, Zij, gBzeta, Node, &
                          pi2nfp, ivol, RTT, TT, dtflux, dpflux
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -45,9 +44,9 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
     call CDGQF(lquad, abscis(1:lquad), weight(1:lquad), itype, aa, bb, twolquad, workfield(1:twolquad), icdgqf)
     weight(lquad + 1) = zero
 
-    cput = MPI_WTIME()
+    cput = 0
     select case (icdgqf)
-    case (0); if (Wjo00aa) write (ounit, 1000) cput - cpus, myid, lvol, icdgqf, "success        ", abscis(1:lquad)
+    case (0); write (ounit, 1000) cput - cpus, myid, lvol, icdgqf, "success        ", abscis(1:lquad)
     case (1); write (ounit, 1000) cput - cpus, myid, lvol, icdgqf, "failed         ", abscis(1:lquad)
     case (2); write (ounit, 1000) cput - cpus, myid, lvol, icdgqf, "input error    ", abscis(1:lquad)
     case (3); write (ounit, 1000) cput - cpus, myid, lvol, icdgqf, "input error    ", abscis(1:lquad)
@@ -57,14 +56,12 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
     case default; write (ounit, 1000) cput - cpus, myid, lvol, icdgqf, "weird          ", abscis(1:lquad)
     end select
 
-    if (Wjo00aa) write (ounit, 1001) weight(1:lquad)
-
 1000 format("jo00aa : ", f10.2, " : myid=", i3, " ; lvol=", i3, " ; icdgqf=", i3, " ; "a15" ;":" abscissae ="99f10.6)
 1001 format("jo00aa : ", 10x, " :       "3x"          "3x"            "3x"    "15x" ;":" weights   ="99f10.6)
 
     if (icdgqf /= 0) then
         write (6, '("jo00aa :      fatal : myid=",i3," ; icdgqf.ne.0 ; failed to construct Gaussian integration abscisae and weights;")') myid
-        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
         stop "jo00aa : icdgqf.ne.0 : failed to construct Gaussian integration abscisae and weights ;"
     end if
 
@@ -263,10 +260,10 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
     beltramierror(lvol, 7:9) = jerrormax(1:3)
 
     if (Lerrortype == 1 .and. Igeometry == 3) then
-        cput = MPI_WTIME(); write (ounit, 1002) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput - cpui
+        cput = 0; write (ounit, 1002) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput - cpui
         ; ; write (ounit, 1003) cput - cpus, myid, lvol, Lrad(lvol), jerrormax(1:3), cput - cpui
     else
-        cput = MPI_WTIME(); write (ounit, 1004) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput - cpui
+        cput = 0; write (ounit, 1004) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput - cpui
         ; ; write (ounit, 1005) cput - cpus, myid, lvol, Lrad(lvol), jerrormax(1:3), cput - cpui
     end if
 
@@ -299,7 +296,7 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
             end do
         end do
     end if
-    cput = MPI_WTIME(); write (ounit, 1006) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:2), cput - cpui
+    cput = 0; write (ounit, 1006) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:2), cput - cpui
 
     Bst = zero
 
@@ -319,7 +316,7 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
         Bst(2) = abs(Bst(2) - dpflux(lvol))
     end if
 
-    cput = MPI_WTIME(); write (ounit, 1007) cput - cpus, myid, lvol, Lrad(lvol), Bst(1:2), cput - cpui
+    cput = 0; write (ounit, 1007) cput - cpus, myid, lvol, Lrad(lvol), Bst(1:2), cput - cpui
 
 1006 format("jo00aa : ", f10.2, " : myid=", i3, " ; lvol =", i3, " ; lrad =", i3, " ; MAX gB^s(-1)="es23.15" , gB^s(+1) ="es23.15" ; time="f8.2"s ;")
 1007 format("jo00aa : ", f10.2, " : myid=", i3, " ; lvol =", i3, " ; lrad =", i3, " ; dtfluxERR   ="es23.15" , dpfluxERR="es23.15" ; time="f8.2"s ;")

@@ -11,14 +11,13 @@ subroutine bfield(zeta, st, Bst)
 
     use cputiming, only: Tbfield
 
-    use allglobal, only: myid, ncpu, cpus, MPI_COMM_SPEC, &
+    use allglobal, only: myid, ncpu, cpus, &
                          mn, im, in, halfmm, regumm, &
                          ivol, gBzeta, Ate, Aze, Ato, Azo, &
                          NOTstellsym, &
                          Lcoordinatesingularity, Mvol, &
                          Node
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -56,7 +55,7 @@ subroutine bfield(zeta, st, Bst)
 
             if (abs(sbar) < vsmall) then
                 write (6, '("bfield :      fatal : myid=",i3," ; abs(sbar).lt.vsmall ; need to avoid divide-by-zero;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "bfield : abs(sbar).lt.vsmall : need to avoid divide-by-zero ;"
             end if
 
@@ -87,14 +86,14 @@ subroutine bfield(zeta, st, Bst)
 
     if (abs(gBzeta) < vsmall) then
 
-        cput = MPI_WTIME()
+        cput = 0
 
         write (ounit, '("bfield : ",f10.2," : lvol=",i3," ; zeta="es23.15" ; (s,t)=("es23.15" ,"es23.15" ) ; B^z="es23.15" ;")') &
             cput - cpus, lvol, zeta, st(1:2), dBu(3)
 
         if (abs(dBu(3)) < vsmall) then
             write (6, '("bfield :      fatal : myid=",i3," ; abs(dBu(3)).lt.vsmall ; field is not toroidal;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "bfield : abs(dBu(3)).lt.vsmall : field is not toroidal ;"
         end if
     end if

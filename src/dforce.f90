@@ -11,15 +11,14 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
     use cputiming, only: Tdforce
 
-    use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, Mvol, NAdof, Iquad, &
+    use allglobal, only: ncpu, myid, cpus, Mvol, NAdof, Iquad, &
                          iRbc, iZbs, iRbs, iZbc, &
                          ImagneticOK, Energy, ForceErr, YESstellsym, NOTstellsym, Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, mn, im, in, dpflux, dtflux, sweight, Bemn, Bomn, Iomn, Iemn, Somn, Semn, BBe, IIo, BBo, IIe, &
                          LGdof, dBdX, Ate, Aze, Ato, Azo, &
                          diotadxup, dItGpdxtp, &
                          lBBintegral, dFFdRZ, HdFFdRZ, dBBdmp, dmupfdx, BBweight, &
-                         psifactor, LocalConstraint, xoffset, solution, IPdtdPf, IsMyVolume, IsMyVolumeValue, WhichCpuID, ext
+                         psifactor, LocalConstraint, xoffset, solution, IPdtdPf, ext
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -38,7 +37,7 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
     integer :: ipiv(1:Mvol)
     real(8), allocatable :: fjac(:, :), r(:), Fvec(:), dpfluxout(:)
 
-    integer :: status(MPI_STATUS_SIZE), request_recv, request_send, cpu_send
+    integer :: request_recv, request_send, cpu_send
     integer :: id
     integer :: iflag, idgesv, Lwork
     integer :: idofr, idofz, tdofr, tdofz
@@ -103,21 +102,7 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
             dpflux(2:Mvol) = dpflux(2:Mvol) - dpfluxout(1:Mvol - 1)
         end if
 
-        call MPI_BCAST(dpfluxout(1:Ndofgl), Ndofgl, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(dpflux(1:Mvol), Mvol, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
         do vvol = 2, Mvol
-
-            call IsMyVolume(vvol)
-
-            if (IsMyVolumeValue == 0) then
-                cycle
-            else if (IsMyVolumeValue == -1) then
-                if (.true.) then
-                    write (6, '("dforce :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
-                    stop "dforce : .true. : Unassociated volume ;"
-                end if
-            end if
 
             NN = NAdof(vvol)
 
@@ -144,15 +129,11 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
     end if
 
     do vvol = 1, Mvol
-        call WhichCpuID(vvol, cpu_id)
-
-        call MPI_BCAST(ImagneticOK(vvol), 1, MPI_LOGICAL, cpu_id, MPI_COMM_SPEC, ierr)
 
         do ideriv = 0, 2
             if ((.not. LcomputeDerivatives) .and. (ideriv /= 0)) cycle
             do ii = 1, mn
-                call MPI_BCAST(Ate(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
-                call MPI_BCAST(Aze(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
+
             end do
         end do
 
@@ -160,8 +141,7 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
             do ideriv = 0, 2
                 if ((.not. LcomputeDerivatives) .and. (ideriv /= 0)) cycle
                 do ii = 1, mn
-                    call MPI_BCAST(Ato(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
-                    call MPI_BCAST(Azo(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, cpu_id, MPI_COMM_SPEC, ierr)
+
                 end do
             end do
         end if
@@ -174,7 +154,6 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
         if (Igeometry == 1 .or. vvol > 1) then; Lcoordinatesingularity = .false.
         else; Lcoordinatesingularity = .true.
         end if
-        call brcast(vvol)
 
     end do
 
@@ -199,7 +178,7 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
             if (Lextrap == 1 .and. vvol == 1) then
                 if (2 > Mvol) then
                     write (6, '("dforce :      fatal : myid=",i3," ; 2.gt.Mvol ; psifactor needs attention;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                     stop "dforce : 2.gt.Mvol : psifactor needs attention ;"
                 end if
                 ; force(tdoc + idoc + 1:tdoc + idoc + mn) = position(1:mn) - (iRbc(1:mn, 2)/psifactor(1:mn, 2))

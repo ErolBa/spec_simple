@@ -9,7 +9,7 @@ subroutine lforce(lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifla
 
     use cputiming, only: Tlforce
 
-    use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, &
+    use allglobal, only: ncpu, myid, cpus, &
                          Lcoordinatesingularity, Mvol, &
                          iRbc, iZbs, iRbs, iZbc, &
                          YESstellsym, NOTstellsym, &
@@ -26,7 +26,6 @@ subroutine lforce(lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifla
                          vvolume, &
                          build_vector_potential
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0

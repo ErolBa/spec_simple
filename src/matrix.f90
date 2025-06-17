@@ -11,7 +11,7 @@ subroutine matrix(lvol, mn, lrad)
 
     use cputiming, only: Tmatrix
 
-    use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, &
+    use allglobal, only: ncpu, myid, cpus, &
                          YESstellsym, NOTstellsym, &
                          im, in, &
                          NAdof, &
@@ -29,7 +29,6 @@ subroutine matrix(lvol, mn, lrad)
                          DDzzcc, DDzzcs, DDzzsc, DDzzss, &
                          dBdX
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0

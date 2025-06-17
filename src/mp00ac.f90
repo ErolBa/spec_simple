@@ -14,7 +14,7 @@ subroutine mp00ac(Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag)
 
     use cputiming, only: Tmp00ac
 
-    use allglobal, only: myid, ncpu, cpus, ivol, MPI_COMM_SPEC, &
+    use allglobal, only: myid, ncpu, cpus, ivol, &
                          YESstellsym, NOTstellsym, &
                          Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, &
                          mn, im, in, mns, &
@@ -32,7 +32,6 @@ subroutine mp00ac(Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag)
                          Ate, Aze, Ato, Azo, Mvol, Iquad, &
                          GMRESlastsolution, ext
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -215,21 +214,7 @@ subroutine mp00ac(Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag)
 
         end select
 
-        cput = MPI_WTIME()
-
-        if (idgetrf(ideriv) == 0 .and. idgetrs(ideriv) == 0 .and. idgerfs(ideriv) == 0 .and. rcond >= machprec) then
-            if (Wmp00ac) write (ounit, 1010) cput - cpus, myid, lvol, ideriv, "idgetrf idgetrs idgerfs", idgetrf(ideriv), idgetrs(ideriv), idgetrf(ideriv), "success ;         ", cput - lcpu
-        elseif (idgetrf(ideriv) < 0 .or. idgetrs(ideriv) < 0 .or. idgerfs(ideriv) < 0) then
-            ; write (ounit, 1010) cput - cpus, myid, lvol, ideriv, "idgetrf idgetrs idgerfs", idgetrf(ideriv), idgetrs(ideriv), idgetrf(ideriv), "input error ;     "
-        elseif (idgetrf(ideriv) > 0) then
-            ; write (ounit, 1010) cput - cpus, myid, lvol, ideriv, "idgetrf idgetrs idgerfs", idgetrf(ideriv), idgetrs(ideriv), idgetrf(ideriv), "singular ;        "
-        elseif (rcond <= machprec) then
-            ; write (ounit, 1010) cput - cpus, myid, lvol, ideriv, "idgetrf idgetrs idgerfs", idgetrf(ideriv), idgetrs(ideriv), idgetrf(ideriv), "ill conditioned ; "
-        else
-            ; write (ounit, 1010) cput - cpus, myid, lvol, ideriv, "idgetrf idgetrs idgerfs", idgetrf(ideriv), idgetrs(ideriv), idgetrf(ideriv), "invalid error ; "
-        end if
-
-1010    format("mp00ac : ", f10.2, " : myid=", i3, " ; lvol=", i3, " ; ideriv="i2" ; "a23"=", i3, ' ', i3, ' ', i3, " ; "a34, :" time=", f10.2, " ;")
+        cput = 0
 
     end do
 
@@ -283,24 +268,10 @@ subroutine mp00ac(Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag)
 
         if (Lplasmaregion) then
 
-            if (Wtr00ab) then
-                call tr00ab(lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1, -1:2, lvol))
-            end if
-
             Fdof(1:Ndof) = zero
             Ddof(1:Ndof, 1:Ndof) = zero
 
         else
-
-            if (Wtr00ab) then
-                call tr00ab(lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1, -1:2, lvol))
-            end if
-
-            if (Wcurent) then
-                call curent(lvol, mn, Nt, Nz, iflag, dItGpdxtp(0:1, -1:2, lvol))
-                curtor = dItGpdxtp(0, 0, lvol)
-                curpol = dItGpdxtp(1, 0, lvol)
-            end if
 
             Fdof(1:Ndof) = zero
             Ddof(1:Ndof, 1:Ndof) = zero
@@ -310,10 +281,6 @@ subroutine mp00ac(Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag)
     case (0)
 
         if (Lplasmaregion) then
-
-            if (Wtr00ab) then
-                call tr00ab(lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1, -1:2, lvol))
-            end if
 
             Fdof(1:Ndof) = zero
             Ddof(1:Ndof, 1:Ndof) = zero
@@ -368,10 +335,6 @@ subroutine mp00ac(Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag)
 
         if (Lplasmaregion) then
 
-            if (Wtr00ab) then
-                call tr00ab(lvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1, -1:2, lvol))
-            end if
-
             Fdof(1:Ndof) = zero
             Ddof(1:Ndof, 1:Ndof) = zero
 
@@ -383,43 +346,6 @@ subroutine mp00ac(Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag)
         end if
 
     end select
-
-    if (Wmp00ac .or. Wma02aa) then
-
-        cput = MPI_WTIME()
-
-        if (Lplasmaregion) then
-            select case (iflag)
-            case (0); write (ounit, 3000) cput - cpus, myid, lvol, lmu, dpf, iflag
-            case (1); write (ounit, 3000) cput - cpus, myid, lvol, lmu, dpf, iflag, Fdof(1:Ndof)
-            case (2); write (ounit, 3010) cput - cpus, myid, lvol, lmu, dpf, iflag, Ddof(1:Ndof, 1:Ndof)
-            case default
-                if (.true.) then
-                    write (6, '("mp00ac :      fatal : myid=",i3," ; .true. ; illegal iflag on entry;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
-                    stop "mp00ac : .true. : illegal iflag on entry ;"
-                end if
-            end select
-        else
-            select case (iflag)
-            case (0); write (ounit, 3001) cput - cpus, myid, lvol, dtf, dpf, iflag
-            case (1); write (ounit, 3001) cput - cpus, myid, lvol, dtf, dpf, iflag, Fdof(1:Ndof)
-            case (2); write (ounit, 3011) cput - cpus, myid, lvol, dtf, dpf, iflag, Ddof(1:Ndof, 1:Ndof)
-            case default
-                if (.true.) then
-                    write (6, '("mp00ac :      fatal : myid=",i3," ; .true. ; illegal iflag on entry;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
-                    stop "mp00ac : .true. : illegal iflag on entry ;"
-                end if
-            end select
-        end if
-
-3000    format("mp00ac : ", f10.2, " : myid=", i3, " ; lvol=", i3, " ; (mu,dp)=("es23.15" ,"es23.15" ) ; iflag="i2" ;":" F="2es13.05" ;")
-3010    format("mp00ac : ", f10.2, " : myid=", i3, " ; lvol=", i3, " ; (mu,dp)=("es23.15" ,"es23.15" ) ; iflag="i2" ;":" D="4es13.05" ;")
-3001    format("mp00ac : ", f10.2, " : myid=", i3, " ; lvol=", i3, " ; (dt,dp)=("es23.15" ,"es23.15" ) ; iflag="i2" ;":" F="2es13.05" ;")
-3011    format("mp00ac : ", f10.2, " : myid=", i3, " ; lvol=", i3, " ; (dt,dp)=("es23.15" ,"es23.15" ) ; iflag="i2" ;":" D="4es13.05" ;")
-
-    end if
 
     if (iflag == 1) then
 

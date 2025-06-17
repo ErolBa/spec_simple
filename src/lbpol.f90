@@ -20,7 +20,6 @@ subroutine lbpol(lvol, Bt00, ideriv, iocons)
 
     use cputiming, only: Tlbpol
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0

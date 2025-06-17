@@ -13,7 +13,7 @@ subroutine ma02aa(lvol, NN)
 
     use cputiming
 
-    use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, &
+    use allglobal, only: ncpu, myid, cpus, &
                          Mvol, mn, im, in, &
                          LBlinear, LBnewton, LBsequad, &
                          dMA, dMB, dMD, solution, &
@@ -25,7 +25,6 @@ subroutine ma02aa(lvol, NN)
                          xoffset, &
                          Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, LocalConstraint
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -63,7 +62,7 @@ subroutine ma02aa(lvol, NN)
     ivol = lvol
 
     if (LBsequad) then
-        lastcpu = MPI_WTIME()
+        lastcpu = 0
 
         NLinearConstraints = 0
 
@@ -169,7 +168,7 @@ subroutine ma02aa(lvol, NN)
 
     if (LBlinear) then
 
-        lastcpu = MPI_WTIME()
+        lastcpu = 0
 
         if (Lplasmaregion) then
 
@@ -221,7 +220,7 @@ subroutine ma02aa(lvol, NN)
 
             if (Ndof > 2) then
                 write (6, '("ma02aa :      fatal : myid=",i3," ; Ndof.gt.2 ; illegal;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "ma02aa : Ndof.gt.2 : illegal ;"
             end if
 
@@ -261,13 +260,13 @@ subroutine ma02aa(lvol, NN)
 
         end select
 
-        cput = MPI_WTIME()
+        cput = 0
 
         select case (ihybrj)
         case (1)
-            if (Wma02aa) write (ounit, 1040) cput - cpus, myid, lvol, ihybrj, helicity(lvol), mu(lvol), dpflux(lvol), cput - lastcpu, "success         ", Fdof(1:Ndof)
+            write (ounit, 1040) cput - cpus, myid, lvol, ihybrj, helicity(lvol), mu(lvol), dpflux(lvol), cput - lastcpu, "success         ", Fdof(1:Ndof)
         case (-2)
-            if (Wma02aa) write (ounit, 1040) cput - cpus, myid, lvol, ihybrj, helicity(lvol), mu(lvol), dpflux(lvol), cput - lastcpu, "|F| < mupftol   ", Fdof(1:Ndof)
+            write (ounit, 1040) cput - cpus, myid, lvol, ihybrj, helicity(lvol), mu(lvol), dpflux(lvol), cput - lastcpu, "|F| < mupftol   ", Fdof(1:Ndof)
         case (-1)
             ; write (ounit, 1040) cput - cpus, myid, lvol, ihybrj, helicity(lvol), mu(lvol), dpflux(lvol), cput - lastcpu, "Beltrami fail   ", Fdof(1:Ndof)
         case (0)
@@ -282,7 +281,7 @@ subroutine ma02aa(lvol, NN)
             ; write (ounit, 1040) cput - cpus, myid, lvol, ihybrj, helicity(lvol), mu(lvol), dpflux(lvol), cput - lastcpu, "illegal ifail   ", Fdof(1:Ndof)
             if (.true.) then
                 write (6, '("ma02aa :      fatal : myid=",i3," ; .true. ; illegal ifail returned by hybrj;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "ma02aa : .true. : illegal ifail returned by hybrj ;"
             end if
         end select

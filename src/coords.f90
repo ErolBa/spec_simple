@@ -11,7 +11,7 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
 
     use cputiming, only: Tcoords
 
-    use allglobal, only: myid, cpus, pi2nfp, MPI_COMM_SPEC, &
+    use allglobal, only: myid, cpus, pi2nfp, &
                          Mvol, im, in, halfmm, &
                          iRbc, iZbs, iRbs, iZbc, &
                          NOTstellsym, Lcoordinatesingularity, &
@@ -23,7 +23,6 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
                          dRodR, dRodZ, dZodR, dZodZ, &
                          Remn_ext, Romn_ext, Zemn_ext, Zomn_ext, Iquad, gaussianabscissae, use_ext_mesh
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -69,7 +68,7 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
             case default
                 if (.true.) then
                     write (6, '("coords :      fatal : myid=",i3," ; .true. ; invalid Igeometry for Lcoordinatesingularity=T;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                     stop "coords : .true. : invalid Igeometry for Lcoordinatesingularity=T ;"
                 end if
             end select
@@ -121,7 +120,7 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
             case default
                 if (.true.) then
                     write (6, '("coords :      fatal : myid=",i3," ; .true. ; invalid Igeometry for Lcoordinatesingularity=T and Lcurvature.ne.0;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                     stop "coords : .true. : invalid Igeometry for Lcoordinatesingularity=T and Lcurvature.ne.0 ;"
                 end if
             end select
@@ -209,7 +208,7 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
 
         if (.true.) then
             write (6, '("coords :      fatal : myid=",i3," ; .true. ; selected Igeometry not supported;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "coords : .true. : selected Igeometry not supported ;"
         end if
 
@@ -239,7 +238,7 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
                     ; 
                     if (.true.) then
                         write (6, '("coords :      fatal : myid=",i3," ; .true ; invalid Igeometry for Lcoordinatesingularity=T and Lcurvature=2;")') myid
-                        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                         stop "coords : .true : invalid Igeometry for Lcoordinatesingularity=T and Lcurvature=2 ;"
                     end if
                 end select; 
@@ -357,7 +356,7 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
 
             if (.true.) then
                 write (6, '("coords :      fatal : myid=",i3," ; .true. ; selected Igeometry not supported for Lcurvature.eq.2;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "coords : .true. : selected Igeometry not supported for Lcurvature.eq.2 ;"
             end if
 
@@ -444,7 +443,7 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
             else
                 if (Lcurvature == 5 .and. Igeometry /= 3) then
                     write (6, '("coords :      fatal : myid=",i3," ; Lcurvature.eq.5 .and. Igeometry.ne.3 ; Lcurvature.eq.5 can only be combined with Igeometry.ne.3;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                     stop "coords : Lcurvature.eq.5 .and. Igeometry.ne.3 : Lcurvature.eq.5 can only be combined with Igeometry.ne.3 ;"
                 end if
             end if
@@ -474,7 +473,7 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
                         if (irz == 1) then
                             if (.true.) then
                                 write (6, '("coords :      fatal : myid=",i3," ; .true. ; No Z-geometrical degree of freedom when Igeometry=2;")') myid
-                                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                                 stop "coords : .true. : No Z-geometrical degree of freedom when Igeometry=2 ;"
                             end if
                         end if
@@ -525,7 +524,7 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
 
                 if (.true.) then
                     write (6, '("coords :      fatal : myid=",i3," ; .true. ; supplied Igeometry is not yet supported for Lcurvature.eq.3 or Lcurvature.eq.4;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                     stop "coords : .true. : supplied Igeometry is not yet supported for Lcurvature.eq.3 or Lcurvature.eq.4 ;"
                 end if
 

@@ -27,7 +27,6 @@ subroutine metrix(lquad, lvol)
                          gzzmne, gzzmno, &
                          guvijsave
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0

@@ -9,7 +9,7 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
 
     use cputiming, only: Tma00aa
 
-    use allglobal, only: myid, ncpu, cpus, MPI_COMM_SPEC, &
+    use allglobal, only: myid, ncpu, cpus, &
                          Mvol, im, in, mne, &
                          YESstellsym, NOTstellsym, &
                          gaussianweight, gaussianabscissae, &
@@ -32,7 +32,6 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
                          pi2pi2nfp, pi2pi2nfphalf, Lsavedguvij, &
                          dBdX
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0

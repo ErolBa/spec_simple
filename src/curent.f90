@@ -11,7 +11,7 @@ subroutine curent(lvol, mn, Nt, Nz, iflag, ldItGp)
 
     use cputiming, only: Tcurent
 
-    use allglobal, only: ncpu, cpus, myid, MPI_COMM_SPEC, &
+    use allglobal, only: ncpu, cpus, myid, &
                          Mvol, im, in, mne, ime, ine, &
                          YESstellsym, NOTstellsym, &
                          sg, guvij, &
@@ -20,7 +20,6 @@ subroutine curent(lvol, mn, Nt, Nz, iflag, ldItGp)
                          Ate, Aze, Ato, Azo, TT, &
                          build_vector_potential
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0

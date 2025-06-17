@@ -159,7 +159,6 @@ module inputlist
     logical :: Wintghs = .false.
     logical :: Wmtrxhs = .false.
     logical :: Wlbpol = .false.
-    logical :: Wbrcast = .false.
     logical :: Wdfp100 = .false.
     logical :: Wdfp200 = .false.
     logical :: Wdforce = .false.
@@ -345,7 +344,6 @@ module inputlist
         Wintghs, &
         Wmtrxhs, &
         Wlbpol, &
-        Wbrcast, &
         Wdfp100, &
         Wdfp200, &
         Wdforce, &

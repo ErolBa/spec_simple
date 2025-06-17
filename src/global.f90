@@ -97,7 +97,6 @@ module cputiming
     real(8) :: Tintghs = 0.0, intghsT = 0.0
     real(8) :: Tmtrxhs = 0.0, mtrxhsT = 0.0
     real(8) :: Tlbpol = 0.0, lbpolT = 0.0
-    real(8) :: Tbrcast = 0.0, brcastT = 0.0
     real(8) :: Tdfp100 = 0.0, dfp100T = 0.0
     real(8) :: Tdfp200 = 0.0, dfp200T = 0.0
     real(8) :: Tdforce = 0.0, dforceT = 0.0
@@ -160,9 +159,7 @@ module allglobal
 
     integer :: myid
     integer :: ncpu
-    integer :: IsMyVolumeValue
     real(8) :: cpus
-    integer :: MPI_COMM_SPEC
 
     logical :: skip_write = .false.
 
@@ -564,7 +561,6 @@ contains
 
         use cputiming
 
-        use mpi
         implicit none
         integer :: ierr, astat, ios, nthreads, ithread
         real(8) :: cput, cpui, cpuo = 0
@@ -604,27 +600,6 @@ contains
 
     end subroutine build_vector_potential
 
-    subroutine set_mpi_comm(comm)
-
-        implicit none
-
-        integer, intent(in) :: comm
-        integer :: ierr
-
-        MPI_COMM_SPEC = comm
-
-        myid = 0; ncpu = 1
-
-        ierr = 0
-        call MPI_COMM_RANK(MPI_COMM_SPEC, myid, ierr)
-        if (ierr /= 0) write (*, *) "error in call to MPI_COMM_RANK"
-
-        ierr = 0
-        call MPI_COMM_SIZE(MPI_COMM_SPEC, ncpu, ierr)
-        if (ierr /= 0) write (*, *) "error in call to MPI_COMM_SIZE"
-
-    end subroutine
-
     subroutine read_inputlists_from_file()
 
         use constants
@@ -635,7 +610,6 @@ contains
         use ifport
 #endif
 
-        use mpi
         implicit none
         integer :: ierr, astat, ios, nthreads, ithread
         real(8) :: cput, cpui, cpuo = 0
@@ -651,7 +625,7 @@ contains
         inquire (file=trim(ext)//".sp", exist=Lspexist)
         if (.not. Lspexist) then
             write (6, '("readin :      fatal : myid=",i3," ; .not.Lspexist ; the input file does not exist;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : .not.Lspexist : the input file does not exist ;"
         end if
 
@@ -659,20 +633,11 @@ contains
 
         instat = 0
 
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : reading physicslist     from ext.sp ;")') cput - cpus
-        end if
-
         read (iunit, physicslist, iostat=instat)
         if (instat /= 0) then
             backspace (iunit)
             read (iunit, fmt='(A)') line
             write (*, '(A)') 'Invalid line in physicslist: '//trim(line)
-        end if
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : read    physicslist     from ext.sp ;")') cput - cpus
-        end if
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : reading numericlist     from ext.sp ;")') cput - cpus
         end if
 
         read (iunit, numericlist, iostat=instat)
@@ -682,23 +647,11 @@ contains
             write (*, '(A)') 'Invalid line in numericlist: '//trim(line)
         end if
 
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : read    numericlist     from ext.sp ;")') cput - cpus
-        end if
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : reading locallist      from ext.sp ;")') cput - cpus
-        end if
-
         read (iunit, locallist, iostat=instat)
         if (instat /= 0) then
             backspace (iunit)
             read (iunit, fmt='(A)') line
             write (*, '(A)') 'Invalid line in locallist: '//trim(line)
-        end if
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : read    locallist      from ext.sp ;")') cput - cpus
-        end if
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : reading globallist   from ext.sp ;")') cput - cpus
         end if
 
         read (iunit, globallist, iostat=instat)
@@ -708,12 +661,6 @@ contains
             write (*, '(A)') 'Invalid line in globallist: '//trim(line)
         end if
 
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : read    globallist   from ext.sp ;")') cput - cpus
-        end if
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : reading diagnosticslist from ext.sp ;")') cput - cpus
-        end if
-
         read (iunit, diagnosticslist, iostat=instat)
         if (instat /= 0) then
             backspace (iunit)
@@ -721,20 +668,11 @@ contains
             write (*, '(A)') 'Invalid line in diagnosticslist: '//trim(line)
         end if
 
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : read    diagnosticslist from ext.sp ;")') cput - cpus
-        end if
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : reading screenlist      from ext.sp ;")') cput - cpus
-        end if
-
         read (iunit, screenlist, iostat=instat)
         if (instat /= 0) then
             backspace (iunit)
             read (iunit, fmt='(A)') line
             write (*, '(A)') 'Invalid line in screenlist: '//trim(line)
-        end if
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : read    screenlist      from ext.sp ;")') cput - cpus
         end if
 
         instat = 0
@@ -749,7 +687,7 @@ contains
 
             if (Nvol < 1 .or. Nvol > MNvol) then
                 write (6, '("readin :      fatal : myid=",i3," ; Nvol.lt.1 .or. Nvol.gt.MNvol ; invalid Nvol: may need to recompile with higher MNvol;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "readin : Nvol.lt.1 .or. Nvol.gt.MNvol : invalid Nvol: may need to recompile with higher MNvol ;"
             end if
 
@@ -778,7 +716,7 @@ contains
 #endif
             if (seek_status /= 0) then
                 write (6, '("inplst :      fatal : myid=",i3," ; seek_status.ne.0 ; failed to seek to end of input namelists;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "inplst : seek_status.ne.0 : failed to seek to end of input namelists ;"
             end if
 
@@ -799,7 +737,6 @@ contains
         use fileunits
         use inputlist
 
-        use mpi
         implicit none
         integer :: ierr, astat, ios, nthreads, ithread
         real(8) :: cput, cpui, cpuo = 0
@@ -811,7 +748,7 @@ contains
             inquire (file=trim(example), EXIST=exist)
             if (exist) then
                 write (6, '("global :      fatal : myid=",i3," ; exist ; example input file example.sp already existed;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "global : exist : example input file example.sp already existed ;"
             end if
             open (iunit, file=trim(example), status='unknown', action='write')
@@ -835,7 +772,6 @@ contains
         use inputlist
         use cputiming, only: Treadin
 
-        use mpi
         implicit none
         integer :: ierr, astat, ios, nthreads, ithread
         real(8) :: cput, cpui, cpuo = 0
@@ -847,7 +783,7 @@ contains
 
         write (ounit, '("readin : ", 10x ," : ")')
 
-        cput = MPI_WTIME()
+        cput = 0
 
         write (ounit, 1010) cput - cpus, Igeometry, Istellsym, Lreflect
         write (ounit, 1011) Lfreebound, phiedge, curtor, curpol
@@ -865,57 +801,57 @@ contains
 
         if (Igeometry < 1 .or. Igeometry > 3) then
             write (6, '("readin :      fatal : myid=",i3," ; Igeometry.lt.1 .or. Igeometry.gt.3 ; invalid geometry;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Igeometry.lt.1 .or. Igeometry.gt.3 : invalid geometry ;"
         end if
         if (Nfp <= 0) then
             write (6, '("readin :      fatal : myid=",i3," ; Nfp.le.0 ; invalid Nfp;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Nfp.le.0 : invalid Nfp ;"
         end if
         if (Mpol < 0 .or. Mpol > MMpol) then
             write (6, '("readin :      fatal : myid=",i3," ; Mpol.lt.0 .or. Mpol.gt.MMpol ; invalid poloidal resolution: may need to recompile with higher MMpol;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Mpol.lt.0 .or. Mpol.gt.MMpol : invalid poloidal resolution: may need to recompile with higher MMpol ;"
         end if
         if (Ntor < 0 .or. Ntor > MNtor) then
             write (6, '("readin :      fatal : myid=",i3," ; Ntor.lt.0 .or. Ntor.gt.MNtor ; invalid toroidal resolution: may need to recompile with higher MNtor;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Ntor.lt.0 .or. Ntor.gt.MNtor : invalid toroidal resolution: may need to recompile with higher MNtor ;"
         end if
         if (Nvol < 1 .or. Nvol > MNvol) then
             write (6, '("readin :      fatal : myid=",i3," ; Nvol.lt.1 .or. Nvol.gt.MNvol ; invalid Nvol: may need to recompile with higher MNvol;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Nvol.lt.1 .or. Nvol.gt.MNvol : invalid Nvol: may need to recompile with higher MNvol ;"
         end if
         if (mupftol <= zero) then
             write (6, '("readin :      fatal : myid=",i3," ; mupftol.le.zero ; mupftol is too small;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : mupftol.le.zero : mupftol is too small ;"
         end if
         if (abs(one + gamma) < vsmall) then
             write (6, '("readin :      fatal : myid=",i3," ; abs(one+gamma).lt.vsmall ; 1+gamma appears in denominator in dforce;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : abs(one+gamma).lt.vsmall : 1+gamma appears in denominator in dforce ;"
         end if
         if (abs(one - gamma) < vsmall) then
             write (6, '("readin :      fatal : myid=",i3," ; abs(one-gamma).lt.vsmall ; 1-gamma appears in denominator in fu00aa;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : abs(one-gamma).lt.vsmall : 1-gamma appears in denominator in fu00aa ;"
         end if
         if (Lconstraint < -1 .or. Lconstraint > 3) then
             write (6, '("readin :      fatal : myid=",i3," ; Lconstraint.lt.-1 .or. Lconstraint.gt.3 ; illegal Lconstraint;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Lconstraint.lt.-1 .or. Lconstraint.gt.3 : illegal Lconstraint ;"
         end if
         if (Igeometry == 1 .and. rpol < vsmall) then
             write (6, '("readin :      fatal : myid=",i3," ; Igeometry.eq.1 .and. rpol.lt.vsmall ; poloidal extent of slab too small or negative;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Igeometry.eq.1 .and. rpol.lt.vsmall : poloidal extent of slab too small or negative ;"
         end if
         if (Igeometry == 1 .and. rtor < vsmall) then
             write (6, '("readin :      fatal : myid=",i3," ; Igeometry.eq.1 .and. rtor.lt.vsmall ; toroidal extent of slab too small or negative;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Igeometry.eq.1 .and. rtor.lt.vsmall : toroidal extent of slab too small or negative ;"
         end if
 
@@ -930,7 +866,7 @@ contains
 
         if (abs(tflux(Nvol)) < vsmall) then
             write (6, '("readin :      fatal : myid=",i3," ; abs(tflux(Nvol)).lt. vsmall ; enclosed toroidal flux cannot be zero;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : abs(tflux(Nvol)).lt. vsmall : enclosed toroidal flux cannot be zero ;"
         end if
 
@@ -941,7 +877,7 @@ contains
 
         if (tflux(1) < zero) then
             write (6, '("readin :      fatal : myid=",i3," ; tflux(1).lt.zero ; enclosed toroidal flux cannot be zero;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : tflux(1).lt.zero : enclosed toroidal flux cannot be zero ;"
         end if
         do vvol = 2, Mvol
@@ -950,7 +886,7 @@ contains
         do vvol = 1, Mvol
             if (Lrad(vvol) < 2) then
                 write (6, '("readin :      fatal : myid=",i3," ; Lrad(vvol ).lt.2 ; require Chebyshev resolution Lrad > 2 so that Lagrange constraints can be satisfied;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "readin : Lrad(vvol ).lt.2 : require Chebyshev resolution Lrad > 2 so that Lagrange constraints can be satisfied ;"
             end if
         end do
@@ -961,7 +897,7 @@ contains
         end if
         if (mupfits <= 0) then
             write (6, '("readin :      fatal : myid=",i3," ; mupfits.le.0 ; must give ma01aa:hybrj a postive integer value for the maximum iterations = mupfits given on input;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : mupfits.le.0 : must give ma01aa:hybrj a postive integer value for the maximum iterations = mupfits given on input ;"
         end if
 
@@ -979,13 +915,13 @@ contains
 
         if (Ndiscrete <= 0) then
             write (6, '("readin :      fatal : myid=",i3," ; Ndiscrete.le.0 ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Ndiscrete.le.0 : error ;"
         end if
 
         if (iotatol > one) then
             write (6, '("readin :      fatal : myid=",i3," ; iotatol.gt.one ; illegal value for sparse tolerance;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : iotatol.gt.one : illegal value for sparse tolerance ;"
         end if
 
@@ -997,27 +933,27 @@ contains
 
         if (LBeltrami < 0 .or. LBeltrami > 7) then
             write (6, '("readin :      fatal : myid=",i3," ; LBeltrami.lt.0 .or. LBeltrami.gt.7 ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : LBeltrami.lt.0 .or. LBeltrami.gt.7 : error ;"
         end if
         if (LGMRESprec < 0 .or. LGMRESprec > 1) then
             write (6, '("readin :      fatal : myid=",i3," ; LGMRESprec.lt.0 .or. LGMRESprec.gt.1 ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : LGMRESprec.lt.0 .or. LGMRESprec.gt.1 : error ;"
         end if
         if (NiterGMRES < 0) then
             write (6, '("readin :      fatal : myid=",i3," ; NiterGMRES.lt.0 ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : NiterGMRES.lt.0 : error ;"
         end if
         if (abs(epsGMRES) <= machprec) then
             write (6, '("readin :      fatal : myid=",i3," ; abs(epsGMRES).le.machprec ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : abs(epsGMRES).le.machprec : error ;"
         end if
         if (abs(epsILU) <= machprec) then
             write (6, '("readin :      fatal : myid=",i3," ; abs(epsILU).le.machprec ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : abs(epsILU).le.machprec : error ;"
         end if
 
@@ -1037,28 +973,28 @@ contains
 
         if (escale < zero) then
             write (6, '("readin :      fatal : myid=",i3," ; escale      .lt.zero ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : escale      .lt.zero : error ;"
         end if
         if (pcondense < one) then
             write (6, '("readin :      fatal : myid=",i3," ; pcondense   .lt.one ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : pcondense   .lt.one : error ;"
         end if
         if (abs(c05xtol) <= machprec) then
             write (6, '("readin :      fatal : myid=",i3," ; abs(c05xtol).le.machprec ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : abs(c05xtol).le.machprec : error ;"
         end if
         if (c05factor <= zero) then
             write (6, '("readin :      fatal : myid=",i3," ; c05factor   .le.zero ; error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : c05factor   .le.zero : error ;"
         end if
 
         if (Igeometry == 3 .and. pcondense <= zero) then
             write (6, '("readin :      fatal : myid=",i3," ; Igeometry.eq.3 .and. pcondense.le.zero ; pcondense must be positive;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : Igeometry.eq.3 .and. pcondense.le.zero : pcondense must be positive ;"
         end if
 
@@ -1072,7 +1008,7 @@ contains
 
         if (odetol <= zero) then
             write (6, '("readin :      fatal : myid=",i3," ; odetol.le.zero ; input error;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : odetol.le.zero : input error ;"
         end if
 
@@ -1085,138 +1021,9 @@ contains
         use fileunits
         use inputlist
 
-        use mpi
         implicit none
         integer :: ierr, astat, ios, nthreads, ithread
         real(8) :: cput, cpui, cpuo = 0
-
-        call MPI_BCAST(ext, 100, MPI_CHARACTER, 0, MPI_COMM_SPEC, ierr)
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : broadcasting physicslist     from ext.sp ;")') cput - cpus
-        end if
-
-        call MPI_BCAST(Igeometry, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Istellsym, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lfreebound, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(phiedge, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(curtor, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(curpol, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(gamma, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Nfp, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Nvol, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Mpol, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Ntor, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lrad, MNvol + 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(tflux, MNvol + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(pflux, MNvol + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(helicity, MNvol, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(pscale, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(pressure, MNvol + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Ladiabatic, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(adiabatic, MNvol + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(mu, MNvol + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Ivolume, MNvol + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Isurf, MNvol + 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lconstraint, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(pl, MNvol, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(ql, MNvol, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(pr, MNvol, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(qr, MNvol, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(iota, MNvol, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(lp, MNvol, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(lq, MNvol, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(rp, MNvol, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(rq, MNvol, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(oita, MNvol, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(mupftol, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(mupfits, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lreflect, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(rpol, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(rtor, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : broadcasting numericlist     from ext.sp ;")') cput - cpus
-        end if
-
-        call MPI_BCAST(Linitialize, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(LautoinitBn, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lzerovac, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Ndiscrete, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Nquad, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(iMpol, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(iNtor, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lsparse, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lsvdiota, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(imethod, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(iorder, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(iprecon, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(iotatol, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lextrap, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Mregular, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lrzaxis, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Ntoraxis, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : broadcasting globallist      from ext.sp ;")') cput - cpus
-        end if
-
-        call MPI_BCAST(Lfindzero, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(escale, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(opsilon, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(pcondense, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(epsilon, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(wpoloidal, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(upsilon, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(forcetol, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(c05xmax, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(c05xtol, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(c05factor, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(LreadGF, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(mfreeits, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(gBntol, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(gBnbld, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(vcasingeps, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(vcasingtol, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(vcasingits, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(vcasingper, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : broadcasting locallist       from ext.sp ;")') cput - cpus
-        end if
-
-        call MPI_BCAST(LBeltrami, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Linitgues, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(maxrndgues, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lmatsolver, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(NiterGMRES, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(epsGMRES, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(LGMRESprec, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(epsILU, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : broadcasting diagnosticslist from ext.sp ;")') cput - cpus
-        end if
-
-        call MPI_BCAST(odetol, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(nPpts, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Ppts, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(nPtrj, MNvol + 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-
-        call MPI_BCAST(LHevalues, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(LHevectors, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Ltransform, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(LHmatrix, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lperturbed, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(dpp, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(dqq, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lerrortype, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Ngrid, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(dRZ, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Lcheck, 1, MPI_INTEGER, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Ltiming, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
-
-        if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : broadcasting screenlist      from ext.sp ;")') cput - cpus
-        end if
-
-        call MPI_BCAST(Wreadin, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Wwrtend, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
-        call MPI_BCAST(Wmacros, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
 
     end subroutine
 
@@ -1232,7 +1039,6 @@ contains
 
         use inputlist
 
-        use mpi
         implicit none
         integer :: ierr, astat, ios, nthreads, ithread
         real(8) :: cput, cpui, cpuo = 0
@@ -1391,9 +1197,6 @@ contains
 
         write (iunit, '("/")')
 
-        if (Wwrtend) then; cput = MPI_WTIME(); write (ounit, '("wrtend : ",f10.2," : myid=",i3," ; writing numericlist ;")') cput - cpus, myid
-        end if
-
         write (iunit, '("&numericlist")')
         write (iunit, '(" Linitialize = ",i9            )') Linitialize
         write (iunit, '(" LautoinitBn = ",i9            )') LautoinitBn
@@ -1414,9 +1217,6 @@ contains
         write (iunit, '(" Ntoraxis    = ",i9            )') Ntoraxis
         write (iunit, '("/")')
 
-        if (Wwrtend) then; cput = MPI_WTIME(); write (ounit, '("wrtend : ",f10.2," : myid=",i3," ; writing locallist ;")') cput - cpus, myid
-        end if
-
         write (iunit, '("&locallist")')
         write (iunit, '(" LBeltrami   = ",i9            )') LBeltrami
         write (iunit, '(" Linitgues   = ",i9            )') Linitgues
@@ -1427,9 +1227,6 @@ contains
         write (iunit, '(" epsILU      = ",es23.15       )') epsILU
 
         write (iunit, '("/")')
-
-        if (Wwrtend) then; cput = MPI_WTIME(); write (ounit, '("wrtend : ",f10.2," : myid=",i3," ; writing globallist ;")') cput - cpus, myid
-        end if
 
         write (iunit, '("&globallist")')
         write (iunit, '(" Lfindzero   = ",i9            )') Lfindzero
@@ -1453,9 +1250,6 @@ contains
         write (iunit, '(" vcasingper  = ",i9            )') vcasingper
         write (iunit, '("/")')
 
-        if (Wwrtend) then; cput = MPI_WTIME(); write (ounit, '("wrtend : ",f10.2," : myid=",i3," ; writing diagnosticslist ;")') cput - cpus, myid
-        end if
-
         write (iunit, '("&diagnosticslist")')
         write (iunit, '(" odetol      = ",es23.15       )') odetol
         write (iunit, '(" nPpts       = ",i9            )') nPpts
@@ -1472,13 +1266,7 @@ contains
         write (iunit, '(" Ltiming     = ",L9            )') Ltiming
         write (iunit, '("/")')
 
-        if (Wwrtend) then; cput = MPI_WTIME(); write (ounit, '("wrtend : ",f10.2," : myid=",i3," ; writing screenlist ;")') cput - cpus, myid
-        end if
-
         write (iunit, '("&screenlist")')
-        if (Wreadin) write (iunit, '(" Wreadin = ",L1                )') Wreadin
-        if (Wwrtend) write (iunit, '(" Wwrtend = ",L1                )') Wwrtend
-        if (Wmacros) write (iunit, '(" Wmacros = ",L1                )') Wmacros
         write (iunit, '("/")')
 
         do imn = 1, mn; write (iunit, '(2i6,1024es23.15)') im(imn), in(imn)/Nfp, (iRbc(imn, vvol), iZbs(imn, vvol), iRbs(imn, vvol), iZbc(imn, vvol), vvol=1, Nvol)
@@ -1487,37 +1275,6 @@ contains
         close (iunit)
 
     end subroutine wrtend
-
-    subroutine IsMyVolume(vvol)
-
-        use mpi
-        implicit none
-        integer :: ierr, astat, ios, nthreads, ithread
-        real(8) :: cput, cpui, cpuo = 0
-
-        integer, intent(in) :: vvol
-
-        IsMyVolumeValue = -1
-        if (myid /= modulo(vvol - 1, ncpu)) then
-            IsMyVolumeValue = 0
-        else
-            IsMyVolumeValue = 1
-        end if
-
-    end subroutine IsMyVolume
-
-    subroutine WhichCpuID(vvol, cpu_id)
-
-        use mpi
-        implicit none
-        integer :: ierr, astat, ios, nthreads, ithread
-        real(8) :: cput, cpui, cpuo = 0
-
-        integer :: vvol, cpu_id
-
-        cpu_id = modulo(vvol - 1, ncpu)
-
-    end subroutine WhichCpuID
 
 end module allglobal
 

@@ -10,13 +10,12 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
 
     use cputiming, only: Tdfp100
 
-    use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, &
+    use allglobal, only: ncpu, myid, cpus, &
                          ImagneticOK, NAdof, mn, &
                          Mvol, Iquad, &
                          dBdX, &
                          Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, Localconstraint, &
                          IPDt, IPDtdPf, xoffset, dpflux, &
-                         IsMyVolume, IsMyVolumeValue, WhichCpuID, &
                          IconstraintOK, &
                          DToocc, DToocs, DToosc, DTooss, &
                          TTsscc, TTsscs, TTsssc, TTssss, &
@@ -28,13 +27,12 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
                          dMA, dMB, dMD, dMG, MBpsi, solution, &
                          Nt, Nz, Lsavedguvij, guvijsave, izbs
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
 
     integer :: vvol, Ndofgl, iflag, cpu_send_one, cpu_send_two, ll, NN, ideriv, iocons
-    integer :: status(MPI_STATUS_SIZE), request1, request2
+    integer :: request1, request2
     real(8) :: Fvec(1:Ndofgl), x(1:Mvol - 1), Bt00(1:Mvol, 0:1, -1:2), ldItGp(0:1, -1:2)
     logical :: LComputeDerivatives
     integer :: deriv, Lcurvature
@@ -47,18 +45,6 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
         else; Lcoordinatesingularity = .true.
         end if
         ImagneticOK(vvol) = .false.
-
-        call IsMyVolume(vvol)
-
-        if (IsMyVolumeValue == 0) then
-            cycle
-        else if (IsMyVolumeValue == -1) then
-            if (.true.) then
-                write (6, '("dfp100 :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
-                stop "dfp100 : .true. : Unassociated volume ;"
-            end if
-        end if
 
         NN = NAdof(vvol)
         ll = Lrad(vvol)
@@ -115,14 +101,6 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
 
             do vvol = 1, Mvol - 1
 
-                call WhichCpuID(vvol, cpu_send_one)
-                call WhichCpuID(vvol + 1, cpu_send_two)
-
-                call MPI_BCAST(Bt00(vvol, 1, 0), 1, MPI_DOUBLE_PRECISION, cpu_send_one, MPI_COMM_SPEC, ierr)
-                call MPI_BCAST(Bt00(vvol + 1, 0, 0), 1, MPI_DOUBLE_PRECISION, cpu_send_two, MPI_COMM_SPEC, ierr)
-                call MPI_BCAST(Bt00(vvol, 1, 2), 1, MPI_DOUBLE_PRECISION, cpu_send_one, MPI_COMM_SPEC, ierr)
-                call MPI_BCAST(Bt00(vvol + 1, 0, 2), 1, MPI_DOUBLE_PRECISION, cpu_send_two, MPI_COMM_SPEC, ierr)
-
                 IPDt(vvol) = pi2*(Bt00(vvol + 1, 0, 0) - Bt00(vvol, 1, 0))
 
                 IPDtdPf(vvol, vvol) = pi2*Bt00(vvol + 1, 0, 2)
@@ -136,7 +114,7 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
         case default
             if (.true.) then
                 write (6, '("dfp100 :      fatal : myid=",i3," ; .true. ; Unaccepted value for Lconstraint;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "dfp100 : .true. : Unaccepted value for Lconstraint ;"
             end if
         end select

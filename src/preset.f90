@@ -15,7 +15,6 @@ subroutine preset
 
     use fftw_interface
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -35,7 +34,7 @@ subroutine preset
     case default; 
         if (.true.) then
             write (6, '("readin :      fatal : myid=",i3," ; .true. ; illegal Istellsym;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : .true. : illegal Istellsym ;"
         end if
     end select
@@ -248,17 +247,6 @@ subroutine preset
 
     end if
 
-    call MPI_BCAST(iRbc(1:mn, 0:Mvol), (Mvol + 1)*mn, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-    if (Igeometry == 3) then
-        call MPI_BCAST(iZbs(1:mn, 0:Mvol), (Mvol + 1)*mn, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-    end if
-    if (NOTstellsym) then
-        call MPI_BCAST(iRbs(1:mn, 0:Mvol), (Mvol + 1)*mn, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        if (Igeometry == 3) then
-            call MPI_BCAST(iZbc(1:mn, 0:Mvol), (Mvol + 1)*mn, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
-        end if
-    end if
-
     if (Igeometry == 1 .or. Igeometry == 2) then
         ; iRbc(1:mn, 0) = zero
         if (NOTstellsym) then
@@ -309,9 +297,6 @@ subroutine preset
 
     NGdof = (Mvol - 1)*LGdof
 
-    if (Wpreset) then; cput = MPI_WTIME(); write (ounit, '("preset : ",f10.2," : myid=",i3," ; NGdof=",i9," ;")') cput - cpus, myid, NGdof
-    end if
-
     do vvol = 0, Nvol
 
         if (ql(vvol) == 0 .and. qr(vvol) == 0) then; iota(vvol) = iota(vvol)
@@ -321,8 +306,6 @@ subroutine preset
         if (lq(vvol) == 0 .and. rq(vvol) == 0) then; oita(vvol) = oita(vvol)
         else; oita(vvol) = (lp(vvol) + goldenmean*rp(vvol))/(lq(vvol) + goldenmean*rq(vvol))
         end if
-
-        if (Wpreset .and. myid == 0) write (ounit, 1002) vvol, pl(vvol), ql(vvol), pr(vvol), qr(vvol), iota(vvol), lp(vvol), lq(vvol), rp(vvol), rq(vvol), oita(vvol)
 
 1002    format("preset : ", 10x, " :      ", 3x, " ; transform : ", i3, " : (", i3, " /", i3, " ) * (", i3, " /", i3, " ) = ", f18.15, " ; ", &
                "(", i3, " /", i3, " ) * (", i3, " /", i3, " ) = ", f18.15, " ; ")
@@ -543,25 +526,6 @@ subroutine preset
 
         call gauleg(lquad, gaussianweight(1:lquad, vvol), gaussianabscissae(1:lquad, vvol), igauleg)
 
-        if (myid == 0) then
-            cput = MPI_WTIME()
-            select case (igauleg)
-            case (0); if (Wpreset) write (ounit, 1000) cput - cpus, vvol, igauleg, "success        ", gaussianabscissae(1:lquad, vvol)
-            case (1); write (ounit, 1000) cput - cpus, vvol, igauleg, "failed         ", gaussianabscissae(1:lquad, vvol)
-            case (2); write (ounit, 1000) cput - cpus, vvol, igauleg, "input error    ", gaussianabscissae(1:lquad, vvol)
-            case default; write (ounit, 1000) cput - cpus, vvol, igauleg, "weird          ", gaussianabscissae(1:lquad, vvol)
-                if (.true.) then
-                    write (6, '("preset :      fatal : myid=",i3," ; .true. ; weird ifail returned by gauleg;")') myid
-                    call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
-                    stop "preset : .true. : weird ifail returned by gauleg ;"
-                end if
-            end select
-            ; ; if (Wpreset) write (ounit, 1001) gaussianweight(1:lquad, vvol)
-        end if
-
-1000    format("preset : ", f10.2, " : lvol=", i3, " ; igauleg=", i5, " ; ", a15, " ; abscissae ="99f09.05)
-1001    format("preset : ", 10x, " :      ", 3x, "           ", 5x, "   ", 15x, " ; weights   ="99f09.05)
-
     end do
 
     LBsequad = .false.
@@ -575,7 +539,7 @@ subroutine preset
     if (Lconstraint == 2) then
         if (Lfreebound == 1) then
             write (6, '("preset :      fatal : myid=",i3," ; Lfreebound.eq.1 ; The combination of helicity constraint and free boundary is under construction;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "preset : Lfreebound.eq.1 : The combination of helicity constraint and free boundary is under construction ;"
         end if
         if (Igeometry == 3 .and. myid == 0) then
@@ -585,7 +549,7 @@ subroutine preset
     end if
 
     if (myid == 0) then
-        cput = MPI_WTIME()
+        cput = 0
         write (ounit, '("preset : ",f10.2," : LBsequad="L2" , LBnewton="L2" , LBlinear="L2" ;")') cput - cpus, LBsequad, LBnewton, LBlinear
     end if
 
@@ -859,13 +823,13 @@ subroutine preset
 
             if (idof /= NAdof(vvol)) then
                 write (6, '("preset :      fatal : myid=",i3," ; idof.ne.NAdof(vvol) ; need to count Beltrami degrees-of-freedom more carefully  for coordinate singularity;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "preset : idof.ne.NAdof(vvol) : need to count Beltrami degrees-of-freedom more carefully  for coordinate singularity ;"
             end if
 
             if ((idof + 1)**2 >= huge(idof)) then
                 write (6, '("preset :      fatal : myid=",i3," ; (idof+1)**2.ge.HUGE(idof)) ; NAdof too big, should be smaller than maximum of int32 type;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "preset : (idof+1)**2.ge.HUGE(idof)) : NAdof too big, should be smaller than maximum of int32 type ;"
             end if
 
@@ -892,13 +856,13 @@ subroutine preset
 
             if (idof /= NAdof(vvol)) then
                 write (6, '("preset :      fatal : myid=",i3," ; idof.ne.NAdof(vvol) ; need to count degrees-of-freedom more carefully for new matrix;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "preset : idof.ne.NAdof(vvol) : need to count degrees-of-freedom more carefully for new matrix ;"
             end if
 
             if ((idof + 1)**2 >= huge(idof)) then
                 write (6, '("preset :      fatal : myid=",i3," ; (idof+1)**2.ge.HUGE(idof)) ; NAdof too big, should be smaller than maximum of int32 type;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "preset : (idof+1)**2.ge.HUGE(idof)) : NAdof too big, should be smaller than maximum of int32 type ;"
             end if
 
@@ -906,7 +870,7 @@ subroutine preset
 
         if (idof /= NAdof(vvol)) then
             write (6, '("preset :      fatal : myid=",i3," ; idof.ne.NAdof(vvol) ; impossible logic;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "preset : idof.ne.NAdof(vvol) : impossible logic ;"
         end if
 
@@ -927,7 +891,7 @@ subroutine preset
     end if
 
     if (myid == 0) then
-        cput = MPI_WTIME()
+        cput = 0
         write (ounit, '("preset : ", 10x ," : ")')
         write (ounit, '("preset : ",f10.2," : Nquad="i4" ; mn="i5" ; NGdof="i6" ; NAdof="16(i6",")" ...")') cput - cpus, Nquad, mn, NGdof, NAdof(1:min(Mvol, 16))
     end if
@@ -940,7 +904,7 @@ subroutine preset
     end if
 
     if (myid == 0) then
-        cput = MPI_WTIME()
+        cput = 0
         write (ounit, '("preset : ", 10x ," : ")')
         write (ounit, '("preset : ",f10.2," : Nt="i6" ; Nz="i6" ; Ntz="i9" ;")') cput - cpus, Nt, Nz, Ntz
     end if
@@ -1128,12 +1092,12 @@ subroutine preset
 
     if (Nz == 0) then
         write (6, '("preset :      fatal : myid=",i3," ; Nz.eq.0 ; illegal division;")') myid
-        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
         stop "preset : Nz.eq.0 : illegal division ;"
     end if
     if (Nt == 0) then
         write (6, '("preset :      fatal : myid=",i3," ; Nt.eq.0 ; illegal division;")') myid
-        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
         stop "preset : Nt.eq.0 : illegal division ;"
     end if
 
@@ -1206,7 +1170,7 @@ subroutine preset
 
         if (.true.) then
             write (6, '("readin :      fatal : myid=",i3," ; .true. ; invalid Igeometry for construction of psifactor;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "readin : .true. : invalid Igeometry for construction of psifactor ;"
         end if
 
@@ -1229,7 +1193,7 @@ subroutine preset
 
             if (Linitialize /= 1) then
                 write (6, '("preset :      fatal : myid=",i3," ; Linitialize.ne.1 ; geometrical initialization under construction for cylindrical;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "preset : Linitialize.ne.1 : geometrical initialization under construction for cylindrical ;"
             end if
 
@@ -1244,7 +1208,7 @@ subroutine preset
 
             if (Linitialize < 0) then
                 write (6, '("preset :      fatal : myid=",i3," ; Linitialize.lt.0 ; geometrical initialization under construction for toroidal;")') myid
-                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
                 stop "preset : Linitialize.lt.0 : geometrical initialization under construction for toroidal ;"
             end if
 

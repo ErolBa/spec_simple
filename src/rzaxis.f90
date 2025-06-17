@@ -11,7 +11,7 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
 
     use cputiming, only: Trzaxis
 
-    use allglobal, only: ncpu, myid, cpus, im, in, MPI_COMM_SPEC, &
+    use allglobal, only: ncpu, myid, cpus, im, in, &
                          ajk, Nt, Nz, Ntz, &
                          Rij, Zij, sg, cosi, sini, &
                          ijreal, ijimag, jireal, jiimag, jkreal, jkimag, kjreal, kjimag, &
@@ -22,7 +22,6 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
                          iRbc, iZbs, iRbs, iZbc, &
                          dBdX
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0

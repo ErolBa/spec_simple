@@ -11,9 +11,8 @@ subroutine ra00aa(writeorread)
 
     use cputiming, only: Tra00aa
 
-    use allglobal, only: myid, ncpu, cpus, MPI_COMM_SPEC, ext, Mvol, mn, im, in, Ate, Aze, Ato, Azo
+    use allglobal, only: myid, ncpu, cpus, ext, Mvol, mn, im, in, Ate, Aze, Ato, Azo
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -154,12 +153,10 @@ subroutine ra00aa(writeorread)
             llmodnp = 0
 
             do ii = 1, mn
-                call MPI_BCAST(Ate(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
-                call MPI_BCAST(Aze(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+
             end do
             do ii = 1, mn
-                call MPI_BCAST(Ato(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
-                call MPI_BCAST(Azo(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
+
             end do
 
         end do
@@ -168,7 +165,7 @@ subroutine ra00aa(writeorread)
 
         if (.true.) then
             write (6, '("ra00aa :      fatal : myid=",i3," ; .true. ; invalid writeorread flag supplied on input;")') myid
-            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+
             stop "ra00aa : .true. : invalid writeorread flag supplied on input ;"
         end if
 

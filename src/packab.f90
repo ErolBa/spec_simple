@@ -11,13 +11,12 @@ subroutine packab(packorunpack, lvol, NN, solution, ideriv)
 
     use cputiming, only: Tpackab
 
-    use allglobal, only: myid, ncpu, cpus, MPI_COMM_SPEC, &
+    use allglobal, only: myid, ncpu, cpus, &
                          mn, im, in, Ate, Aze, Ato, Azo, YESstellsym, NOTstellsym, &
                          TT, &
                          Lma, Lmb, Lmc, Lmd, Lme, Lmf, Lmg, Lmh, &
                          Lmavalue, Lmbvalue, Lmcvalue, Lmdvalue, Lmevalue, Lmfvalue, Lmgvalue, Lmhvalue
 
-    use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
