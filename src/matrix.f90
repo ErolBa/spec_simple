@@ -48,9 +48,9 @@ subroutine matrix(lvol, mn, lrad)
     real(8) :: Hzete, Hzeto, Hzote, Hzoto
     real(8) :: Hzeze, Hzezo, Hzoze, Hzozo
 
-    real(8), allocatable :: TTdata(:, :, :), TTMdata(:, :) ! queues to construct sparse matrices
+    real(8), allocatable :: TTdata(:, :, :), TTMdata(:, :)
 
-    NN = NAdof(lvol) ! shorthand;
+    NN = NAdof(lvol)
 
     dMA(0:NN, 0:NN) = zero
     dMD(0:NN, 0:NN) = zero
@@ -82,10 +82,10 @@ subroutine matrix(lvol, mn, lrad)
                     do pp = 0, lrad
 
                         if (Lcoordinatesingularity) then
-                            if (ll < mi .or. pp < mj) cycle ! rule out zero components of Zernike; 02 Jul 19
-                            if (mod(ll + mi, 2) + mod(pp + mj, 2) > 0) cycle ! rule out zero components of Zernike; 02 Jul 19
-                            ll1 = (ll - mod(ll, 2))/2 ! shrinked dof for Zernike; 02 Jul 19
-                            pp1 = (pp - mod(pp, 2))/2 ! shrinked dof for Zernike; 02 Jul 19
+                            if (ll < mi .or. pp < mj) cycle
+                            if (mod(ll + mi, 2) + mod(pp + mj, 2) > 0) cycle
+                            ll1 = (ll - mod(ll, 2))/2
+                            pp1 = (pp - mod(pp, 2))/2
                         else
                             ll1 = ll
                             pp1 = pp
@@ -106,11 +106,11 @@ subroutine matrix(lvol, mn, lrad)
                         id = Aze(lvol, 0, ii)%i(ll); jd = Ate(lvol, 0, jj)%i(pp); dMA(id, jd) = Wteze; dMD(id, jd) = Hteze
                         ; ; jd = Aze(lvol, 0, jj)%i(pp); dMA(id, jd) = Wzeze; dMD(id, jd) = Hzeze
 
-                    end do ! end of do pp ;
+                    end do
 
-                end do ! end of do ll ;
+                end do
 
-            end do ! end of do jj ;
+            end do
 
             if (dBdX%L) cycle
 
@@ -127,7 +127,7 @@ subroutine matrix(lvol, mn, lrad)
                     ; ; id = Aze(lvol, 0, ii)%i(ll); jd = Lmh(lvol, ii); dMA(id, jd) = +TTdata(ll, mi, 1)
                 end if
 
-            end do ! end of do ll ;
+            end do
 
             do pp = 0, lrad; id = Lma(lvol, ii); jd = Ate(lvol, 0, ii)%i(pp); dMA(id, jd) = +TTMdata(pp, mi)
                 ; ; id = Lmb(lvol, ii); jd = Aze(lvol, 0, ii)%i(pp); dMA(id, jd) = +TTdata(pp, mi, kk)
@@ -136,11 +136,11 @@ subroutine matrix(lvol, mn, lrad)
                 else; id = Lmg(lvol, ii); jd = Ate(lvol, 0, ii)%i(pp); dMA(id, jd) = +TTdata(pp, mi, 1)
                     ; ; id = Lmh(lvol, ii); jd = Aze(lvol, 0, ii)%i(pp); dMA(id, jd) = +TTdata(pp, mi, 1)
                 end if
-            end do ! end of do pp ;
+            end do
 
-        end do ! end of do ii ;
+        end do
 
-    else ! NOTstellsym ;
+    else
 
         do ii = 1, mn; mi = im(ii); ni = in(ii)
 
@@ -151,10 +151,10 @@ subroutine matrix(lvol, mn, lrad)
                     do pp = 0, lrad
 
                         if (Lcoordinatesingularity) then
-                            if (ll < mi .or. pp < mj) cycle ! rule out zero components of Zernike; 02 Jul 19
-                            if (mod(ll + mi, 2) + mod(pp + mj, 2) > 0) cycle ! rule out zero components of Zernike; 02 Jul 19
-                            ll1 = (ll - mod(ll, 2))/2 ! shrinked dof for Zernike; 02 Jul 19
-                            pp1 = (pp - mod(pp, 2))/2 ! shrinked dof for Zernike; 02 Jul 19
+                            if (ll < mi .or. pp < mj) cycle
+                            if (mod(ll + mi, 2) + mod(pp + mj, 2) > 0) cycle
+                            ll1 = (ll - mod(ll, 2))/2
+                            pp1 = (pp - mod(pp, 2))/2
                         else
                             ll1 = ll
                             pp1 = pp
@@ -217,11 +217,11 @@ subroutine matrix(lvol, mn, lrad)
                         ; ; jd = Aze(lvol, 0, jj)%i(pp); dMA(id, jd) = Wzezo; dMD(id, jd) = Hzezo
                         ; ; jd = Azo(lvol, 0, jj)%i(pp); dMA(id, jd) = Wzozo; dMD(id, jd) = Hzozo
 
-                    end do ! end of do pp ;
+                    end do
 
-                end do ! end of do jj ;
+                end do
 
-            end do ! end of do ll ;
+            end do
 
             if (dBdX%L) cycle
 
@@ -229,7 +229,7 @@ subroutine matrix(lvol, mn, lrad)
             else; kk = 0
             end if
 
-            do ll = 0, lrad ! Chebyshev polynomial ;
+            do ll = 0, lrad
 
                 ; ; id = Ate(lvol, 0, ii)%i(ll); jd = Lma(lvol, ii); dMA(id, jd) = TTMdata(ll, mi)
                 ; ; id = Aze(lvol, 0, ii)%i(ll); jd = Lmb(lvol, ii); dMA(id, jd) = TTdata(ll, mi, kk)
@@ -243,7 +243,7 @@ subroutine matrix(lvol, mn, lrad)
                     ; ; id = Aze(lvol, 0, ii)%i(ll); jd = Lmh(lvol, ii); dMA(id, jd) = +TTdata(ll, mi, 1)
                 end if
 
-            end do ! end of do ll;
+            end do
 
             do pp = 0, lrad
                 ; ; id = Lma(lvol, ii); jd = Ate(lvol, 0, ii)%i(pp); dMA(id, jd) = TTMdata(pp, mi)
@@ -257,10 +257,10 @@ subroutine matrix(lvol, mn, lrad)
                 else; id = Lmg(lvol, ii); jd = Ate(lvol, 0, ii)%i(pp); dMA(id, jd) = +TTdata(pp, mi, 1)
                     ; ; id = Lmh(lvol, ii); jd = Aze(lvol, 0, ii)%i(pp); dMA(id, jd) = +TTdata(pp, mi, 1)
                 end if
-            end do ! end of do pp ;
+            end do
 
-        end do ! end of do ii ;
-    end if ! end of if( YESstellsym ) ;
+        end do
+    end if
 
     call matrixBG(lvol, mn, lrad)
 
@@ -280,7 +280,7 @@ subroutine matrixBG(lvol, mn, lrad)
 
     integer :: NN, ii, id, mi, ni
 
-    NN = NAdof(lvol) ! shorthand;
+    NN = NAdof(lvol)
 
     dMB(0:NN, 1:2) = zero
     dMG(0:NN) = zero
@@ -291,24 +291,24 @@ subroutine matrixBG(lvol, mn, lrad)
 
             ; if (ii > 1) then; id = Lme(lvol, ii); ; dMG(id) = -(iVns(ii) + iBns(ii))
                 ; else; id = Lmg(lvol, ii); ; dMB(id, 1) = -one
-                ; ; id = Lmh(lvol, ii); ; dMB(id, 2) = +one ! changed sign;
+                ; ; id = Lmh(lvol, ii); ; dMB(id, 2) = +one
                 ; end if
 
-        end do ! end of do ii ;
+        end do
 
-    else ! NOTstellsym ;
+    else
 
         do ii = 1, mn; mi = im(ii); ni = in(ii)
 
             ; if (ii > 1) then; id = Lme(lvol, ii); ; dMG(id) = -(iVns(ii) + iBns(ii))
                 ; ; id = Lmf(lvol, ii); ; dMG(id) = -(iVnc(ii) + iBnc(ii))
                 ; else; id = Lmg(lvol, ii); ; dMB(id, 1) = -one
-                ; ; id = Lmh(lvol, ii); ; dMB(id, 2) = +one ! changed sign;
+                ; ; id = Lmh(lvol, ii); ; dMB(id, 2) = +one
                 ; end if
 
-        end do ! end of do ii ;
+        end do
 
-    end if ! end of if( YESstellsym ) ;
+    end if
 
     return
 

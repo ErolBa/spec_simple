@@ -11,29 +11,25 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
     use cputiming, only: Tdforce
 
-    use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, Mvol, NAdof, Iquad, & ! convenience; provided
-                         ! to ma00aa as argument to avoid allocations;
-                         iRbc, iZbs, iRbs, iZbc, & ! Fourier harmonics of geometry; vector of independent variables, position, is
-                         ! "unpacked" into iRbc,iZbs;
-                         ImagneticOK, Energy, ForceErr, YESstellsym, NOTstellsym, Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, mn, im, in, dpflux, dtflux, sweight, Bemn, Bomn, Iomn, Iemn, Somn, Semn, BBe, IIo, BBo, IIe, & ! these are just
-                         ! used for screen diagnostics;
-                         LGdof, dBdX, Ate, Aze, Ato, Azo, & ! only required for broadcasting
-                         diotadxup, dItGpdxtp, & ! only required for broadcasting
-                         lBBintegral, dFFdRZ, HdFFdRZ, dBBdmp, dmupfdx, BBweight, & ! exponential weight on force-imbalance harmonics;
-                         psifactor, LocalConstraint, xoffset, solution, IPdtdPf, IsMyVolume, IsMyVolumeValue, WhichCpuID, ext ! For
-    ! outputing Lcheck = 6 test
+    use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, Mvol, NAdof, Iquad, &
+                         iRbc, iZbs, iRbs, iZbc, &
+                         ImagneticOK, Energy, ForceErr, YESstellsym, NOTstellsym, Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, mn, im, in, dpflux, dtflux, sweight, Bemn, Bomn, Iomn, Iemn, Somn, Semn, BBe, IIo, BBo, IIe, &
+                         LGdof, dBdX, Ate, Aze, Ato, Azo, &
+                         diotadxup, dItGpdxtp, &
+                         lBBintegral, dFFdRZ, HdFFdRZ, dBBdmp, dmupfdx, BBweight, &
+                         psifactor, LocalConstraint, xoffset, solution, IPdtdPf, IsMyVolume, IsMyVolumeValue, WhichCpuID, ext
 
     use mpi
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
 
-    integer, parameter :: NB = 3 ! optimal workspace block size for LAPACK:DSYSVX;
+    integer, parameter :: NB = 3
 
-    integer, intent(in) :: NGdof ! dimensions;
+    integer, intent(in) :: NGdof
     real(8), intent(in) :: position(0:NGdof)
-    real(8), intent(out) :: force(0:NGdof) ! force;
-    logical, intent(in) :: LComputeDerivatives !
+    real(8), intent(out) :: force(0:NGdof)
+    logical, intent(in) :: LComputeDerivatives
 
     integer :: vvol, innout, ii, jj, irz, issym, iocons, tdoc, tdoc_ntz, idoc, idof, tdof, jdof, ivol, imn, ll, ihybrd1, lwa, Ndofgl, llmodnp
     integer :: maxfev, ml, muhybr, mode, nprint, nfev, ldfjac, lr, Nbc, NN, cpu_id, ideriv
@@ -62,7 +58,7 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
         dmupfdx(1:Mvol, 1:Mvol - 1, 1:2, 1:LGdof, 1) = zero
     end if
 
-    packorunpack = 'U' ! unpack geometrical degrees-of-freedom;
+    packorunpack = 'U'
 
     call packxi(NGdof, position(0:NGdof), Mvol, mn, iRbc(1:mn, 0:Mvol), iZbs(1:mn, 0:Mvol), iRbs(1:mn, 0:Mvol), iZbc(1:mn, 0:Mvol), packorunpack, LcomputeDerivatives, LComputeAxis)
 
@@ -130,22 +126,22 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
             solution(1:NN, 0:2) = zero
 
             packorunpack = 'P'
-            call packab(packorunpack, vvol, NN, solution(1:NN, 0), 0) ! packing;
-            call packab(packorunpack, vvol, NN, solution(1:NN, 2), 2) ! packing;
+            call packab(packorunpack, vvol, NN, solution(1:NN, 0), 0)
+            call packab(packorunpack, vvol, NN, solution(1:NN, 2), 2)
 
             solution(1:NN, 0) = solution(1:NN, 0) - dpfluxout(vvol - 1)*solution(1:NN, 2)
 
             packorunpack = 'U'
-            call packab(packorunpack, vvol, NN, solution(1:NN, 0), 0) ! unpacking;
+            call packab(packorunpack, vvol, NN, solution(1:NN, 0), 0)
 
             deallocate (solution, stat=astat)
 
-        end do ! end of do vvol = 1, Mvol
+        end do
 
         deallocate (Fvec, stat=astat)
         deallocate (dpfluxout, stat=astat)
 
-    end if !matches if( LocalConstraint )
+    end if
 
     do vvol = 1, Mvol
         call WhichCpuID(vvol, cpu_id)
@@ -184,7 +180,7 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
     lBBintegral(1:Nvol) = lBBintegral(1:Nvol)*half
 
-    Energy = sum(lBBintegral(1:Nvol)) ! should also compute beta;
+    Energy = sum(lBBintegral(1:Nvol))
 
     ; force(0:NGdof) = zero
 
@@ -196,12 +192,11 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
         tdoc = (vvol - 1)*LGdof
 
-        if (ImagneticOK(vvol) .and. ImagneticOK(vvol + 1)) then ! the magnetic fields in the volumes adjacent to this
-            ! interface are valid;
+        if (ImagneticOK(vvol) .and. ImagneticOK(vvol + 1)) then
 
-            ; idoc = 0 ! degree-of-constraint counter; set;
+            ; idoc = 0
 
-            if (Lextrap == 1 .and. vvol == 1) then ! to be made redundant;
+            if (Lextrap == 1 .and. vvol == 1) then
                 if (2 > Mvol) then
                     write (6, '("dforce :      fatal : myid=",i3," ; 2.gt.Mvol ; psifactor needs attention;")') myid
                     call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
@@ -209,51 +204,49 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
                 end if
                 ; force(tdoc + idoc + 1:tdoc + idoc + mn) = position(1:mn) - (iRbc(1:mn, 2)/psifactor(1:mn, 2))
             else
-                ; force(tdoc + idoc + 1:tdoc + idoc + mn) = (Bemn(1:mn, vvol + 1, 0) - Bemn(1:mn, vvol + 0, 1))*BBweight(1:mn) !
-                !pressure imbalance;
+                ; force(tdoc + idoc + 1:tdoc + idoc + mn) = (Bemn(1:mn, vvol + 1, 0) - Bemn(1:mn, vvol + 0, 1))*BBweight(1:mn)
+
             end if
 
-            ; BBe(vvol) = max(sum(abs(force(tdoc + idoc + 1:tdoc + idoc + mn)))/(mn), logtolerance) ! screen diagnostics;
+            ; BBe(vvol) = max(sum(abs(force(tdoc + idoc + 1:tdoc + idoc + mn)))/(mn), logtolerance)
 
-            ; idoc = idoc + mn ! degree-of-constraint counter; increment;
+            ; idoc = idoc + mn
 
-            if (Igeometry >= 3) then ! add spectral constraints;
+            if (Igeometry >= 3) then
 
-                force(tdoc + idoc + 1:tdoc + idoc + mn - 1) = (Iomn(2:mn, vvol + 0))*epsilon & ! spectral constraints;
-                                                              + (+Somn(2:mn, vvol + 0, 1))*sweight(vvol + 0) & ! poloidal length constraint;
+                force(tdoc + idoc + 1:tdoc + idoc + mn - 1) = (Iomn(2:mn, vvol + 0))*epsilon &
+                                                              + (+Somn(2:mn, vvol + 0, 1))*sweight(vvol + 0) &
                                                               - (Somn(2:mn, vvol + 1, 0))*sweight(vvol + 1)
 
-                IIo(vvol) = max(sum(abs(force(tdoc + idoc + 1:tdoc + idoc + mn - 1)))/(mn - 1), logtolerance) ! screen diagnostics;
+                IIo(vvol) = max(sum(abs(force(tdoc + idoc + 1:tdoc + idoc + mn - 1)))/(mn - 1), logtolerance)
 
                 idoc = idoc + mn - 1
 
-            end if ! end of if( Igeometry.ge.3 ) ;
+            end if
 
             if (NOTstellsym) then
 
-                force(tdoc + idoc + 1:tdoc + idoc + mn - 1) = (Bomn(2:mn, vvol + 1, 0) - Bomn(2:mn, vvol + 0, 1))*BBweight(2:mn) !
-                !pressure imbalance;
+                force(tdoc + idoc + 1:tdoc + idoc + mn - 1) = (Bomn(2:mn, vvol + 1, 0) - Bomn(2:mn, vvol + 0, 1))*BBweight(2:mn)
 
-                BBo(vvol) = max(sum(abs(force(tdoc + idoc + 1:tdoc + idoc + mn - 1)))/(mn - 1), logtolerance) ! screen diagnostics;
+                BBo(vvol) = max(sum(abs(force(tdoc + idoc + 1:tdoc + idoc + mn - 1)))/(mn - 1), logtolerance)
 
-                idoc = idoc + mn - 1 ! degree-of-constraint counter; increment;
+                idoc = idoc + mn - 1
 
-                if (Igeometry >= 3) then ! add spectral constraints;
+                if (Igeometry >= 3) then
 
-                    force(tdoc + idoc + 1:tdoc + idoc + mn) = (Iemn(1:mn, vvol + 0))*epsilon & ! spectral constraints;
-                                                              + (+Semn(1:mn, vvol + 0, 1))*sweight(vvol + 0) & ! poloidal length constraint;
+                    force(tdoc + idoc + 1:tdoc + idoc + mn) = (Iemn(1:mn, vvol + 0))*epsilon &
+                                                              + (+Semn(1:mn, vvol + 0, 1))*sweight(vvol + 0) &
                                                               - (Semn(1:mn, vvol + 1, 0))*sweight(vvol + 1)
 
-                    IIe(vvol) = max(sum(abs(force(tdoc + idoc + 1:tdoc + idoc + mn)))/(mn), logtolerance) ! screen
-                    ! diagnostics;
+                    IIe(vvol) = max(sum(abs(force(tdoc + idoc + 1:tdoc + idoc + mn)))/(mn), logtolerance)
 
-                    idoc = idoc + mn ! degree-of-constraint counter; increment;
+                    idoc = idoc + mn
 
-                end if ! end of if( Igeometry.ge.3 ) ;
+                end if
 
-            end if ! end of if( NOTstellsym ) ;
+            end if
 
-        else ! matches if( ImagneticOK(vvol) .and. ImagneticOK(vvol+1) );
+        else
 
             ; ; BBe(vvol) = 9.9e+09
             ; ; IIo(vvol) = 9.9e+09
@@ -263,12 +256,12 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
             ; force(tdoc + 1:tdoc + LGdof) = 9.9e+09
 
-        end if ! end of if( ImagneticOK(vvol) .and. ImagneticOK(vvol+1) ) ;
+        end if
 
-    end do ! end of do vvol;
+    end do
 
-    if (NGdof /= 0) then; ForceErr = sqrt(sum(force(1:NGdof)*force(1:NGdof))/NGdof) ! this includes spectral
-        ! constraints;
+    if (NGdof /= 0) then; ForceErr = sqrt(sum(force(1:NGdof)*force(1:NGdof))/NGdof)
+
     else; ForceErr = zero
     end if
 

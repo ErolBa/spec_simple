@@ -23,7 +23,7 @@ subroutine get_cheby(lss, lrad, cheby)
     end do
 
     do ll = 0, lrad
-        cheby(ll, 0:1) = cheby(ll, 0:1)/real(ll + 1) ! scale for better conditioning
+        cheby(ll, 0:1) = cheby(ll, 0:1)/real(ll + 1)
     end do
 
     return
@@ -43,8 +43,8 @@ subroutine get_cheby_d2(lss, lrad, cheby)
 
     cheby = zero
 
-    ; ; cheby(0, 0:2) = (/one, zero, zero/) ! T_0: Chebyshev initialization; function, 1st-derivative, 2nd-derivative;
-    ; ; cheby(1, 0:2) = (/lss, one, zero/) ! T_1: Chebyshev initialization; function, 1st-derivative, 2nd-derivative;
+    ; ; cheby(0, 0:2) = (/one, zero, zero/)
+    ; ; cheby(1, 0:2) = (/lss, one, zero/)
     do ll = 2, lrad
         cheby(ll, 0:2) = (/two*lss*cheby(ll - 1, 0) - cheby(ll - 2, 0), &
                            two*cheby(ll - 1, 0) + two*lss*cheby(ll - 1, 1) - cheby(ll - 2, 1), &
@@ -56,7 +56,7 @@ subroutine get_cheby_d2(lss, lrad, cheby)
     end do
 
     do ll = 0, lrad
-        cheby(ll, 0:2) = cheby(ll, 0:2)/real(ll + 1) ! scale for better conditioning
+        cheby(ll, 0:2) = cheby(ll, 0:2)/real(ll + 1)
     end do
 
     return
@@ -72,12 +72,12 @@ subroutine get_zernike(r, lrad, mpol, zernike)
     integer, intent(in) :: lrad, mpol
     real(8), intent(inout) :: zernike(0:lrad, 0:mpol, 0:1)
 
-    real(8) :: rm, rm1 ! r to the power of m'th and m-1'th
+    real(8) :: rm, rm1
     real(8) :: factor1, factor2, factor3, factor4
-    integer :: m, n ! Zernike R^m_n
+    integer :: m, n
 
-    rm = one ! r to the power of m'th
-    rm1 = zero ! r to the power of m-1'th
+    rm = one
+    rm1 = zero
     zernike(:, :, :) = zero
     do m = 0, mpol
         if (lrad >= m) then
@@ -132,13 +132,13 @@ subroutine get_zernike_d2(r, lrad, mpol, zernike)
     integer, intent(in) :: lrad, mpol
     real(8), intent(inout) :: zernike(0:lrad, 0:mpol, 0:2)
 
-    real(8) :: rm, rm1, rm2 ! r to the power of m'th, m-1'th and m-2'th
+    real(8) :: rm, rm1, rm2
     real(8) :: factor1, factor2, factor3, factor4
-    integer :: m, n ! Zernike R^m_n
+    integer :: m, n
 
-    rm = one ! r to the power of m'th
-    rm1 = zero ! r to the power of m-1'th
-    rm2 = zero ! r to the power of m-2'th
+    rm = one
+    rm1 = zero
+    rm2 = zero
     zernike(:, :, :) = zero
     do m = 0, mpol
         if (lrad >= m) then
@@ -196,7 +196,7 @@ subroutine get_zernike_rm(r, lrad, mpol, zernike)
     real(8), intent(inout) :: zernike(0:lrad, 0:mpol)
 
     real(8) :: factor1, factor2, factor3, factor4
-    integer :: m, n ! Zernike R^m_n
+    integer :: m, n
 
     zernike(:, :) = zero
     do m = 0, mpol

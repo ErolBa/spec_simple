@@ -60,14 +60,14 @@ subroutine ma02aa(lvol, NN)
     real(8), allocatable :: constraintfunction(:), constraintgradient(:, :), multipliers(:), objectivegradient(:), RS(:, :), RWk(:)
     character :: optionalparameter*33
 
-    ivol = lvol ! various subroutines (e.g. mp00ac, df00ab) that may be called below require volume identification, but the argument list is fixed by NAG;
+    ivol = lvol
 
-    if (LBsequad) then ! sequential quadratic programming (SQP); construct minimum energy with constrained helicity;
+    if (LBsequad) then
         lastcpu = MPI_WTIME()
 
-        NLinearConstraints = 0 ! no linear constraints;
+        NLinearConstraints = 0
 
-        NNonLinearConstraints = 1 ! single non-linear constraint = conserved helicity;
+        NNonLinearConstraints = 1
 
         LDA = max(1, NLinearConstraints)
 
@@ -86,14 +86,14 @@ subroutine ma02aa(lvol, NN)
         allocate (UpperBound(1:NN + NLinearConstraints + NNonLinearConstraints), stat=astat)
         UpperBound(1:NN + NLinearConstraints + NNonLinearConstraints) = zero
 
-        LowerBound(1:NN) = -1.0e+21 !   variable constraints; no constraint;
-        UpperBound(1:NN) = +1.0e+21 !
-        LowerBound(NN + 1:NN + NLinearConstraints) = -1.0e+21 !     linear constraints; no constraint;
-        UpperBound(NN + 1:NN + NLinearConstraints) = +1.0e+21 !
-        LowerBound(NN + NLinearConstraints + 1:NN + NLinearConstraints + NNonLinearConstraints) = helicity(lvol) ! non-linear constraints; enforce helicity constraint;
-        UpperBound(NN + NLinearConstraints + 1:NN + NLinearConstraints + NNonLinearConstraints) = helicity(lvol) !
+        LowerBound(1:NN) = -1.0e+21
+        UpperBound(1:NN) = +1.0e+21
+        LowerBound(NN + 1:NN + NLinearConstraints) = -1.0e+21
+        UpperBound(NN + 1:NN + NLinearConstraints) = +1.0e+21
+        LowerBound(NN + NLinearConstraints + 1:NN + NLinearConstraints + NNonLinearConstraints) = helicity(lvol)
+        UpperBound(NN + NLinearConstraints + 1:NN + NLinearConstraints + NNonLinearConstraints) = helicity(lvol)
 
-        iterations = 0 ! iteration counter;
+        iterations = 0
 
         if (allocated(Istate)) deallocate (Istate)
         allocate (Istate(1:NN + NLinearConstraints + NNonLinearConstraints), stat=astat)
@@ -111,7 +111,7 @@ subroutine ma02aa(lvol, NN)
         allocate (multipliers(1:NN + NLinearConstraints + NNonLinearConstraints), stat=astat)
         multipliers(1:NN + NLinearConstraints + NNonLinearConstraints) = zero
 
-        objectivefunction = zero ! objective function;
+        objectivefunction = zero
 
         if (allocated(objectivegradient)) deallocate (objectivegradient)
         allocate (objectivegradient(1:NN), stat=astat)
@@ -120,7 +120,7 @@ subroutine ma02aa(lvol, NN)
         if (allocated(RS)) deallocate (RS)
         allocate (RS(1:LDR, 1:NN), stat=astat)
         RS(1:LDR, 1:NN) = zero
-        ideriv = 0; dpsi(1:2) = (/dtflux(lvol), dpflux(lvol)/) ! these are also used below;
+        ideriv = 0; dpsi(1:2) = (/dtflux(lvol), dpflux(lvol)/)
 
         packorunpack = 'P'
 
@@ -130,17 +130,17 @@ subroutine ma02aa(lvol, NN)
         allocate (NEEDC(1:NNonLinearConstraints), stat=astat)
         NEEDC(1:NNonLinearConstraints) = 0
 
-        LIWk = 3*NN + NLinearConstraints + 2*NNonLinearConstraints ! workspace;
+        LIWk = 3*NN + NLinearConstraints + 2*NNonLinearConstraints
         if (allocated(IWk)) deallocate (IWk)
         allocate (IWk(1:LIWk), stat=astat)
         IWk(1:LIWk) = 0
 
-        LRWk = 2*NN**2 + NN*NLinearConstraints + 2*NN*NNonLinearConstraints + 21*NN + 11*NLinearConstraints + 22*NNonLinearConstraints + 1 ! workspace;
+        LRWk = 2*NN**2 + NN*NLinearConstraints + 2*NN*NNonLinearConstraints + 21*NN + 11*NLinearConstraints + 22*NNonLinearConstraints + 1
         if (allocated(RWk)) deallocate (RWk)
         allocate (RWk(1:LRWk), stat=astat)
         RWk(1:LRWk) = zero
 
-        irevcm = 0; ie04uff = 1 ! reverse communication loop control; ifail error flag;
+        irevcm = 0; ie04uff = 1
 
         MBpsi(1:NN) = matmul(dMB(1:NN, 1:2), dpsi(1:2))
 
@@ -160,62 +160,61 @@ subroutine ma02aa(lvol, NN)
         packorunpack = 'U'
         call packab(packorunpack, lvol, NN, xi(1:NN), ideriv)
 
-        lBBintegral(lvol) = half*sum(xi(1:NN)*matmul(dMA(1:NN, 1:NN), xi(1:NN))) + sum(xi(1:NN)*MBpsi(1:NN)) ! + psiMCpsi
-        lABintegral(lvol) = half*sum(xi(1:NN)*matmul(dMD(1:NN, 1:NN), xi(1:NN))) ! + sum( xi(1:NN) * MEpsi(1:NN) ) ! + psiMFpsi
+        lBBintegral(lvol) = half*sum(xi(1:NN)*matmul(dMA(1:NN, 1:NN), xi(1:NN))) + sum(xi(1:NN)*MBpsi(1:NN))
+        lABintegral(lvol) = half*sum(xi(1:NN)*matmul(dMD(1:NN, 1:NN), xi(1:NN)))
 
         solution(1:NN, 0) = xi(1:NN)
 
-    end if ! end of if( LBsequad ) then;
+    end if
 
-    if (LBlinear) then ! assume Beltrami field is parameterized by helicity multiplier (and poloidal flux);
+    if (LBlinear) then
 
         lastcpu = MPI_WTIME()
 
         if (Lplasmaregion) then
 
-            Xdof(1:2) = xoffset + (/mu(lvol), dpflux(lvol)/) ! initial guess for degrees of freedom; offset from zero so that relative error is small;
+            Xdof(1:2) = xoffset + (/mu(lvol), dpflux(lvol)/)
 
             select case (Lconstraint)
-            case (-1); ; Nxdof = 0 ! multiplier & poloidal flux NOT varied                               ;
-                ; ; iflag = 1 !(we don't need derivatives)
-            case (0); ; Nxdof = 0 ! multiplier & poloidal flux NOT varied
-                ; ; iflag = 1 !(we don't need derivatives)                            ;
-            case (1); if (Lcoordinatesingularity) then; Nxdof = 1 ! multiplier                 IS  varied to match       outer transform;
-                    ; else; Nxdof = 2 ! multiplier & poloidal flux ARE varied to match inner/outer transform;
+            case (-1); ; Nxdof = 0
+                ; ; iflag = 1
+            case (0); ; Nxdof = 0
+                ; ; iflag = 1
+            case (1); if (Lcoordinatesingularity) then; Nxdof = 1
+                    ; else; Nxdof = 2
                     ; end if
-            case (2); Nxdof = 1 ! multiplier                 IS  varied to match             helicity ;
-            case (3); if (Lcoordinatesingularity) then; Nxdof = 0 ! multiplier & poloidal flux NOT varied                               ;
-                    ; else; Nxdof = 0 ! Global constraint, no dof locally
+            case (2); Nxdof = 1
+            case (3); if (Lcoordinatesingularity) then; Nxdof = 0
+                    ; else; Nxdof = 0
                     ; end if
-                ; ; iflag = 2 !(we still need derivatives)
+                ; ; iflag = 2
             end select
 
-        else ! Lvacuumregion ;
+        else
 
-            Xdof(1:2) = xoffset + (/dtflux(lvol), dpflux(lvol)/) ! initial guess for degrees of freedom; offset from zero so that relative error is small;
+            Xdof(1:2) = xoffset + (/dtflux(lvol), dpflux(lvol)/)
 
             select case (Lconstraint)
-            case (-1); ; Nxdof = 0 ! poloidal   & toroidal flux NOT varied                                                  ;
-            case (0); ; Nxdof = 2 ! poloidal   & toroidal flux ARE varied to match linking current and plasma current      ;
-            case (1); ; Nxdof = 2 ! poloidal   & toroidal flux ARE varied to match linking current and transform-constraint;
-            case (2); ; Nxdof = 2 ! poloidal   & toroidal flux ARE varied to match linking current and plasma current      ;
-            case (3); ; Nxdof = 0 ! Fluxes are determined in dforce via a linear system
+            case (-1); ; Nxdof = 0
+            case (0); ; Nxdof = 2
+            case (1); ; Nxdof = 2
+            case (2); ; Nxdof = 2
+            case (3); ; Nxdof = 0
                 ; iflag = 2
             end select
 
-        end if ! end of if( Lplasmaregion) ;
+        end if
 
         select case (Nxdof)
 
-        case (0) ! need only call mp00ac once, to calculate Beltrami field for given helicity multiplier and enclosed fluxes;
+        case (0)
 
-            ; ; Ndof = 1; Ldfjac = Ndof; nfev = 1; njev = 0; ihybrj = 1; ! provide dummy values for consistency;
-
+            ; ; Ndof = 1; Ldfjac = Ndof; nfev = 1; njev = 0; ihybrj = 1; 
             call mp00ac(Ndof, Xdof(1:Ndof), Fdof(1:Ndof), Ddof(1:Ldfjac, 1:Ndof), Ldfjac, iflag)
 
-            helicity(lvol) = lABintegral(lvol) ! this was computed in mp00ac;
+            helicity(lvol) = lABintegral(lvol)
 
-        case (1:2) ! will iteratively call mp00ac, to calculate Beltrami field that satisfies constraints;
+        case (1:2)
 
             ; ; Ndof = Nxdof; Ldfjac = Ndof; nfev = 0; njev = 0; ihybrj = 0; 
             tol = mupftol; LRR = Ndof*(Ndof + 1)/2; mode = 0; diag(1:2) = zero; factor = one; maxfev = mupfits; nprint = 0
@@ -235,36 +234,36 @@ subroutine ma02aa(lvol, NN)
                 select case (ihybrj)
                 case (0:); mu(lvol) = Xdof(1) - xoffset
                     ; ; dpflux(lvol) = Xdof(2) - xoffset
-                case (:-1); Xdof(1) = mu(lvol) + xoffset ! mu    and dpflux have been updated in mp00ac; early termination;
-                    ; ; Xdof(2) = dpflux(lvol) + xoffset ! mu    and dpflux have been updated in mp00ac; early termination;
+                case (:-1); Xdof(1) = mu(lvol) + xoffset
+                    ; ; Xdof(2) = dpflux(lvol) + xoffset
                 end select
 
-            else ! Lvacuumregion;
+            else
 
                 select case (ihybrj)
                 case (0:); dtflux(lvol) = Xdof(1) - xoffset
                     ; ; dpflux(lvol) = Xdof(2) - xoffset
-                case (:-1); Xdof(1) = dtflux(lvol) + xoffset ! dtflux and dpflux have been updated in mp00ac; early termination;
-                    ; ; Xdof(2) = dpflux(lvol) + xoffset ! dtflux and dpflux have been updated in mp00ac; early termination;
+                case (:-1); Xdof(1) = dtflux(lvol) + xoffset
+                    ; ; Xdof(2) = dpflux(lvol) + xoffset
                 end select
 
-            end if ! end of if( Lplasmaregion ) ;
+            end if
 
-            if (Lconstraint /= 2) helicity(lvol) = lABintegral(lvol) ! this was computed in mp00ac;
+            if (Lconstraint /= 2) helicity(lvol) = lABintegral(lvol)
 
             if (Lconstraint == 1 .or. Lconstraint == 3 .or. (Lvacuumregion .and. Lconstraint == 0)) then
 
-                iflag = 2; Ldfjac = Ndof ! call mp00ac: tr00ab/curent to ensure the derivatives of B, transform, currents, wrt mu/dtflux & dpflux are calculated;
+                iflag = 2; Ldfjac = Ndof
 
                 call mp00ac(Ndof, Xdof(1:Ndof), Fdof(1:Ndof), Ddof(1:Ldfjac, 1:Ndof), Ldfjac, iflag)
 
-            end if ! end of if( Lconstraint.eq.1 .or. ( Lvacuumregion .and. Lconstraint.eq.0 ) ) ;
+            end if
 
-        end select ! end of select case( Nxdof ) ;
+        end select
 
         cput = MPI_WTIME()
 
-        select case (ihybrj) ! this screen output may not be correct for Lvacuumregion;
+        select case (ihybrj)
         case (1)
             if (Wma02aa) write (ounit, 1040) cput - cpus, myid, lvol, ihybrj, helicity(lvol), mu(lvol), dpflux(lvol), cput - lastcpu, "success         ", Fdof(1:Ndof)
         case (-2)
@@ -288,7 +287,7 @@ subroutine ma02aa(lvol, NN)
             end if
         end select
 
-    end if ! end of if( LBlinear ) then;
+    end if
 
 1010 format("ma02aa : ", f10.2, " : myid=", i3, " ; lvol=", i3, " ; SQP    : ie04uff=", i3, " hel="es12.4" mu="es12.4" dpflux="es12.4" time="f9.1" ":, a36)
 1020 format("ma02aa : ", f10.2, " : myid=", i3, " ; lvol=", i3, " ; Newton : ihybrj1=", i3, " hel="es12.4" mu="es12.4" dpflux="es12.4" time="f9.1" ; " &

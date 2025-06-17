@@ -70,7 +70,7 @@ subroutine tfft(Nt, Nz, ijreal, ijimag, mn, im, in, efmn, ofmn, cfmn, sfmn, ifai
     do jj = 1, Nz; cplxin(:, jj, ithread) = cmplx(ijreal((jj - 1)*Nt + 1:jj*Nt), ijimag((jj - 1)*Nt + 1:jj*Nt), KIND=c_double_complex)
     end do
 
-    call fftw_execute_dft(planf, cplxin(:, :, ithread), cplxout(:, :, ithread)) !Forward transform
+    call fftw_execute_dft(planf, cplxin(:, :, ithread), cplxout(:, :, ithread))
     Ntz = Nt*Nz
     cplxout(:, :, ithread) = cplxout(:, :, ithread)/Ntz
     cplxout(1, 1, ithread) = half*cplxout(1, 1, ithread)
@@ -123,7 +123,7 @@ subroutine invfft(mn, im, in, efmn, ofmn, cfmn, sfmn, Nt, Nz, ijreal, ijimag)
     integer, intent(in) :: mn, im(mn), in(mn)
     real(8), intent(in) :: efmn(mn), ofmn(mn), cfmn(mn), sfmn(mn)
     integer, intent(in) :: Nt, Nz
-    real(8), intent(out) :: ijreal(Nt*Nz), ijimag(Nt*Nz) ! output real space;
+    real(8), intent(out) :: ijreal(Nt*Nz), ijimag(Nt*Nz)
 
     integer :: imn, jj, mm, nn, ithread
 
@@ -139,7 +139,7 @@ subroutine invfft(mn, im, in, efmn, ofmn, cfmn, sfmn, Nt, Nz, ijreal, ijimag)
     end do
     cplxin(1, 1, ithread) = two*cplxin(1, 1, ithread)
 
-    call fftw_execute_dft(planb, cplxin(:, :, ithread), cplxout(:, :, ithread)) !Inverse transform
+    call fftw_execute_dft(planb, cplxin(:, :, ithread), cplxout(:, :, ithread))
 
     do jj = 1, Nz
         ijreal((jj - 1)*Nt + 1:jj*Nt) = real(cplxout(:, jj, ithread))
@@ -170,27 +170,27 @@ subroutine gauleg(n, weight, abscis, ifail)
     if (n < 1) then; ifail = 2; return
     end if
 
-    m = (n + 1)/2 !Roots are symmetric in interval, so we only need half
-    do i = 1, m !Loop over desired roots
+    m = (n + 1)/2
+    do i = 1, m
         irefl = n + 1 - i
         if (i /= irefl) then
-            z = cos(pi*(i - 0.25)/(n + 0.5)) ! Approximate ith root
-        else !For an odd number of abscissae, the center must be at zero by symmetry.
+            z = cos(pi*(i - 0.25)/(n + 0.5))
+        else
             z = 0.0
         end if
 
         do iter = 1, maxiter
-            p1 = one; p2 = zero ! Initialize recurrence relation
+            p1 = one; p2 = zero
 
-            do j = 1, n !Recurrence relation to get P(x)
+            do j = 1, n
                 p3 = p2; p2 = p1
                 p1 = ((two*j - one)*z*p2 - (j - one)*p3)/j
-            end do !j
+            end do
 
-            pp = n*(z*p1 - p2)/(z*z - one) !Derivative of P(x)
-            z1 = z; z = z1 - p1/pp !Newton iteration
-            if (abs(z - z1) <= eps) exit !Convergence test
-        end do !iter
+            pp = n*(z*p1 - p2)/(z*z - one)
+            z1 = z; z = z1 - p1/pp
+            if (abs(z - z1) <= eps) exit
+        end do
         if (iter > maxiter) then
             ifail = 1; return
         end if
@@ -198,31 +198,8 @@ subroutine gauleg(n, weight, abscis, ifail)
         abscis(i) = -z; abscis(irefl) = z
         weight(i) = two/((one - z*z)*pp*pp)
         weight(irefl) = weight(i)
-    end do !i
+    end do
 
     ifail = 0
 end subroutine gauleg
-
-#ifdef DELETETHIS
-
-real(8) function pythag(a, b)
-    implicit none
-    real(8) :: a, b
-    real(8) :: absa, absb
-
-    absa = abs(a)
-    absb = abs(b)
-    if (absa > absb) then
-        pythag = absa*sqrt(1.+(absb/absa)**2)
-    else
-        if (absb == 0.) then
-            pythag = 0.
-        else
-            pythag = absb*sqrt(1.+(absa/absb)**2)
-        end if
-    end if
-    return
-end function pythag
-
-#endif
 

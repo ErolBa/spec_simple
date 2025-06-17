@@ -19,17 +19,17 @@ subroutine dfp200(LcomputeDerivatives, vvol)
     use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, &
                          Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, &
                          Mvol, &
-                         Iquad, & ! convenience; provided to ma00aa as argument to avoid allocations;
-                         iRbc, iZbs, iRbs, iZbc, & ! Fourier harmonics of geometry; vector of independent variables, position, is "unpacked" into iRbc,iZbs;
+                         Iquad, &
+                         iRbc, iZbs, iRbs, iZbc, &
                          NAdof, &
                          YESstellsym, NOTstellsym, &
                          mn, im, in, mns, Ntz, &
-                         Ate, Aze, Ato, Azo, & ! only required for debugging;
+                         Ate, Aze, Ato, Azo, &
                          ijreal, &
                          efmn, ofmn, cfmn, sfmn, &
                          evmn, odmn, comn, simn, &
                          Nt, Nz, &
-                         cosi, sini, & ! FFT workspace;
+                         cosi, sini, &
                          dBdX, &
                          dtflux, dpflux, sweight, &
                          mmpp, &
@@ -37,10 +37,10 @@ subroutine dfp200(LcomputeDerivatives, vvol)
                          Bemn, Bomn, Iomn, Iemn, Somn, Semn, &
                          LGdof, &
                          vvolume, dvolume, &
-                         Rij, Zij, sg, guvij, iRij, iZij, dRij, dZij, tRij, tZij, & ! Jacobian and metrics; computed in coords;
+                         Rij, Zij, sg, guvij, iRij, iZij, dRij, dZij, tRij, tZij, &
                          diotadxup, dItGpdxtp, &
                          dFFdRZ, dBBdmp, dmupfdx, denergydrr, denergydzr, &
-                         BBweight, & ! exponential weight on force-imbalance harmonics;
+                         BBweight, &
                          psifactor, &
                          lmns, &
                          mn, mne, &
@@ -55,7 +55,7 @@ subroutine dfp200(LcomputeDerivatives, vvol)
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
 
-    logical, intent(in) :: LComputeDerivatives ! indicates whether derivatives are to be calculated;
+    logical, intent(in) :: LComputeDerivatives
     logical :: LInnerVolume
 
     integer :: NN, IA, ifail, if01adf, vflag, MM, idgetrf, idgetri, Lwork, lvol, pvol
@@ -103,29 +103,29 @@ subroutine dfp200(LcomputeDerivatives, vvol)
 
             if (Igeometry == 1 .or. vvol > 1) then; Lcoordinatesingularity = .false.
             else; Lcoordinatesingularity = .true.
-            end if ! assigns Lcoordinatesingularity, Lplasmaregion, etc. ;
+            end if
 
-            dBdX%vol = vvol ! Label
-            ll = Lrad(vvol) ! Shorthand
-            NN = NAdof(vvol) ! shorthand;
+            dBdX%vol = vvol
+            ll = Lrad(vvol)
+            NN = NAdof(vvol)
 
             vflag = 1
-            call volume(vvol, vflag) ! compute volume;
+            call volume(vvol, vflag)
 
-            do iocons = 0, 1 ! construct field magnitude on inner and outer interfaces; inside do vvol;
+            do iocons = 0, 1
 
-                if (vvol == 1 .and. iocons == 0) cycle ! fixed inner boundary (or coordinate axis);
-                if (vvol == Mvol .and. iocons == 1) cycle ! fixed outer boundary                     ; there are no constraints at outer boundary;
+                if (vvol == 1 .and. iocons == 0) cycle
+                if (vvol == Mvol .and. iocons == 1) cycle
 
                 ideriv = 0; id = ideriv
-                iflag = 0 ! XX & YY are returned by lforce; Bemn(1:mn,vvol,iocons), Iomn(1:mn,vvol) etc. are returned through global;
+                iflag = 0
                 call lforce(vvol, iocons, ideriv, Ntz, dBB(1:Ntz, id), XX(1:Ntz), YY(1:Ntz), length(1:Ntz), DDl, MMl, iflag)
 
-            end do ! end of do iocons = 0, 1;
+            end do
 
-        end do ! matches do vvol = 1, Mvol
+        end do
 
-    else ! CASE SEMI GLOBAL CONSTRAINT
+    else
 
         do vvol = 1, Mvol
             call IsMyVolume(vvol)
@@ -142,29 +142,29 @@ subroutine dfp200(LcomputeDerivatives, vvol)
 
             if (Igeometry == 1 .or. vvol > 1) then; Lcoordinatesingularity = .false.
             else; Lcoordinatesingularity = .true.
-            end if ! assigns Lcoordinatesingularity, Lplasmaregion, etc. ;
-            ll = Lrad(vvol) ! Shorthand
-            NN = NAdof(vvol) ! shorthand;
+            end if
+            ll = Lrad(vvol)
+            NN = NAdof(vvol)
 
             vflag = 1
-            call volume(vvol, vflag) ! compute volume;
+            call volume(vvol, vflag)
 
-            do iocons = 0, 1 ! construct field magnitude on inner and outer interfaces; inside do vvol;
+            do iocons = 0, 1
 
-                if (vvol == 1 .and. iocons == 0) cycle ! fixed inner boundary (or coordinate axis);
-                if (vvol == Mvol .and. iocons == 1) cycle ! fixed outer boundary                     ; there are no constraints at outer boundary;
+                if (vvol == 1 .and. iocons == 0) cycle
+                if (vvol == Mvol .and. iocons == 1) cycle
 
                 ideriv = 0; id = ideriv
-                iflag = 0 ! dAt, dAz, XX & YY are returned by lforce; Bemn(1:mn,vvol,iocons), Iomn(1:mn,vvol) etc. are returned through global;
+                iflag = 0
                 call lforce(vvol, iocons, ideriv, Ntz, dBB(1:Ntz, id), XX(1:Ntz), YY(1:Ntz), length(1:Ntz), DDl, MMl, iflag)
 
-            end do ! end of do iocons = 0, 1;
+            end do
         end do
 
-    end if ! End of if( LocalConstraint )
+    end if
 
     deallocate (dBB, stat=astat)
-    deallocate (XX, stat=astat) ! spectral constraints; not used;
+    deallocate (XX, stat=astat)
     deallocate (YY, stat=astat)
     deallocate (length, stat=astat)
 

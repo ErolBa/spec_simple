@@ -1,5 +1,5 @@
 
-subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-field line magnetic coordinates;
+subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
 
     use constants, only: zero, third, half, one, two, pi2, goldenmean
 
@@ -16,7 +16,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                          pi2nfp, &
                          Mvol, im, in, mns, ims, ins, &
                          YESstellsym, NOTstellsym, &
-                         glambda, & ! global lambda: initial guesses will be saved; 21 Apr 13;
+                         glambda, &
                          Ntz, hNt, hNz, &
                          iotakkii, iotaksub, iotakadd, iotaksgn, &
                          Ate, Aze, Ato, Azo, TT, RTT, &
@@ -33,7 +33,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
 
     integer :: innout, ll, ii, jj, kk, jb, kb, mj, nj, ideriv, jderiv, id, MM, ielement, nelements, Lcurvature, idof, icon, mi, ni, imupf
 
-    real(8) :: lcpu, mfactor, lss, Dteta, Dzeta, rfac, tol, rnorm, omega, diotaerror !, sparsedenseerror
+    real(8) :: lcpu, mfactor, lss, Dteta, Dzeta, rfac, tol, rnorm, omega, diotaerror
 
     real(8) :: lAte(0:mn, -1:2), lAze(0:mn, -1:2), lAto(0:mn, -1:2), lAzo(0:mn, -1:2)
 
@@ -61,30 +61,30 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
     integer :: inz(-1:2), lnz
     integer, allocatable :: irow(:, :), jcol(:, :), istr(:), iwork(:)
     real(8), allocatable :: smatrix(:, :), srhs(:, :), slambda(:, :), swork(:)
-    character :: duplicate*1, zeros*1, method*8, precon*1, trans*1, check*1 ! logical control of sparse routines; 20 Apr 13;
+    character :: duplicate*1, zeros*1, method*8, precon*1, trans*1, check*1
 
-    do innout = 0, 1 ! loop over inner and outer interfaces;
+    do innout = 0, 1
 
-        if (Lcoordinatesingularity .and. innout == 0) cycle ! transform on coordinate    axis     is not required              ; 20 Apr 13;
-        if (Lvacuumregion .and. innout == 1) cycle ! transform on computational boundary is not required (not defined); 20 Apr 13;
+        if (Lcoordinatesingularity .and. innout == 0) cycle
+        if (Lvacuumregion .and. innout == 1) cycle
 
-        lAte(0:mn, -1:2) = zero ! radial derivatives of vector potential evaluated at interfaces; 20 Apr 13;
+        lAte(0:mn, -1:2) = zero
         lAze(0:mn, -1:2) = zero
         lAto(0:mn, -1:2) = zero
         lAzo(0:mn, -1:2) = zero
 
-        do ideriv = -1, 2; id = ideriv ! labels derivative of magnetic field wrt enclosed fluxes; 20 Apr 13;
+        do ideriv = -1, 2; id = ideriv
 
-            if (iflag == 1 .and. ideriv /= 0) cycle ! derivatives of transform                                                        are not required; 20 Jun 14;
-            if (iflag == 2 .and. ideriv < 0) cycle ! derivatives of transform wrt geometry                                           is  not required; 20 Jun 14;
-            if (iflag == -1 .and. ideriv > 0) cycle ! derivatives of transform wrt helicity multiplier and differential poloidal flux are not required; 20 Jun 14;
+            if (iflag == 1 .and. ideriv /= 0) cycle
+            if (iflag == 2 .and. ideriv < 0) cycle
+            if (iflag == -1 .and. ideriv > 0) cycle
 
-            do ii = 1, mn ! loop over Fourier harmonics; 20 Apr 13;
+            do ii = 1, mn
 
                 mi = im(ii)
 
                 if (Lcoordinatesingularity) then
-                    do ll = mi, Lrad(lvol), 2 ! loop over Zernike polynomials; 01 Jul 19;
+                    do ll = mi, Lrad(lvol), 2
 
                         ; lAte(ii, id) = lAte(ii, id) + Ate(lvol, id, ii)%s(ll)*RTT(ll, mi, innout, 1)*half
                         ; lAze(ii, id) = lAze(ii, id) - Aze(lvol, id, ii)%s(ll)*RTT(ll, mi, innout, 1)*half
@@ -93,27 +93,27 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                             lAzo(ii, id) = lAzo(ii, id) - Azo(lvol, id, ii)%s(ll)*RTT(ll, mi, innout, 1)*half
                         end if
 
-                    end do ! end of do ll; 30 Jan 13;
+                    end do
                 else
-                    do ll = 0, Lrad(lvol) ! loop over Chebyshev polynomials; 20 Apr 13;
+                    do ll = 0, Lrad(lvol)
 
-                        ; lAte(ii, id) = lAte(ii, id) + Ate(lvol, id, ii)%s(ll)*TT(ll, innout, 1) ! compute radial derivative of vector potential; 20 Apr 13;
+                        ; lAte(ii, id) = lAte(ii, id) + Ate(lvol, id, ii)%s(ll)*TT(ll, innout, 1)
                         ; lAze(ii, id) = lAze(ii, id) - Aze(lvol, id, ii)%s(ll)*TT(ll, innout, 1)
                         if (NOTstellsym) then
                             lAto(ii, id) = lAto(ii, id) + Ato(lvol, id, ii)%s(ll)*TT(ll, innout, 1)
                             lAzo(ii, id) = lAzo(ii, id) - Azo(lvol, id, ii)%s(ll)*TT(ll, innout, 1)
                         end if
 
-                    end do ! end of do ll; 30 Jan 13;
-                end if ! Lcoordinatesingularity; 01 Jul 19;
-            end do ! end of do ii; 30 Jan 13; ! Fourier harmonics, and their derivatives, have been constructed; 20 Apr 13;
+                    end do
+                end if
+            end do
 
-            if (Lsparse > 0) then ! will construct transformation to straight-field line angle in real space; 24 Apr 13;
+            if (Lsparse > 0) then
                 call invfft(mn, im(1:mn), in(1:mn), lAte(1:mn, id), lAto(1:mn, id), lAze(1:mn, id), lAzo(1:mn, id), &
-                            Nt, Nz, Bsupz(1:Ntz, id), Bsupt(1:Ntz, id)) ! map to real space;
+                            Nt, Nz, Bsupz(1:Ntz, id), Bsupt(1:Ntz, id))
             end if
 
-        end do ! end of do ideriv; 31 Jan 13;
+        end do
 
         if (Lsparse == 0 .or. Lsparse == 3) then
             if (allocated(dmatrix)) deallocate (dmatrix)
@@ -127,17 +127,17 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
             FAA(1:NN, 1:NN) = zero
         end if
 
-        if (Lsparse == 0 .or. Lsparse == 3) then ! Fourier transformation; 24 Apr 13;
+        if (Lsparse == 0 .or. Lsparse == 3) then
 
             drhs(1:NN, -1:2) = zero
 
-            dmatrix(1:NN, 1:NN, -1:2) = zero ! initialize summation; 30 Jan 13;
+            dmatrix(1:NN, 1:NN, -1:2) = zero
 
             do ideriv = -1, 2
 
-                if (iflag == 1 .and. ideriv /= 0) cycle ! derivatives                                                        not required; 20 Jun 14;
-                if (iflag == 2 .and. ideriv < 0) cycle ! derivatives wrt helicity multiplier and differential poloidal flux are required; 20 Jun 14;
-                if (iflag == -1 .and. ideriv > 0) cycle ! derivative  wrt geometry                                               required; 20 Jun 14;
+                if (iflag == 1 .and. ideriv /= 0) cycle
+                if (iflag == 2 .and. ideriv < 0) cycle
+                if (iflag == -1 .and. ideriv > 0) cycle
                 do kk = 1, mn
 
                     ii = iotakkii(kk)
@@ -152,7 +152,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                         dmatrix(ii + mns - 1, 1, ideriv) = lAto(kk, ideriv)
                     end if
 
-                    do jj = 2, mns; mj = ims(jj); nj = ins(jj) ! this seems to ignore the non-stellarator symmetric mode; 02 Sep 14;
+                    do jj = 2, mns; mj = ims(jj); nj = ins(jj)
 
                         ii = iotakadd(kk, jj)
 
@@ -170,7 +170,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                             dmatrix(ii + mns - 1, jj + mns - 1, ideriv) = dmatrix(ii + mns - 1, jj + mns - 1, ideriv) + (+mj*lAze(kk, ideriv) - nj*lAte(kk, ideriv))*half
                         end if
 
-                    end do ! end of do jj; 30 Jan 13;
+                    end do
 
                     do jj = 2, mns; mj = ims(jj); nj = ins(jj)
 
@@ -195,24 +195,24 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                             dmatrix(ii + mns - 1, jj + mns - 1, ideriv) = dmatrix(ii + mns - 1, jj + mns - 1, ideriv) - (+mj*lAze(kk, ideriv) - nj*lAte(kk, ideriv))*half*iotaksgn(kk, jj)
                         end if
 
-                    end do ! end of do jj; 30 Jan 13;
+                    end do
 
-                end do ! end of do kk; 30 Jan 13;
-            end do ! end of ideriv; 30 Jan 13;
+                end do
+            end do
 
-            call DCOPY(NN*NN, dmatrix(1, 1, 0), 1, omatrix(1, 1), 1) ! BLAS version 21 Jul 19
+            call DCOPY(NN*NN, dmatrix(1, 1, 0), 1, omatrix(1, 1), 1)
 
             do jderiv = 0, 1
 
-                if (iflag == 1 .and. jderiv /= 0) cycle ! derivatives of rotational transform (wrt either enclosed-fluxes/currents/geometry) are not required;
+                if (iflag == 1 .and. jderiv /= 0) cycle
 
                 select case (jderiv)
-                case (0); !             drhs(1:NN, 0) = drhs(1:NN, 0)
+                case (0); 
                 case (1); 
-                    if (iflag == 2) then; call DGEMV('N', NN, NN, -one, dmatrix(1, 1, 1), NN, dlambda(1, 0), 1, one, drhs(1, 1), 1) ! BLAS version 21 Jul 19
-                        ; ; call DGEMV('N', NN, NN, -one, dmatrix(1, 1, 2), NN, dlambda(1, 0), 1, one, drhs(1, 2), 1) ! BLAS version 21 Jul 19
+                    if (iflag == 2) then; call DGEMV('N', NN, NN, -one, dmatrix(1, 1, 1), NN, dlambda(1, 0), 1, one, drhs(1, 1), 1)
+                        ; ; call DGEMV('N', NN, NN, -one, dmatrix(1, 1, 2), NN, dlambda(1, 0), 1, one, drhs(1, 2), 1)
                     end if
-                    if (iflag == -1) then; call DGEMV('N', NN, NN, -one, dmatrix(1, 1, -1), NN, dlambda(1, 0), 1, one, drhs(1, -1), 1) ! BLAS version 21 Jul 19
+                    if (iflag == -1) then; call DGEMV('N', NN, NN, -one, dmatrix(1, 1, -1), NN, dlambda(1, 0), 1, one, drhs(1, -1), 1)
                     end if
                 case default
                     if (.true.) then
@@ -222,17 +222,17 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                     end if
                 end select
 
-                lcpu = MPI_WTIME() ! record time taken in dgesvx; 09 Nov 17;
+                lcpu = MPI_WTIME()
 
                 select case (Lsvdiota)
 
-                case (0) ! Lsvdiota = 0; use linear solver to invert linear equations that define the straight fieldline angle; 01 Jul 14;
+                case (0)
 
                     if04aaf = 1
 
                     select case (jderiv)
 
-                    case (0) ! Lsvdiota = 0; jderiv = 0; 02 Sep 14;
+                    case (0)
 
                         MM = 1
 
@@ -240,24 +240,24 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                                     equed, Rdgesvx(1:NN), Cdgesvx(1:NN), drhs(1:NN, 0:0), NN, dlambda(1:NN, 0:0), &
                                     NN, rcond, ferr, berr, work4(1:4*NN), iwork4(1:NN), idgesvx)
 
-                        ; ldiota(innout, 0) = dlambda(1, 0) ! return intent out; 21 Apr 13;
+                        ; ldiota(innout, 0) = dlambda(1, 0)
                         ; dlambdaout(1:NN, lvol, innout) = dlambda(1:NN, 0)
 
-                    case (1) ! Lsvdiota = 0; jderiv = 1; 02 Sep 14;
+                    case (1)
 
                         MM = 2
                         if (iflag == -1) then; drhs(1:NN, 1) = drhs(1:NN, -1)
                             ; ; drhs(1:NN, 2) = zero
                         end if
 
-                        call DCOPY(NN*NN, omatrix(1, 1), 1, dmatrix(1, 1, 0), 1) ! BLAS version 21 Jul 19
+                        call DCOPY(NN*NN, omatrix(1, 1), 1, dmatrix(1, 1, 0), 1)
 
                         call dgesvx('N', 'N', NN, MM, dmatrix(1:NN, 1:NN, 0), NN, FAA(1:NN, 1:NN), NN, ipiv(1:NN), &
                                     equed, Rdgesvx(1:NN), Cdgesvx(1:NN), drhs(1:NN, 1:MM), NN, dlambda(1:NN, 1:MM), &
                                     NN, rcond, ferr2(1:MM), berr2(1:MM), work4(1:4*NN), iwork4(1:NN), idgesvx)
 
-                        if (iflag == 2) ldiota(innout, 1:2) = dlambda(1, 1:2) ! return intent out; 21 Apr 13;
-                        if (iflag == -1) ldiota(innout, -1) = dlambda(1, 1) ! return intent out; 21 Apr 13;
+                        if (iflag == 2) ldiota(innout, 1:2) = dlambda(1, 1:2)
+                        if (iflag == -1) ldiota(innout, -1) = dlambda(1, 1)
 
                     case default
 
@@ -267,11 +267,11 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                             stop "tr00ab : .true. : invalid jderiv ;"
                         end if
 
-                    end select ! end of select case jderiv; 02 Sep 14;
+                    end select
 
                     cput = MPI_WTIME()
 
-                    select case (idgesvx) !12345678901234567
+                    select case (idgesvx)
                     case (0); if (Wtr00ab) write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput - lcpu, "solved Fourier ; ", dlambda(1, 0)
                     case (1:); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput - lcpu, "singular ;       "
                     case (:-1); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput - lcpu, "input error ;    "
@@ -289,7 +289,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                         stop "tr00ab : idgesvx.ne.0 : failed to construct straight-fieldline angle using dgesvx ;"
                     end if
 
-                case (1) ! Lsvdiota = 1; use least-squares to invert linear equations that define the straight fieldline angle; 01 Jul 14;
+                case (1)
 
                     nlvl = max(0, int(log(real(NN)/26)/log(2.0d0)) + 1)
                     Lwork = (63 + 8*nlvl)*NN + 676
@@ -307,9 +307,9 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
 
                     select case (jderiv)
 
-                    case (0) ! Lsvdiota = 1; jderiv = 0; 02 Sep 14;
+                    case (0)
 
-                        dlambda(1:NN, 0) = drhs(1:NN, 0) ! on entry, rhs; on exit, solution; 20 Jun 14;
+                        dlambda(1:NN, 0) = drhs(1:NN, 0)
 
                         call dgelsd(NN, NN, 1, dmatrix(1:NN, 1:NN, 0), NN, dlambda(1:NN, 0), NN, sval(1:NN), rcond, Irank, &
                                     work(1:Lwork), Lwork, iwork(1:Liwork), idgelsd)
@@ -317,7 +317,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                         ldiota(innout, 0) = dlambda(1, 0)
                         dlambdaout(1:NN, lvol, innout) = dlambda(1:NN, 0)
 
-                    case (1) ! Lsvdiota = 1; jderiv = 1; 02 Sep 14;
+                    case (1)
 
                         if (iflag == 2) then
                             do imupf = 1, 2
@@ -353,13 +353,13 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                             stop "tr00ab : .true. : invalid jderiv ;"
                         end if
 
-                    end select ! end of select case( jderiv) ; 02 Sep 14;
+                    end select
 
                     deallocate (work, stat=astat)
 
                     cput = MPI_WTIME()
 
-                    select case (idgelsd) !12345678901234567
+                    select case (idgelsd)
                     case (0); if (Wtr00ab) write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput - lcpu, "solved Fourier ; ", dlambda(1, 0)
                     case (:-1); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput - lcpu, "input error ;    "
                     case (1:); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput - lcpu, "QR failed ;      "
@@ -377,7 +377,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                         stop "tr00ab : idgelsd.ne.0 : failed to construct straight-fieldline angle using dgelsd ;"
                     end if
 
-                    dmatrix(1:NN, 1:NN, 0) = omatrix(1:NN, 1:NN) ! original "unperturbed" matrix; 30 Jan 13;
+                    dmatrix(1:NN, 1:NN, 0) = omatrix(1:NN, 1:NN)
 
                 case default
 
@@ -387,13 +387,13 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
                         stop "tr00ab : .true. : illegal Lsvdiota ;"
                     end if
 
-                end select ! end of select case( Lsvdiota ) ; 02 Sep 14;
+                end select
 
 1030            format("tr00ab : ", f10.2, " ; myid=", i3, " ; lvol=", i3, " ; innout="i2" ; jderiv="i2" ; "a7"="i2" ; time="f10.4" ; "a17, :" [d]iota="es17.09" ;")
 
-            end do ! end of do jderiv; 31 Jan 13;
+            end do
 
-        end if ! end of if( Lsparse.eq.0 .or. Lsparse.eq.3 );
+        end if
 
         if (Lsparse == 0 .or. Lsparse == 3) then
             deallocate (dmatrix, stat=astat)
@@ -401,7 +401,7 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-fiel
             deallocate (FAA, stat=astat)
         end if
 
-    end do ! end of do innout; 29 Jan 13;
+    end do
 
 end subroutine tr00ab
 

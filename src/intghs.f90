@@ -2,24 +2,24 @@
 module intghs_module
 
     type intghs_workspace
-        real(8), allocatable :: efmn(:, :) !< This is efmn.
-        real(8), allocatable :: ofmn(:, :) !< This is ofmn.
-        real(8), allocatable :: cfmn(:, :) !<
-        real(8), allocatable :: sfmn(:, :) !<
-        real(8), allocatable :: evmn(:, :) !<
-        real(8), allocatable :: odmn(:, :) !<
-        real(8), allocatable :: ijreal(:, :) !<
-        real(8), allocatable :: jireal(:, :) !<
-        real(8), allocatable :: jkreal(:, :) !<
-        real(8), allocatable :: kjreal(:, :) !<
-        real(8), allocatable :: Bloweremn(:, :, :) !<
-        real(8), allocatable :: Bloweromn(:, :, :) !<
-        real(8), allocatable :: gBupper(:, :, :) !<
-        real(8), allocatable :: Blower(:, :, :) !<
-        real(8), allocatable :: basis(:, :, :, :) !<
+        real(8), allocatable :: efmn(:, :)
+        real(8), allocatable :: ofmn(:, :)
+        real(8), allocatable :: cfmn(:, :)
+        real(8), allocatable :: sfmn(:, :)
+        real(8), allocatable :: evmn(:, :)
+        real(8), allocatable :: odmn(:, :)
+        real(8), allocatable :: ijreal(:, :)
+        real(8), allocatable :: jireal(:, :)
+        real(8), allocatable :: jkreal(:, :)
+        real(8), allocatable :: kjreal(:, :)
+        real(8), allocatable :: Bloweremn(:, :, :)
+        real(8), allocatable :: Bloweromn(:, :, :)
+        real(8), allocatable :: gBupper(:, :, :)
+        real(8), allocatable :: Blower(:, :, :)
+        real(8), allocatable :: basis(:, :, :, :)
     end type
 
-    type(intghs_workspace) :: wk !< This is an instance of the intghs_workspace type.
+    type(intghs_workspace) :: wk
 
 end module intghs_module
 

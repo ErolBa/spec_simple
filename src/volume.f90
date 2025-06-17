@@ -37,27 +37,27 @@ subroutine volume(lvol, vflag)
 
     real(8) :: AA, BB, CC, DD, lss
 
-    if (lvol > Nvol) then; vvolume(lvol) = one; dvolume = zero; return ! this can only be the vacuum region; provide default value; 13 Sep 13;
+    if (lvol > Nvol) then; vvolume(lvol) = one; dvolume = zero; return
     end if
 
-    ; vol(0:1) = zero ! initialize;
-    ; dvolume = zero ! derivatives of volume wrt interface inner/outer, R/Z harmonic;
+    ; vol(0:1) = zero
+    ; dvolume = zero
 
-    do innout = 0, 1 ! will subtract inner volume from outer volume to obtain enclosed volume; 26 Feb 13; ! this does seem a little wasteful; 13 Sep 13;
+    do innout = 0, 1
 
-        jvol = lvol - 1 + innout ! labels inner or outer interface; 13 Sep 13;
+        jvol = lvol - 1 + innout
 
         select case (Igeometry)
 
-        case (1) !> <li> \c Igeometry.eq.1 : Cartesian : \f$\sqrt g = R_s\f$
+        case (1)
 
-            vol(innout) = iRbc(1, jvol) ! 20 Jun 14;
+            vol(innout) = iRbc(1, jvol)
 
-            if (dBdX%L .and. dBdX%innout == innout .and. dBdX%ii == 1) then ! compute derivative of volume;
-                if (dBdX%issym == 0) dvolume = one ! note that the sign factor for the lower interface is included below; 20 Jun 14;
+            if (dBdX%L .and. dBdX%innout == innout .and. dBdX%ii == 1) then
+                if (dBdX%issym == 0) dvolume = one
             end if
 
-        case (2) !> <li> \c Igeometry.eq.2 : cylindrical : \f$\sqrt g = R R_s = \frac{1}{2}\partial_s (R^2)\f$
+        case (2)
 
             if (YESstellsym) then
 
@@ -67,15 +67,15 @@ subroutine volume(lvol, vflag)
 
                         vol(innout) = vol(innout) + iRbc(ii, jvol)*iRbc(jj, jvol)*(djkp(ii, jj) + djkm(ii, jj))
 
-                        if (dBdX%L .and. dBdX%innout == innout .and. dBdX%ii == ii) then ! compute derivative of volume;
+                        if (dBdX%L .and. dBdX%innout == innout .and. dBdX%ii == ii) then
                             dvolume = dvolume + iRbc(jj, jvol)*(djkp(jj, ii) + djkm(jj, ii) + djkp(ii, jj) + djkm(ii, jj))
                         end if
 
-                    end do ! end of do jj; 02 Sep 14;
+                    end do
 
-                end do ! end of do ii; 02 Sep 14;
+                end do
 
-            else ! NOTstellsym;
+            else
 
                 do ii = 1, mn; mi = im(ii); ni = in(ii)
                     do jj = 1, mn; mj = im(jj); nj = in(jj)
@@ -83,8 +83,8 @@ subroutine volume(lvol, vflag)
                         vol(innout) = vol(innout) + iRbc(ii, jvol)*iRbc(jj, jvol)*(djkp(ii, jj) + djkm(ii, jj)) &
                                       + iRbs(ii, jvol)*iRbs(jj, jvol)*(djkp(ii, jj) - djkm(ii, jj))
 
-                        if (dBdX%L .and. dBdX%innout == innout .and. dBdX%ii == ii) then ! compute derivative of volume;
-                            if (dBdX%issym == 0) then !     stellarator-symmetric harmonic; dV/dRei ; 13 Sep 13;
+                        if (dBdX%L .and. dBdX%innout == innout .and. dBdX%ii == ii) then
+                            if (dBdX%issym == 0) then
                                 dvolume = dvolume + iRbc(jj, jvol)*(djkp(jj, ii) + djkm(jj, ii) + djkp(ii, jj) + djkm(ii, jj))
                             else
                                 if (.true.) then
@@ -92,16 +92,16 @@ subroutine volume(lvol, vflag)
                                     call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
                                     stop "volume : .true. : derivatives of volume under construction ;"
                                 end if
-                                dvolume = dvolume + iRbs(jj, jvol)*(djkp(jj, ii) - djkm(jj, ii) + djkp(ii, jj) - djkm(ii, jj)) ! needs to be checked; 02 Sep 14;
+                                dvolume = dvolume + iRbs(jj, jvol)*(djkp(jj, ii) - djkm(jj, ii) + djkp(ii, jj) - djkm(ii, jj))
                             end if
                         end if
 
                     end do
                 end do
 
-            end if ! end of if( YESstellsym ) ; 11 Aug 14;
+            end if
 
-        case (3) !> <li> \c Igeometry.eq.3 : toroidal : \f${\bf x}\cdot {\bf e}_\theta \times {\bf e}_\zeta  = R ( Z R_\theta - R Z_\theta ) \f$
+        case (3)
 
             if (lvol == 1 .and. innout == 0) then
                 vol(1) = zero
@@ -116,11 +116,11 @@ subroutine volume(lvol, vflag)
                 vint = Rij(1:Ntz, 0, 0)*(Zij(1:Ntz, 0, 0)*Rij(1:Ntz, 2, 0) - Zij(1:Ntz, 2, 0)*Rij(1:Ntz, 0, 0))
                 vol(innout) = four*sum(vint)/float(Ntz)
 
-                if (dBdX%L .and. dBdX%innout == innout) then ! compute derivative of volume;
+                if (dBdX%L .and. dBdX%innout == innout) then
 
-                    ii = dBdX%ii ! shorthand
+                    ii = dBdX%ii
 
-                    if (dBdX%irz == 0) then ! compute derivatives wrt R;
+                    if (dBdX%irz == 0) then
 
                         if (dBdX%issym == 0) then
                             vint = cosi(1:Ntz, ii)*(Zij(1:Ntz, 0, 0)*Rij(1:Ntz, 2, 0) - Zij(1:Ntz, 2, 0)*Rij(1:Ntz, 0, 0)) &
@@ -132,7 +132,7 @@ subroutine volume(lvol, vflag)
                                    + Rij(1:Ntz, 0, 0)*(-Zij(1:Ntz, 2, 0)*sini(1:Ntz, ii))
                         end if
 
-                    else ! matches if( dBdX%irz.eq.0 ) then; compute derivative wrt Z;
+                    else
 
                         if (dBdX%issym == 0) then
                             vint = Rij(1:Ntz, 0, 0)*(sini(1:Ntz, ii)*Rij(1:Ntz, 2, 0)) &
@@ -142,7 +142,7 @@ subroutine volume(lvol, vflag)
                                    + Rij(1:Ntz, 0, 0)*(+im(ii)*sini(1:Ntz, ii)*Rij(1:Ntz, 0, 0))
                         end if
 
-                    end if ! end of if( dBdX%irz.eq.0 )
+                    end if
 
                     dvolume = four*sum(vint)/float(Ntz)
 
@@ -150,18 +150,18 @@ subroutine volume(lvol, vflag)
 
                     dvolume = zero
 
-                end if ! end of if( dBdX%L .and. dBdX%innout.eq.innout )
-            end if ! lvol.eq.1 .and. innout.eq.0
+                end if
+            end if
 
         end select
 
-    end do ! end of innout loop; 26 Feb 13;
+    end do
 
     select case (Igeometry)
-    case (1); vvolume(lvol) = (vol(1) - vol(0))*pi2pi2nfp; dvolume = dvolume*pi2pi2nfp ! 20 Jun 14;
+    case (1); vvolume(lvol) = (vol(1) - vol(0))*pi2pi2nfp; dvolume = dvolume*pi2pi2nfp
     case (2); vvolume(lvol) = (vol(1) - vol(0))*pi2pi2nfpquart; dvolume = dvolume*pi2pi2nfpquart
     case (3); vvolume(lvol) = (vol(1) - vol(0))*pi2pi2nfpquart*third; dvolume = dvolume*pi2pi2nfpquart*third
-    case (4); vvolume(lvol) = one; dvolume = zero ! this is under construction; 04 Dec 14;
+    case (4); vvolume(lvol) = one; dvolume = zero
         if (abs(pscale) > vsmall) then
             write (6, '("volume :      fatal : myid=",i3," ; abs(pscale).gt.vsmall ; need to compute volume;")') myid
             call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)

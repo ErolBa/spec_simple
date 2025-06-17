@@ -28,7 +28,7 @@ subroutine packab(packorunpack, lvol, NN, solution, ideriv)
 
     integer :: ii, ll, id, llrad
 
-    llrad = Lrad(lvol) ! shorthand;
+    llrad = Lrad(lvol)
 
     select case (packorunpack)
 
@@ -47,10 +47,10 @@ subroutine packab(packorunpack, lvol, NN, solution, ideriv)
                     end if
                     ; ; ; Ato(lvol, ideriv, ii)%s(ll) = zero
                     ; ; ; Azo(lvol, ideriv, ii)%s(ll) = zero
-                end do ! end of do ll;
-            end do ! end of do ii;
+                end do
+            end do
 
-        else ! NOTstellsym;
+        else
 
             ; ii = 1
             do ll = 0, llrad; id = Ate(lvol, 0, ii)%i(ll); 
@@ -61,8 +61,8 @@ subroutine packab(packorunpack, lvol, NN, solution, ideriv)
                 if (id /= 0) then; Aze(lvol, ideriv, ii)%s(ll) = solution(id)
                 else; Aze(lvol, ideriv, ii)%s(ll) = zero
                 end if
-                ; ; ; Ato(lvol, ideriv, ii)%s(ll) = zero ! sin( m \t - n \z ) = 0 for (m,n)=(0,0);
-                ; ; ; Azo(lvol, ideriv, ii)%s(ll) = zero ! sin( m \t - n \z ) = 0 for (m,n)=(0,0);
+                ; ; ; Ato(lvol, ideriv, ii)%s(ll) = zero
+                ; ; ; Azo(lvol, ideriv, ii)%s(ll) = zero
             end do
             do ii = 2, mn
                 do ll = 0, llrad; id = Ate(lvol, 0, ii)%i(ll); 
@@ -81,10 +81,10 @@ subroutine packab(packorunpack, lvol, NN, solution, ideriv)
                     if (id /= 0) then; Azo(lvol, ideriv, ii)%s(ll) = solution(id)
                     else; Azo(lvol, ideriv, ii)%s(ll) = zero
                     end if
-                end do ! end of do ll;
-            end do ! end of do ii;
+                end do
+            end do
 
-        end if ! end of if( YESstellsym );
+        end if
 
     case ('P')
 
@@ -97,10 +97,10 @@ subroutine packab(packorunpack, lvol, NN, solution, ideriv)
                 if (ii > 1 .and. NOTstellsym) then; id = Ato(lvol, 0, ii)%i(ll); if (id /= 0) solution(id) = Ato(lvol, ideriv, ii)%s(ll)
                     ; ; id = Azo(lvol, 0, ii)%i(ll); if (id /= 0) solution(id) = Azo(lvol, ideriv, ii)%s(ll)
                 end if
-            end do ! end of do ll;
-        end do ! end of do ii;
+            end do
+        end do
 
-    end select ! end of select case( packorunpack );
+    end select
 
 end subroutine packab
 

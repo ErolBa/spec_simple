@@ -16,7 +16,7 @@ subroutine bfield(zeta, st, Bst)
                          ivol, gBzeta, Ate, Aze, Ato, Azo, &
                          NOTstellsym, &
                          Lcoordinatesingularity, Mvol, &
-                         Node ! 17 Dec 15;
+                         Node
 
     use mpi
     implicit none
@@ -30,15 +30,15 @@ subroutine bfield(zeta, st, Bst)
     real(8) :: teta, lss, sbar, sbarhm(0:1), arg, carg, sarg, dBu(1:3)
     real(8) :: cheby(0:Lrad(ivol), 0:1), zernike(0:Lrad(1), 0:Mpol, 0:1)
 
-    real(8) :: TT(0:Lrad(ivol), 0:1) ! this is almost identical to cheby; 17 Dec 15;
+    real(8) :: TT(0:Lrad(ivol), 0:1)
 
-    lvol = ivol; ideriv = 0 ! the argument list of bfield is fixed by NAG requirements, but volume index is required below;
+    lvol = ivol; ideriv = 0
 
-    Bst(1:Node) = (/zero, zero/) ! set default intent out; this should cause a compilation error if Node.ne.2;
+    Bst(1:Node) = (/zero, zero/)
 
     lss = st(1); teta = st(2)
 
-    if (abs(lss) > one) return ! out of domain;
+    if (abs(lss) > one) return
 
     if (Lcoordinatesingularity) sbar = max((lss + one)*half, small)
 
@@ -48,11 +48,11 @@ subroutine bfield(zeta, st, Bst)
         call get_cheby(lss, Lrad(lvol), cheby(0:Lrad(lvol), 0:1))
     end if
 
-    dBu(1:3) = zero ! initialize summation;
+    dBu(1:3) = zero
 
-    do ii = 1, mn; mi = im(ii); ni = in(ii); arg = mi*teta - ni*zeta; carg = cos(arg); sarg = sin(arg) ! shorthand; 20 Apr 13;
+    do ii = 1, mn; mi = im(ii); ni = in(ii); arg = mi*teta - ni*zeta; carg = cos(arg); sarg = sin(arg)
 
-        if (Lcoordinatesingularity) then ! regularization factor depends on mi; 17 Dec 15;
+        if (Lcoordinatesingularity) then
 
             if (abs(sbar) < vsmall) then
                 write (6, '("bfield :      fatal : myid=",i3," ; abs(sbar).lt.vsmall ; need to avoid divide-by-zero;")') myid
@@ -68,22 +68,22 @@ subroutine bfield(zeta, st, Bst)
             do ll = 0, Lrad(lvol); TT(ll, 0:1) = (/cheby(ll, 0), cheby(ll, 1)/)
             end do
 
-        end if ! end of if( Lcoordinatesingularity ) ; 16 Jan 15;
+        end if
 
-        do ll = 0, Lrad(lvol) ! loop over Chebyshev summation; 20 Feb 13;
+        do ll = 0, Lrad(lvol)
             ; dBu(1) = dBu(1) + (-mi*Aze(lvol, ideriv, ii)%s(ll) - ni*Ate(lvol, ideriv, ii)%s(ll))*TT(ll, 0)*sarg
             ; dBu(2) = dBu(2) + (-Aze(lvol, ideriv, ii)%s(ll))*TT(ll, 1)*carg
             ; dBu(3) = dBu(3) + (Ate(lvol, ideriv, ii)%s(ll))*TT(ll, 1)*carg
-            if (NOTstellsym) then ! include non-symmetric harmonics; 28 Jan 13;
+            if (NOTstellsym) then
                 dBu(1) = dBu(1) + (+mi*Azo(lvol, ideriv, ii)%s(ll) + ni*Ato(lvol, ideriv, ii)%s(ll))*TT(ll, 0)*carg
                 dBu(2) = dBu(2) + (-Azo(lvol, ideriv, ii)%s(ll))*TT(ll, 1)*sarg
                 dBu(3) = dBu(3) + (Ato(lvol, ideriv, ii)%s(ll))*TT(ll, 1)*sarg
             end if
-        end do ! end of do ll; 10 Dec 15;
+        end do
 
-    end do ! end of do ii = 1, mn;
+    end do
 
-    gBzeta = dBu(3) ! gBzeta is returned through global; 20 Apr 13;
+    gBzeta = dBu(3)
 
     if (abs(gBzeta) < vsmall) then
 
@@ -99,6 +99,6 @@ subroutine bfield(zeta, st, Bst)
         end if
     end if
 
-    Bst(1:2) = dBu(1:2)/gBzeta ! normalize field line equations to toroidal field; 20 Apr 13;
+    Bst(1:2) = dBu(1:2)/gBzeta
 
 end subroutine bfield

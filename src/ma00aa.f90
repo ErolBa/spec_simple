@@ -97,7 +97,7 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
         DDzzcs = zero
         DDzzsc = zero
         DDzzss = zero
-    end if !NOTstellsym
+    end if
 
     if (allocated(basis)) deallocate (basis)
     allocate (basis(0:lrad, 0:mpol, 0:1, lquad), stat=astat)
@@ -110,13 +110,13 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
     if (.not. Lsavedguvij) then
         call compute_guvijsave(lquad, lvol, ideriv, Lcurvature)
     end if
-    call metrix(lquad, lvol) ! compute metric elements; 16 Jan 13;
+    call metrix(lquad, lvol)
 
     do jquad = 1, lquad
         lss = gaussianabscissae(jquad, lvol); jthweight = gaussianweight(jquad, lvol)
         sbar = (lss + one)*half
         if (Lcoordinatesingularity) then
-            call get_zernike(sbar, lrad, mpol, basis(:, :, 0:1, jquad)) ! use Zernike polynomials 29 Jun 19;
+            call get_zernike(sbar, lrad, mpol, basis(:, :, 0:1, jquad))
         else
             call get_cheby(lss, lrad, basis(:, 0, 0:1, jquad))
         end if
@@ -126,13 +126,13 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
         ii = mod(mn2 - 1, mn) + 1
         jj = (mn2 - ii)/mn + 1
 
-        do jquad = 1, lquad ! Gaussian quadrature loop;
+        do jquad = 1, lquad
 
             lss = gaussianabscissae(jquad, lvol); jthweight = gaussianweight(jquad, lvol)
             sbar = (lss + one)*half
 
-            kks = kijs(ii, jj, 0) !; kds = kijs(ii,jj,1)
-            kka = kija(ii, jj, 0) !; kda = kija(ii,jj,1)
+            kks = kijs(ii, jj, 0)
+            kka = kija(ii, jj, 0)
             ikds = jthweight/kijs(ii, jj, 1)
             ikda = jthweight/kija(ii, jj, 1)
 
@@ -172,7 +172,7 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
                 fzzcs = (-gzzmno(kks, jquad)*ikds + gzzmno(kka, jquad)*ikda)
                 fzzsc = (+gzzmno(kks, jquad)*ikds + gzzmno(kka, jquad)*ikda)
                 fzzss = (+gzzmne(kks, jquad)*abs(ikds) - gzzmne(kka, jquad)*abs(ikda))
-            end if !NOTstellsym
+            end if
 
             do lp2 = 1, lp2_max
                 ll = mod(lp2 - 1, lrad + 1)
@@ -180,19 +180,19 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
 
                 if (Lcoordinatesingularity) then
 
-                    ll1 = (ll - mod(ll, 2))/2 ! shrinked dof for Zernike; 02 Jul 19
-                    pp1 = (pp - mod(pp, 2))/2 ! shrinked dof for Zernike; 02 Jul 19
+                    ll1 = (ll - mod(ll, 2))/2
+                    pp1 = (pp - mod(pp, 2))/2
 
-                    if (ll < im(ii)) cycle ! zernike only non-zero for ll>=ii
-                    if (pp < im(jj)) cycle ! zernike only non-zero for pp>=jj
-                    if (mod(ll + im(ii), 2) /= 0) cycle ! zernike only non-zero if ll and ii have the same parity
-                    if (mod(pp + im(jj), 2) /= 0) cycle ! zernike only non-zero if pp and jj have the same parity
+                    if (ll < im(ii)) cycle
+                    if (pp < im(jj)) cycle
+                    if (mod(ll + im(ii), 2) /= 0) cycle
+                    if (mod(pp + im(jj), 2) /= 0) cycle
 
-                    Tl = basis(ll, im(ii), 0, jquad) ! use Zernike polynomials 29 Jun 19;
-                    Dl = basis(ll, im(ii), 1, jquad)*half ! use Zernike polynomials 29 Jun 19;
+                    Tl = basis(ll, im(ii), 0, jquad)
+                    Dl = basis(ll, im(ii), 1, jquad)*half
 
-                    Tp = basis(pp, im(jj), 0, jquad) ! use Zernike polynomials 29 Jun 19;
-                    Dp = basis(pp, im(jj), 1, jquad)*half ! use Zernike polynomials 29 Jun 19;
+                    Tp = basis(pp, im(jj), 0, jquad)
+                    Dp = basis(pp, im(jj), 1, jquad)*half
 
                 else
 
@@ -205,7 +205,7 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
                     Tp = basis(pp, 0, 0, jquad)
                     Dp = basis(pp, 0, 1, jquad)
 
-                end if ! Lcoordinatesingularity
+                end if
 
                 TlTp = Tl*Tp
                 TlDp = Tl*Dp
@@ -249,13 +249,13 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
                     DDzzcs(ll1, pp1, ii, jj) = DDzzcs(ll1, pp1, ii, jj) + DlDp*fzzcs
                     DDzzsc(ll1, pp1, ii, jj) = DDzzsc(ll1, pp1, ii, jj) + DlDp*fzzsc
                     DDzzss(ll1, pp1, ii, jj) = DDzzss(ll1, pp1, ii, jj) + DlDp*fzzss
-                end if !NOTstellsym
+                end if
 
-            end do ! end of do lp2; 08 Feb 16;
+            end do
 
-        end do ! end of do jquad
+        end do
 
-    end do ! end of do mn
+    end do
 
     deallocate (basis, stat=astat)
 
@@ -296,7 +296,7 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
         DDzzsc = DDzzsc*pi2pi2nfphalf
         DDzzss = DDzzss*pi2pi2nfphalf
 
-    end if !NOTstellsym
+    end if
 
 end subroutine ma00aa
 

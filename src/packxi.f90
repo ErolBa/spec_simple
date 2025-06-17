@@ -22,8 +22,8 @@ subroutine packxi(NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpac
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
 
-    logical, intent(in) :: LComputeDerivatives ! indicates whether derivatives are to be calculated;
-    logical, intent(in) :: LComputeAxis ! if to recompute the axis
+    logical, intent(in) :: LComputeDerivatives
+    logical, intent(in) :: LComputeAxis
 
     integer, intent(in) :: NGdof, Mvol, mn
     real(8) :: position(0:NGdof), iRbc(1:mn, 0:Mvol), iZbs(1:mn, 0:Mvol), iRbs(1:mn, 0:Mvol), iZbc(1:mn, 0:Mvol)
@@ -31,35 +31,35 @@ subroutine packxi(NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpac
 
     integer :: lvol, jj, kk, irz, issym, idof, ifail, ivol
 
-    idof = 0 ! initialize counter; 14 Jan 13;
+    idof = 0
 
-    do lvol = 1, Mvol - 1 ! loop over internal interfaces;
+    do lvol = 1, Mvol - 1
 
-        do jj = 1, mn ! loop over Fourier harmonics;
+        do jj = 1, mn
 
-            do irz = 0, 1 ! loop over R & Z;
+            do irz = 0, 1
 
-                if (Igeometry < 3 .and. irz == 1) cycle ! no dependence on Z; 14 Jan 13;
+                if (Igeometry < 3 .and. irz == 1) cycle
 
-                do issym = 0, 1 ! loop over even & odd;
+                do issym = 0, 1
 
                     if (YESstellsym .and. issym == 1) cycle
 
-                    if (issym == 0 .and. irz == 1 .and. jj == 1) cycle ! no dependence on Zbs_{0,0}; 14 Jan 13;
-                    if (issym == 1 .and. irz == 0 .and. jj == 1) cycle ! no dependence on Rbs_{0,0}; 14 Jan 13;
+                    if (issym == 0 .and. irz == 1 .and. jj == 1) cycle
+                    if (issym == 1 .and. irz == 0 .and. jj == 1) cycle
 
                     idof = idof + 1
 
                     select case (packorunpack)
 
-                    case ('P') !   pack vector of unknowns;
+                    case ('P')
 
                         if (irz == 0 .and. issym == 0) position(idof) = iRbc(jj, lvol)/psifactor(jj, lvol)
                         if (irz == 1 .and. issym == 0) position(idof) = iZbs(jj, lvol)/psifactor(jj, lvol)
                         if (irz == 0 .and. issym == 1) position(idof) = iRbs(jj, lvol)/psifactor(jj, lvol)
                         if (irz == 1 .and. issym == 1) position(idof) = iZbc(jj, lvol)/psifactor(jj, lvol)
 
-                    case ('U') ! unpack vector of unknowns;
+                    case ('U')
 
                         if (irz == 0 .and. issym == 0) iRbc(jj, lvol) = position(idof)*psifactor(jj, lvol)
                         if (irz == 1 .and. issym == 0) iZbs(jj, lvol) = position(idof)*psifactor(jj, lvol)
@@ -68,22 +68,22 @@ subroutine packxi(NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpac
 
                     end select
 
-                end do ! end of do issym;
+                end do
 
-            end do ! end of do irz;
+            end do
 
-        end do ! end of do jj;
+        end do
 
-    end do ! end of do lvol;
+    end do
 
-    if (YESstellsym) then ! iRbc(    ,0:Mvol) = zero
+    if (YESstellsym) then
         ; ; iZbs(1, 0:Mvol) = zero
         ; ; iRbs(1:mn, 0:Mvol) = zero
         ; ; iZbc(1:mn, 0:Mvol) = zero
-    else ! iRbc(    ,0:Mvol) = zero
+    else
         ; ; iZbs(1, 0:Mvol) = zero
         ; ; iRbs(1, 0:Mvol) = zero
-        ; ! iZbc(    ,0:Mvol) = zero
+        ; 
     end if
 
     select case (packorunpack)
@@ -92,7 +92,7 @@ subroutine packxi(NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpac
 
     case ('U')
 
-        ivol = 1 ! take care with ivol: this variable name might be a global variable, but here it is local; 19 Jul 16;
+        ivol = 1
 
     end select
 

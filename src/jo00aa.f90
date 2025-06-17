@@ -42,11 +42,11 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
 
     itype = 1; aa = -one; bb = +one; cc = zero; dd = zero; twolquad = 2*lquad
 
-    call CDGQF(lquad, abscis(1:lquad), weight(1:lquad), itype, aa, bb, twolquad, workfield(1:twolquad), icdgqf) ! prepare Gaussian quadrature;
+    call CDGQF(lquad, abscis(1:lquad), weight(1:lquad), itype, aa, bb, twolquad, workfield(1:twolquad), icdgqf)
     weight(lquad + 1) = zero
 
     cput = MPI_WTIME()
-    select case (icdgqf) !                                                         123456789012345
+    select case (icdgqf)
     case (0); if (Wjo00aa) write (ounit, 1000) cput - cpus, myid, lvol, icdgqf, "success        ", abscis(1:lquad)
     case (1); write (ounit, 1000) cput - cpus, myid, lvol, icdgqf, "failed         ", abscis(1:lquad)
     case (2); write (ounit, 1000) cput - cpus, myid, lvol, icdgqf, "input error    ", abscis(1:lquad)
@@ -68,10 +68,10 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
         stop "jo00aa : icdgqf.ne.0 : failed to construct Gaussian integration abscisae and weights ;"
     end if
 
-    jerror(1:3) = zero; ideriv = 0 ! three components of the error in \curl B - mu B; initialize summation;
+    jerror(1:3) = zero; ideriv = 0
     jerrormax(1:3) = zero; intvol = zero
 
-    do jquad = 1, lquad + 1 ! loop over radial sub-sub-grid (numerical quadrature);
+    do jquad = 1, lquad + 1
 
         if (jquad == lquad + 1) then
             lss = one; sbar = one
@@ -81,28 +81,28 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
 
         Lcurvature = 2
 
-        call coords(lvol, lss, Lcurvature, Ntz, mn) ! returns coordinates, metrics, . . .
+        call coords(lvol, lss, Lcurvature, Ntz, mn)
 
-        if (Lcoordinatesingularity) then ! Zernike 1 Jul 2019
+        if (Lcoordinatesingularity) then
             call get_zernike_d2(sbar, Lrad(lvol), mpol, zernike)
         else
             call get_cheby_d2(lss, Lrad(lvol), cheby(0:Lrad(lvol), 0:2))
         end if
 
-        Atemn(1:mn, 0:2) = zero ! initialize summation over Chebyshev/Zernike polynomials;
+        Atemn(1:mn, 0:2) = zero
         Azemn(1:mn, 0:2) = zero
         if (NOTstellsym) then
             Atomn(1:mn, 0:2) = zero
             Azomn(1:mn, 0:2) = zero
         else
-            Atomn(1:mn, 0:2) = zero ! these are used below;
+            Atomn(1:mn, 0:2) = zero
             Azomn(1:mn, 0:2) = zero
         end if
 
         if (Lcoordinatesingularity) then
-            do ll = 0, Lrad(lvol) ! radial (Chebyshev) resolution of magnetic vector potential;
+            do ll = 0, Lrad(lvol)
 
-                do ii = 1, mn ! Fourier resolution of magnetic vector potential;
+                do ii = 1, mn
                     mm = im(ii)
                     if (ll < mm) cycle
                     if (mod(ll + mm, 2) > 0) cycle
@@ -125,17 +125,17 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
                         Azomn(ii, 1) = Azomn(ii, 1) + Azo(lvol, ideriv, ii)%s(ll)*zernike(ll, mm, 1)*half
                         Azomn(ii, 2) = Azomn(ii, 2) + Azo(lvol, ideriv, ii)%s(ll)*zernike(ll, mm, 2)*half*half
 
-                    end if ! end of if( NOTstellsym) ; 20 Jun 14;
+                    end if
 
-                end do ! end of do ii;
+                end do
 
-            end do ! end of do ll;
+            end do
 
         else
 
-            do ll = 0, Lrad(lvol) ! radial (Chebyshev) resolution of magnetic vector potential;
+            do ll = 0, Lrad(lvol)
 
-                do ii = 1, mn ! Fourier resolution of magnetic vector potential;
+                do ii = 1, mn
 
                     ; Atemn(ii, 0) = Atemn(ii, 0) + Ate(lvol, ideriv, ii)%s(ll)*cheby(ll, 0)
                     ; Atemn(ii, 1) = Atemn(ii, 1) + Ate(lvol, ideriv, ii)%s(ll)*cheby(ll, 1)
@@ -155,11 +155,11 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
                         Azomn(ii, 1) = Azomn(ii, 1) + Azo(lvol, ideriv, ii)%s(ll)*cheby(ll, 1)
                         Azomn(ii, 2) = Azomn(ii, 2) + Azo(lvol, ideriv, ii)%s(ll)*cheby(ll, 2)
 
-                    end if ! end of if( NOTstellsym) ; 20 Jun 14;
+                    end if
 
-                end do ! end of do ii;
+                end do
 
-            end do ! end of do ll;
+            end do
         end if
 
         ofmn(1:mn) = -im(1:mn)*Azemn(1:mn, 0) - in(1:mn)*Atemn(1:mn, 0)
@@ -167,42 +167,42 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
         sfmn(1:mn) = -im(1:mn)*Azemn(1:mn, 1) - in(1:mn)*Atemn(1:mn, 1)
         cfmn(1:mn) = +im(1:mn)*Azomn(1:mn, 1) + in(1:mn)*Atomn(1:mn, 1)
 
-        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 1, 0), gBu(1:Ntz, 1, 1)) !  (gB^s)   , d(gB^s)/ds;
+        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 1, 0), gBu(1:Ntz, 1, 1))
 
         efmn(1:mn) = -im(1:mn)*im(1:mn)*Azemn(1:mn, 0) - im(1:mn)*in(1:mn)*Atemn(1:mn, 0)
         ofmn(1:mn) = -im(1:mn)*im(1:mn)*Azomn(1:mn, 0) - im(1:mn)*in(1:mn)*Atomn(1:mn, 0)
         cfmn(1:mn) = +in(1:mn)*im(1:mn)*Azemn(1:mn, 0) + in(1:mn)*in(1:mn)*Atemn(1:mn, 0)
         sfmn(1:mn) = +in(1:mn)*im(1:mn)*Azomn(1:mn, 0) + in(1:mn)*in(1:mn)*Atomn(1:mn, 0)
 
-        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 1, 2), gBu(1:Ntz, 1, 3)) ! d(gB^s)/dt, d(gB^s)/dz;
+        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 1, 2), gBu(1:Ntz, 1, 3))
 
         efmn(1:mn) = -Azemn(1:mn, 1)
         ofmn(1:mn) = -Azomn(1:mn, 1)
         cfmn(1:mn) = -Azemn(1:mn, 2)
         sfmn(1:mn) = -Azomn(1:mn, 2)
 
-        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 2, 0), gBu(1:Ntz, 2, 1)) !  (gB^t)   , d(gB^t)/ds;
+        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 2, 0), gBu(1:Ntz, 2, 1))
 
         ofmn(1:mn) = +im(1:mn)*Azemn(1:mn, 1)
         efmn(1:mn) = -im(1:mn)*Azomn(1:mn, 1)
         sfmn(1:mn) = -in(1:mn)*Azemn(1:mn, 1)
         cfmn(1:mn) = +in(1:mn)*Azomn(1:mn, 1)
 
-        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 2, 2), gBu(1:Ntz, 2, 3)) ! d(gB^t)/dt, d(gB^t)/dz;
+        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 2, 2), gBu(1:Ntz, 2, 3))
 
         efmn(1:mn) = +Atemn(1:mn, 1)
         ofmn(1:mn) = +Atomn(1:mn, 1)
         cfmn(1:mn) = +Atemn(1:mn, 2)
         sfmn(1:mn) = +Atomn(1:mn, 2)
 
-        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 3, 0), gBu(1:Ntz, 3, 1)) !  (gB^z)   , d(gB^z)/ds;
+        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 3, 0), gBu(1:Ntz, 3, 1))
 
         ofmn(1:mn) = -im(1:mn)*Atemn(1:mn, 1)
         efmn(1:mn) = +im(1:mn)*Atomn(1:mn, 1)
         sfmn(1:mn) = +in(1:mn)*Atemn(1:mn, 1)
         cfmn(1:mn) = -in(1:mn)*Atomn(1:mn, 1)
 
-        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 3, 2), gBu(1:Ntz, 3, 3)) ! d(gB^z)/dt, d(gB^z)/dz;
+        call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), Nt, Nz, gBu(1:Ntz, 3, 2), gBu(1:Ntz, 3, 3))
 
         do ii = 1, 3
 
@@ -214,7 +214,7 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
 
             gJu(1:Ntz, ii) = zero
 
-            do uu = 1, 3 ! summation over uu;
+            do uu = 1, 3
 
                 gJu(1:Ntz, ii) = gJu(1:Ntz, ii) &
                                  + (gBu(1:Ntz, uu, jj)*guvij(1:Ntz, uu, kk, 0) &
@@ -225,11 +225,11 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
                                     + gBu(1:Ntz, uu, 0)*guvij(1:Ntz, uu, jj, kk) &
                                     - gBu(1:Ntz, uu, 0)*guvij(1:Ntz, uu, jj, 0)*sg(1:Ntz, kk)/sg(1:Ntz, 0) &
                                     )
-            end do ! end of do uu;
+            end do
 
             gJu(1:Ntz, ii) = gJu(1:Ntz, ii)/sg(1:Ntz, 0)
 
-        end do ! end of do ii;
+        end do
 
         select case (Igeometry)
         case (1)
@@ -255,19 +255,19 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
         end if
         intvol = intvol + weight(jquad)*sum(sg(1:Ntz, 0))
 
-    end do ! end of do jquad;
+    end do
 
-    beltramierror(lvol, 1:3) = jerror(1:3)/Ntz ! the 'tranditional' SPEC error
+    beltramierror(lvol, 1:3) = jerror(1:3)/Ntz
     jerror(1:3) = jerror(1:3)/intvol
-    beltramierror(lvol, 4:6) = jerror(1:3) ! the volume average error
-    beltramierror(lvol, 7:9) = jerrormax(1:3) ! the max error
+    beltramierror(lvol, 4:6) = jerror(1:3)
+    beltramierror(lvol, 7:9) = jerrormax(1:3)
 
     if (Lerrortype == 1 .and. Igeometry == 3) then
-        cput = MPI_WTIME(); write (ounit, 1002) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput - cpui ! write error to screen;
-        ; ; write (ounit, 1003) cput - cpus, myid, lvol, Lrad(lvol), jerrormax(1:3), cput - cpui ! write error to screen;
+        cput = MPI_WTIME(); write (ounit, 1002) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput - cpui
+        ; ; write (ounit, 1003) cput - cpus, myid, lvol, Lrad(lvol), jerrormax(1:3), cput - cpui
     else
-        cput = MPI_WTIME(); write (ounit, 1004) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput - cpui ! write error to screen;
-        ; ; write (ounit, 1005) cput - cpus, myid, lvol, Lrad(lvol), jerrormax(1:3), cput - cpui ! write error to screen;
+        cput = MPI_WTIME(); write (ounit, 1004) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:3), cput - cpui
+        ; ; write (ounit, 1005) cput - cpus, myid, lvol, Lrad(lvol), jerrormax(1:3), cput - cpui
     end if
 
 1002 format("jo00aa : ", f10.2, " : myid=", i3, " ; lvol =", i3, " ; lrad =", i3, " ; AVG E^\R="es23.15" , E^\Z="es23.15" , E^\phi="es23.15" ; time="f8.2"s ;")
@@ -299,7 +299,7 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
             end do
         end do
     end if
-    cput = MPI_WTIME(); write (ounit, 1006) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:2), cput - cpui ! write error to screen;
+    cput = MPI_WTIME(); write (ounit, 1006) cput - cpus, myid, lvol, Lrad(lvol), jerror(1:2), cput - cpui
 
     Bst = zero
 
@@ -319,7 +319,7 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
         Bst(2) = abs(Bst(2) - dpflux(lvol))
     end if
 
-    cput = MPI_WTIME(); write (ounit, 1007) cput - cpus, myid, lvol, Lrad(lvol), Bst(1:2), cput - cpui ! write error to screen;
+    cput = MPI_WTIME(); write (ounit, 1007) cput - cpus, myid, lvol, Lrad(lvol), Bst(1:2), cput - cpui
 
 1006 format("jo00aa : ", f10.2, " : myid=", i3, " ; lvol =", i3, " ; lrad =", i3, " ; MAX gB^s(-1)="es23.15" , gB^s(+1) ="es23.15" ; time="f8.2"s ;")
 1007 format("jo00aa : ", f10.2, " : myid=", i3, " ; lvol =", i3, " ; lrad =", i3, " ; dtfluxERR   ="es23.15" , dpfluxERR="es23.15" ; time="f8.2"s ;")

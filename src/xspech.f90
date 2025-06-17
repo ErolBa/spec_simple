@@ -52,14 +52,14 @@ subroutine xspech
 
         call check_inputs()
 
-    end if ! myid.eq.0
+    end if
 
     call broadcast_inputs()
 
     call preset()
 
-    if (myid == 0) then ! save restart file;
-        call wrtend() ! write initial restart file
+    if (myid == 0) then
+        call wrtend()
     end if
 
     call spec()
@@ -126,9 +126,9 @@ subroutine read_command_args
             call MPI_ABORT(MPI_COMM_SPEC, 0, ierr)
         case default
             extlen = len_trim(arg)
-            sppos = index(arg, ".sp", .true.) ! search for ".sp" from the back of ext
-            if (sppos == extlen - 2) then ! check if ext ends with ".sp"
-                arg = arg(1:extlen - 3) ! if this is the case, remove ".sp" from end of ext
+            sppos = index(arg, ".sp", .true.)
+            if (sppos == extlen - 2) then
+                arg = arg(1:extlen - 3)
             end if
             ext = trim(arg)
 
@@ -144,14 +144,14 @@ subroutine read_command_args
                 iarg = iarg + 1; call getarg(iarg, arg)
                 select case (arg)
                 case ("-readin"); Wreadin = .true.
-                case ("-p4pg"); iarg = iarg + 1; call getarg(iarg, arg) ! TODO: what is this?
-                case ("-p4wd"); iarg = iarg + 1; call getarg(iarg, arg) ! TODO: what is this?
+                case ("-p4pg"); iarg = iarg + 1; call getarg(iarg, arg)
+                case ("-p4wd"); iarg = iarg + 1; call getarg(iarg, arg)
                 case default; write (ounit, '("rdcmdl : ",f10.2," : myid=",i3," : argument not recognized ; arg = ",a100)') cput - cpus, myid, arg
                 end select
             end do
         end if
 
-    end if ! check for myid.eq.0
+    end if
 
 end subroutine read_command_args
 
@@ -192,7 +192,7 @@ subroutine spec
                          ForceErr, BnsErr, &
                          efmn, ofmn, cfmn, sfmn, &
                          iBns, iBnc, iVns, iVnc, &
-                         Ate, Aze, Ato, Azo, & ! only required for debugging; 09 Mar 17;
+                         Ate, Aze, Ato, Azo, &
                          nfreeboundaryiterations, &
                          beltramierror, &
                          first_free_bound, &
@@ -233,7 +233,7 @@ subroutine spec
 
 9000 nfreeboundaryiterations = nfreeboundaryiterations + 1
 
-    if (NGdof > 0) then ! pack geometry into vector; 14 Jan 13;
+    if (NGdof > 0) then
 
         pack = 'P'
         LComputeAxis = .true.
@@ -248,13 +248,13 @@ subroutine spec
         else; Lcoordinatesingularity = .true.
         end if
         vflag = 0
-        call volume(vvol, vflag) ! compute volume;
+        call volume(vvol, vflag)
 
-        if (Ladiabatic == 0) adiabatic(vvol) = pressure(vvol)*vvolume(vvol)**gamma ! initialize adiabatic constants using supplied pressure profile;
+        if (Ladiabatic == 0) adiabatic(vvol) = pressure(vvol)*vvolume(vvol)**gamma
 
-    end do ! end of do vvol = 1, Mvol;
+    end do
 
-    if (Mvol > Nvol) then; adiabatic(Mvol) = zero; pressure(Mvol) = zero ! these are never used; 15 May 13;
+    if (Mvol > Nvol) then; adiabatic(Mvol) = zero; pressure(Mvol) = zero
     end if
 
     if (Wxspech .and. myid == 0) then
@@ -262,7 +262,7 @@ subroutine spec
         write (ounit, '("xspech : ",f10.2," : myid=",i3," ; adiabatic constants = "999es13.5)') cput - cpus, myid, adiabatic(1:Mvol)
     end if
 
-    pressure(1:Mvol) = adiabatic(1:Mvol)/vvolume(1:Mvol)**gamma ! this matches construction of adiabatic above;
+    pressure(1:Mvol) = adiabatic(1:Mvol)/vvolume(1:Mvol)**gamma
 
     lastcpu = MPI_WTIME()
 
@@ -278,22 +278,22 @@ subroutine spec
 1000 format("xspech : ", f10.2, " : #freeits=", i3, " ; ":"|f|="es12.5" ; ":"time=", f10.2, "s ;":" log"a5, :"="28f6.2" ...")
 1001 format("xspech : ", 10x, " :          ", 3x, " ; ":"    "12x "   ":"     ", 10x, "  ;":" log"a5, :"="28f6.2" ...")
 
-    select case (Igeometry) ! 08 Feb 16;
-    case (1); tflux(1) = dtflux(1); pflux(1) = dpflux(1) ! 08 Feb 16;
-    case (2:3); tflux(1) = dtflux(1); pflux(1) = zero ! 08 Feb 16;
-    end select ! 08 Feb 16;
+    select case (Igeometry)
+    case (1); tflux(1) = dtflux(1); pflux(1) = dpflux(1)
+    case (2:3); tflux(1) = dtflux(1); pflux(1) = zero
+    end select
 
-    do vvol = 2, Mvol; tflux(vvol) = tflux(vvol - 1) + dtflux(vvol) ! 01 Jul 14;
-        ; pflux(vvol) = pflux(vvol - 1) + dpflux(vvol) ! 01 Jul 14;
+    do vvol = 2, Mvol; tflux(vvol) = tflux(vvol - 1) + dtflux(vvol)
+        ; pflux(vvol) = pflux(vvol - 1) + dpflux(vvol)
     end do
 
-    tflux(1:Mvol) = tflux(1:Mvol)*pi2/phiedge ! this is the "inverse" operation defined in preset; 19 Jul 16;
+    tflux(1:Mvol) = tflux(1:Mvol)*pi2/phiedge
     pflux(1:Mvol) = pflux(1:Mvol)*pi2/phiedge
 
-    call ra00aa('W') ! this writes vector potential to file;
+    call ra00aa('W')
 
-    if (myid == 0) then ! write restart file; note that this is inside free-boundary iteration loop; 11 Aug 14;
-        call wrtend() ! write restart file; save initial input;
+    if (myid == 0) then
+        call wrtend()
     end if
 
 end subroutine spec
@@ -352,7 +352,7 @@ subroutine final_diagnostics
             else; Lcoordinatesingularity = .true.
             end if
 
-            call tr00ab(vvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1, -1:2, vvol)) ! stores lambda in a global variable.
+            call tr00ab(vvol, mn, lmns, Nt, Nz, iflag, diotadxup(0:1, -1:2, vvol))
         end do
 
         do vvol = 1, Mvol
@@ -393,8 +393,8 @@ subroutine final_diagnostics
 
     sumI = 0
     do vvol = 1, Mvol
-        Ivolume(vvol) = mu(vvol)*dtflux(vvol)*pi2 + sumI ! factor pi2 due to normalization in preset
-        sumI = Ivolume(vvol) ! Sum over all volumes since this is how Ivolume is defined
+        Ivolume(vvol) = mu(vvol)*dtflux(vvol)*pi2 + sumI
+        sumI = Ivolume(vvol)
     end do
 
     if (myid == 0) then
@@ -418,7 +418,7 @@ subroutine final_diagnostics
         else; Lcoordinatesingularity = .true.
         end if
 
-        if (myid == modulo(vvol - 1, ncpu) .and. myid < Mvol) then ! the following is in parallel; 20 Jun 14;
+        if (myid == modulo(vvol - 1, ncpu) .and. myid < Mvol) then
 
             if (.not. ImagneticOK(vvol)) then; cput = MPI_WTIME(); write (ounit, 1002) cput - cpus; write (ounit, 1002) cput - cpus, myid, vvol, ImagneticOK(vvol); cycle
             end if
@@ -427,8 +427,8 @@ subroutine final_diagnostics
                 call jo00aa(vvol, Ntz, Iquad(vvol), mn)
             end if
 
-        end if ! myid.eq.modulo(vvol-1,ncpu)
-    end do ! end of do vvol = 1, Mvol; ! end of parallel diagnostics loop; 03 Apr 13;
+        end if
+    end do
 
 1002 format("xspech : ", f10.2, " :":" myid=", i3, " ; vvol=", i3, " ; IBeltrami="L2" ; construction of Beltrami field failed ;")
 
@@ -441,6 +441,6 @@ subroutine final_diagnostics
 
         call MPI_BCAST(beltramierror(vvol, 1:9), 9, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
 
-    end do ! end of do vvol = 1, Mvol; 01 Jul 14;
+    end do
 
 end subroutine final_diagnostics

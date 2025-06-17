@@ -39,7 +39,7 @@ subroutine brcast(lvol)
         stop "brcast : lvol.le.0 .or. lvol.gt.Mvol : error ;"
     end if
 
-    llmodnp = modulo(lvol - 1, ncpu) ! identify which node contains data; this must be consistent with previous looping / parallelization;
+    llmodnp = modulo(lvol - 1, ncpu)
 
     call MPI_BCAST(mu(lvol), 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
     call MPI_BCAST(dtflux(lvol), 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
@@ -66,9 +66,9 @@ subroutine brcast(lvol)
         call MPI_BCAST(Iemn(1:mn, lvol), mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
         call MPI_BCAST(Semn(1:mn, lvol, 0:1), 2*mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
         call MPI_BCAST(Pemn(1:mn, lvol, 0:2), 3*mn, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
-    end if ! end of if( NOTstellsym) ; 11 Aug 14;
+    end if
 
-    if (lvol > Nvol .and. Wcurent) then ! 27 Feb 17;
+    if (lvol > Nvol .and. Wcurent) then
         call MPI_BCAST(curtor, 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
         call MPI_BCAST(curpol, 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
     end if

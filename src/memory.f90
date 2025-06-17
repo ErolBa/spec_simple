@@ -1,10 +1,4 @@
-!> \file
-!> \brief memory management module
 
-!> \brief allocate Beltrami matrices
-!>
-!> @param vvol
-!> @param LcomputeDerivatives
 subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
     use fileunits
@@ -24,7 +18,7 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
     logical, intent(in) :: LcomputeDerivatives
     integer :: NN
 
-    NN = NAdof(vvol) ! shorthand;
+    NN = NAdof(vvol)
 
     if (allocated(dMA)) deallocate (dMA)
     allocate (dMA(0:NN, 0:NN), stat=astat)
@@ -33,7 +27,6 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
     allocate (dMD(0:NN, 0:NN), stat=astat)
     dMD(0:NN, 0:NN) = zero
 
-    ! we will need the rest even with or without matrix-free
     if (allocated(dMB)) deallocate (dMB)
     allocate (dMB(0:NN, 0:2), stat=astat)
     dMB(0:NN, 0:2) = zero
@@ -51,9 +44,6 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
 end subroutine allocate_Beltrami_matrices
 
-!> \brief deallocate Beltrami matrices
-!>
-!> @param LcomputeDerivatives
 subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
     use fileunits
@@ -84,13 +74,7 @@ subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
 end subroutine deallocate_Beltrami_matrices
 
-!> \brief allocate geometry matrices
-!>
-!> @param vvol
-!> @param LcomputeDerivatives
 subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
-
-! Allocate all geometry dependent matrices for a given ll
 
     use constants, only: zero
 
@@ -115,10 +99,9 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
 
     ll = Lrad(vvol)
 
-    if (Lcoordinatesingularity) then ! different radial dof for Zernike; 02 Jul 19
+    if (Lcoordinatesingularity) then
         lldof = (Lrad(vvol) - mod(Lrad(vvol), 2))/2
 
-        ! we need full-size matrices
         iidof = mn
         jjdof = mn
 
@@ -260,16 +243,12 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
         allocate (Tzs(0:lldof, 1:mn), stat=astat)
         Tzs(0:lldof, 1:mn) = zero
 
-    end if !NOTstellsym
+    end if
 
 end subroutine allocate_geometry_matrices
 
-!> \brief deallocate geometry matrices
-!>
-!> @param LcomputeDerivatives
 subroutine deallocate_geometry_matrices(LcomputeDerivatives)
 
-! Deallocate all geometry dependent matrices
     use constants, only: zero
 
     use fileunits

@@ -27,11 +27,11 @@ subroutine ra00aa(writeorread)
     real(8), allocatable :: oldAte(:), oldAze(:), oldAto(:), oldAzo(:)
     real(8), allocatable :: allAte(:, :), allAze(:, :), allAto(:, :), allAzo(:, :)
 
-    ideriv = 0 ! write vector potential and not derivative (?)
+    ideriv = 0
 
     select case (writeorread)
 
-    case ('W') ! write vector potential harmonics to file;
+    case ('W')
 
         sumLrad = sum(Lrad(1:Mvol) + 1)
 
@@ -43,14 +43,14 @@ subroutine ra00aa(writeorread)
         sumLrad = 1
         do vvol = 1, Mvol
 
-            do ii = 1, mn ! loop over Fourier harmonics;
+            do ii = 1, mn
                 allAte(sumLrad:sumLrad + Lrad(vvol), ii) = Ate(vvol, ideriv, ii)%s(0:Lrad(vvol))
                 allAze(sumLrad:sumLrad + Lrad(vvol), ii) = Aze(vvol, ideriv, ii)%s(0:Lrad(vvol))
                 allAto(sumLrad:sumLrad + Lrad(vvol), ii) = Ato(vvol, ideriv, ii)%s(0:Lrad(vvol))
                 allAzo(sumLrad:sumLrad + Lrad(vvol), ii) = Azo(vvol, ideriv, ii)%s(0:Lrad(vvol))
-            end do ! end of do ii;  6 Feb 13;
+            end do
             sumLrad = sumLrad + Lrad(vvol) + 1
-        end do ! end of do vvol;  6 Feb 13;
+        end do
 
         sumLrad = sum(Lrad(1:Mvol) + 1)
 
@@ -59,7 +59,7 @@ subroutine ra00aa(writeorread)
         deallocate (allAto)
         deallocate (allAzo)
 
-    case ('R') ! read potential from file; interpolate onto new radial grid;
+    case ('R')
 
         if (myid == 0) then
 
@@ -68,12 +68,12 @@ subroutine ra00aa(writeorread)
             if (.not. exist) then; write (ounit, '("ra00aa : ",f10.2," : myid=",i3," ; error ; .ext.sp.A does not exist ;")') cput - cpus, myid; goto 9998
             end if
 
-            open (aunit, file="."//trim(ext)//".sp.A", status="old", form="unformatted", iostat=ios) ! this will contain initial guess for vector potential;
+            open (aunit, file="."//trim(ext)//".sp.A", status="old", form="unformatted", iostat=ios)
 
             if (ios /= 0) then; write (ounit, '("ra00aa : ",f10.2," : myid=",i3," ; error ; opening .ext.sp.A ;")') cput - cpus, myid; goto 9997
             end if
 
-            read (aunit, iostat=ios) oldMvol, oldMpol, oldNtor, oldmn, oldNfp ! these are the "old" resolution parameters;
+            read (aunit, iostat=ios) oldMvol, oldMpol, oldNtor, oldmn, oldNfp
 
             if (ios /= 0) then
                 write (ounit, '("ra00aa : ",f10.2," : myid=",i3," ; error ; reading oldMvol, oldMpol, oldNtor, oldmn, oldNfp;")') cput - cpus, myid
@@ -121,22 +121,22 @@ subroutine ra00aa(writeorread)
                     read (aunit, iostat=ios) oldAto(0:oldLrad)
                     read (aunit, iostat=ios) oldAzo(0:oldLrad)
 
-                    do ii = 1, mn ! compare Fourier harmonic with old; 26 Feb 13;
+                    do ii = 1, mn
                         if (im(ii) == oldim(jj) .and. in(ii) == oldin(jj)) then; Ate(vvol, ideriv, ii)%s(0:minLrad) = oldAte(0:minLrad)
                             ; ; Aze(vvol, ideriv, ii)%s(0:minLrad) = oldAze(0:minLrad)
                             ; ; Ato(vvol, ideriv, ii)%s(0:minLrad) = oldAto(0:minLrad)
                             ; ; Azo(vvol, ideriv, ii)%s(0:minLrad) = oldAzo(0:minLrad)
                         end if
-                    end do ! end of do ii; 26 Feb 13;
+                    end do
 
-                end do ! end of do jj; 26 Feb 13;
+                end do
 
                 deallocate (oldAte, stat=astat)
                 deallocate (oldAze, stat=astat)
                 deallocate (oldAto, stat=astat)
                 deallocate (oldAzo, stat=astat)
 
-            end do ! end of do vvol; 26 Feb 13;
+            end do
 
             deallocate (oldim, stat=astat)
             deallocate (oldin, stat=astat)
@@ -147,11 +147,11 @@ subroutine ra00aa(writeorread)
 
 9998        continue
 
-        end if ! end of if( myid.eq.0 ) ; 26 Feb 13;
+        end if
 
         do vvol = 1, Mvol
 
-            llmodnp = 0 ! this node contains the information that is to be broadcast; 26 Feb 13;
+            llmodnp = 0
 
             do ii = 1, mn
                 call MPI_BCAST(Ate(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
@@ -162,7 +162,7 @@ subroutine ra00aa(writeorread)
                 call MPI_BCAST(Azo(vvol, ideriv, ii)%s(0:Lrad(vvol)), Lrad(vvol) + 1, MPI_DOUBLE_PRECISION, llmodnp, MPI_COMM_SPEC, ierr)
             end do
 
-        end do ! end of do vvol; 26 Feb 13;
+        end do
 
     case default
 

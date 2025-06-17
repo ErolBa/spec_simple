@@ -3,36 +3,36 @@ module constants
 
     implicit none
 
-    real(8), parameter :: zero = 0.0 !< 0
-    real(8), parameter :: one = 1.0 !< 1
-    real(8), parameter :: two = 2.0 !< 2
-    real(8), parameter :: three = 3.0 !< 3
-    real(8), parameter :: four = 4.0 !< 4
-    real(8), parameter :: five = 5.0 !< 5
-    real(8), parameter :: six = 6.0 !< 6
-    real(8), parameter :: seven = 7.0 !< 7
-    real(8), parameter :: eight = 8.0 !< 8
-    real(8), parameter :: nine = 9.0 !< 9
-    real(8), parameter :: ten = 10.0 !< 10
+    real(8), parameter :: zero = 0.0
+    real(8), parameter :: one = 1.0
+    real(8), parameter :: two = 2.0
+    real(8), parameter :: three = 3.0
+    real(8), parameter :: four = 4.0
+    real(8), parameter :: five = 5.0
+    real(8), parameter :: six = 6.0
+    real(8), parameter :: seven = 7.0
+    real(8), parameter :: eight = 8.0
+    real(8), parameter :: nine = 9.0
+    real(8), parameter :: ten = 10.0
 
-    real(8), parameter :: eleven = 11.0 !< 11
-    real(8), parameter :: twelve = 12.0 !< 12
+    real(8), parameter :: eleven = 11.0
+    real(8), parameter :: twelve = 12.0
 
-    real(8), parameter :: hundred = 100.0 !< 100
-    real(8), parameter :: thousand = 1000.0 !< 1000
+    real(8), parameter :: hundred = 100.0
+    real(8), parameter :: thousand = 1000.0
 
-    real(8), parameter :: half = one/two !< 1/2
-    real(8), parameter :: third = one/three !< 1/3
-    real(8), parameter :: quart = one/four !< 1/4
-    real(8), parameter :: fifth = one/five !< 1/5
-    real(8), parameter :: sixth = one/six !< 1/6
+    real(8), parameter :: half = one/two
+    real(8), parameter :: third = one/three
+    real(8), parameter :: quart = one/four
+    real(8), parameter :: fifth = one/five
+    real(8), parameter :: sixth = one/six
 
-    real(8), parameter :: pi2 = 6.28318530717958623 !< \f$2\pi\f$
-    real(8), parameter :: pi = pi2/two !< \f$\pi\f$
-    real(8), parameter :: mu0 = 2.0e-07*pi2 !< \f$4\pi\cdot10^{-7}\f$
-    real(8), parameter :: goldenmean = 1.618033988749895 !< golden mean = \f$( 1 + \sqrt 5 ) / 2\f$ ;
+    real(8), parameter :: pi2 = 6.28318530717958623
+    real(8), parameter :: pi = pi2/two
+    real(8), parameter :: mu0 = 2.0e-07*pi2
+    real(8), parameter :: goldenmean = 1.618033988749895
 
-    real(8), parameter :: version = 3.23 !< version of SPEC
+    real(8), parameter :: version = 3.23
 
 end module constants
 
@@ -40,11 +40,11 @@ module numerical
 
     implicit none
 
-    real(8), parameter :: machprec = 1.11e-16 !< machine precision: 0.5*epsilon(one) for 64 bit double precision
-    real(8), parameter :: vsmall = 100*machprec !< very small number
-    real(8), parameter :: small = 10000*machprec !< small number
-    real(8), parameter :: sqrtmachprec = sqrt(machprec) !< square root of machine precision
-    real(8), parameter :: logtolerance = 1.0e-32 !< this is used to avoid taking alog10(zero); see e.g. dforce;
+    real(8), parameter :: machprec = 1.11e-16
+    real(8), parameter :: vsmall = 100*machprec
+    real(8), parameter :: small = 10000*machprec
+    real(8), parameter :: sqrtmachprec = sqrt(machprec)
+    real(8), parameter :: logtolerance = 1.0e-32
 
 end module numerical
 
@@ -52,16 +52,16 @@ module fileunits
 
     implicit none
 
-    integer :: iunit = 10 !< input; used in global/readin:ext.sp, global/wrtend:ext.sp.end
-    integer :: ounit = 6 !< screen output;
-    integer :: gunit = 13 !< wall geometry; used in wa00aa
+    integer :: iunit = 10
+    integer :: ounit = 6
+    integer :: gunit = 13
 
-    integer :: aunit = 11 !< vector potential; used in ra00aa:.ext.AtAzmn;
-    integer :: dunit = 12 !< derivative matrix; used in newton:.ext.GF;
-    integer :: hunit = 14 !< eigenvalues of Hessian; under re-construction;
-    integer :: munit = 14 !< matrix elements of Hessian;
-    integer :: lunit = 20 !< local unit; used in lunit+myid: pp00aa:.ext.poincare,.ext.transform;
-    integer :: vunit = 15 !< for examination of adaptive quadrature; used in casing:.ext.vcint;
+    integer :: aunit = 11
+    integer :: dunit = 12
+    integer :: hunit = 14
+    integer :: munit = 14
+    integer :: lunit = 20
+    integer :: vunit = 15
 
 contains
 
@@ -131,8 +131,8 @@ end module cputiming
 module typedefns
 
     type subgrid
-        real(8), allocatable :: s(:) !< coefficients
-        integer, allocatable :: i(:) !< indices
+        real(8), allocatable :: s(:)
+        integer, allocatable :: i(:)
     end type subgrid
 
     type MatrixLU
@@ -141,12 +141,12 @@ module typedefns
     end type MatrixLU
 
     type derivative
-        logical :: L !< what is this?
-        integer :: vol !< Used in coords(); required for global constraint force gradient evaluation
-        integer :: innout !< what is this?
-        integer :: ii !< what is this?
-        integer :: irz !< what is this?
-        integer :: issym !< what is this?
+        logical :: L
+        integer :: vol
+        integer :: innout
+        integer :: ii
+        integer :: irz
+        integer :: issym
     end type derivative
 
 end module typedefns
@@ -158,249 +158,249 @@ module allglobal
 
     implicit none
 
-    integer :: myid !< MPI rank of current CPU
-    integer :: ncpu !< number of MPI tasks
-    integer :: IsMyVolumeValue !< flag to indicate if a CPU is operating on its assigned volume
-    real(8) :: cpus !< initial time
-    integer :: MPI_COMM_SPEC !< SPEC MPI communicator
+    integer :: myid
+    integer :: ncpu
+    integer :: IsMyVolumeValue
+    real(8) :: cpus
+    integer :: MPI_COMM_SPEC
 
-    logical :: skip_write = .false. ! flag to disable any HDF5-related calls
+    logical :: skip_write = .false.
 
-    real(8) :: pi2nfp !       pi2/nfp     ; assigned in readin;
+    real(8) :: pi2nfp
     real(8) :: pi2pi2nfp
     real(8) :: pi2pi2nfphalf
     real(8) :: pi2pi2nfpquart
 
-    character(LEN=1000) :: ext ! extension of input filename, i.e., "G3V01L1Fi.001" for an input file G3V01L1Fi.001.sp
+    character(LEN=1000) :: ext
 
-    real(8) :: ForceErr !< total force-imbalance
-    real(8) :: Energy !< MHD energy
-    real(8) :: BnsErr !< (in freeboundary) error in self-consistency of field on plasma boundary (Picard iteration)
+    real(8) :: ForceErr
+    real(8) :: Energy
+    real(8) :: BnsErr
 
-    real(8), allocatable :: IPDt(:), IPDtDpf(:, :) !< Toroidal pressure-driven current
+    real(8), allocatable :: IPDt(:), IPDtDpf(:, :)
 
     integer :: Mvol
 
-    logical :: YESstellsym !< internal shorthand copies of Istellsym, which is an integer input;
-    logical :: NOTstellsym !< internal shorthand copies of Istellsym, which is an integer input;
+    logical :: YESstellsym
+    logical :: NOTstellsym
 
-    real(8), allocatable :: cheby(:, :) !< local workspace for evaluation of Chebychev polynomials
-    real(8), allocatable :: zernike(:, :, :) !< local workspace for evaluation of Zernike polynomials
+    real(8), allocatable :: cheby(:, :)
+    real(8), allocatable :: zernike(:, :, :)
 
-    real(8), allocatable :: TT(:, :, :) !< derivatives of Chebyshev polynomials at the inner and outer interfaces;
-    real(8), allocatable :: RTT(:, :, :, :) !< derivatives of Zernike   polynomials at the inner and outer interfaces;
+    real(8), allocatable :: TT(:, :, :)
+    real(8), allocatable :: RTT(:, :, :, :)
 
-    real(8), allocatable :: RTM(:, :) !< \f$r^m\f$ term of Zernike polynomials at the origin
-    real(8), allocatable :: ZernikeDof(:) !< Zernike degree of freedom for each \f$m\f$
+    real(8), allocatable :: RTM(:, :)
+    real(8), allocatable :: ZernikeDof(:)
 
-    integer :: mne !< enhanced resolution for metric elements
-    integer, allocatable :: ime(:) !< enhanced poloidal mode numbers for metric elements
-    integer, allocatable :: ine(:) !< enhanced toroidal mode numbers for metric elements
+    integer :: mne
+    integer, allocatable :: ime(:)
+    integer, allocatable :: ine(:)
 
-    integer :: mns !< enhanced resolution for straight field line transformation
-    integer, allocatable :: ims(:) !< enhanced poloidal mode numbers for straight field line transformation
-    integer, allocatable :: ins(:) !< enhanced toroidal mode numbers for straight field line transformation
+    integer :: mns
+    integer, allocatable :: ims(:)
+    integer, allocatable :: ins(:)
 
-    integer :: lMpol !< what is this?
-    integer :: lNtor !< what is this?
-    integer :: sMpol !< what is this?
-    integer :: sNtor !< what is this?
+    integer :: lMpol
+    integer :: lNtor
+    integer :: sMpol
+    integer :: sNtor
 
-    real(8) :: xoffset = 1.0 !< used to normalize NAG routines (which ones exacly where?)
+    real(8) :: xoffset = 1.0
 
-    logical, allocatable :: ImagneticOK(:) !< used to indicate if Beltrami fields have been correctly constructed;
+    logical, allocatable :: ImagneticOK(:)
 
-    logical :: IconstraintOK !< Used to break iteration loops of slaves in the global constraint minimization.
+    logical :: IconstraintOK
 
-    real(8), allocatable :: beltramierror(:, :) !< to store the integral of |curlB-mu*B| computed by jo00aa;
+    real(8), allocatable :: beltramierror(:, :)
 
-    integer :: mn !< total number of Fourier harmonics for coordinates/fields; calculated from Mpol, Ntor in readin()
-    integer, allocatable :: im(:) !< poloidal mode numbers for Fourier representation
-    integer, allocatable :: in(:) !< toroidal mode numbers for Fourier representation
+    integer :: mn
+    integer, allocatable :: im(:)
+    integer, allocatable :: in(:)
 
-    real(8), allocatable :: halfmm(:) !< I saw this already somewhere...
-    real(8), allocatable :: regumm(:) !< I saw this already somewhere...
+    real(8), allocatable :: halfmm(:)
+    real(8), allocatable :: regumm(:)
 
-    real(8) :: Rscale !< no idea
-    real(8), allocatable :: psifactor(:, :) !< no idea
-    real(8), allocatable :: inifactor(:, :) !< no idea
+    real(8) :: Rscale
+    real(8), allocatable :: psifactor(:, :)
+    real(8), allocatable :: inifactor(:, :)
 
-    real(8), allocatable :: BBweight(:) !< weight on force-imbalance harmonics; used in dforce()
+    real(8), allocatable :: BBweight(:)
 
-    real(8), allocatable :: mmpp(:) !< spectral condensation factors
+    real(8), allocatable :: mmpp(:)
 
-    real(8), allocatable :: iRbc(:, :) !< cosine R harmonics of interface surface geometry;     stellarator symmetric
-    real(8), allocatable :: iZbs(:, :) !<   sine Z harmonics of interface surface geometry;     stellarator symmetric
-    real(8), allocatable :: iRbs(:, :) !<   sine R harmonics of interface surface geometry; non-stellarator symmetric
-    real(8), allocatable :: iZbc(:, :) !< cosine Z harmonics of interface surface geometry; non-stellarator symmetric
+    real(8), allocatable :: iRbc(:, :)
+    real(8), allocatable :: iZbs(:, :)
+    real(8), allocatable :: iRbs(:, :)
+    real(8), allocatable :: iZbc(:, :)
 
-    real(8), allocatable :: dRbc(:, :) !< cosine R harmonics of interface surface geometry;     stellarator symmetric; linear deformation
-    real(8), allocatable :: dZbs(:, :) !<   sine Z harmonics of interface surface geometry;     stellarator symmetric; linear deformation
-    real(8), allocatable :: dRbs(:, :) !<   sine R harmonics of interface surface geometry; non-stellarator symmetric; linear deformation
-    real(8), allocatable :: dZbc(:, :) !< cosine Z harmonics of interface surface geometry; non-stellarator symmetric; linear deformation
+    real(8), allocatable :: dRbc(:, :)
+    real(8), allocatable :: dZbs(:, :)
+    real(8), allocatable :: dRbs(:, :)
+    real(8), allocatable :: dZbc(:, :)
 
-    real(8), allocatable :: iRij(:, :) !< interface surface geometry; real space
-    real(8), allocatable :: iZij(:, :) !< interface surface geometry; real space
-    real(8), allocatable :: dRij(:, :) !< interface surface geometry; real space
-    real(8), allocatable :: dZij(:, :) !< interface surface geometry; real space
-    real(8), allocatable :: tRij(:, :) !< interface surface geometry; real space
-    real(8), allocatable :: tZij(:, :) !< interface surface geometry; real space
+    real(8), allocatable :: iRij(:, :)
+    real(8), allocatable :: iZij(:, :)
+    real(8), allocatable :: dRij(:, :)
+    real(8), allocatable :: dZij(:, :)
+    real(8), allocatable :: tRij(:, :)
+    real(8), allocatable :: tZij(:, :)
 
-    real(8), allocatable :: iVns(:) !<   sine harmonics of vacuum normal magnetic field on interfaces;     stellarator symmetric
-    real(8), allocatable :: iBns(:) !<   sine harmonics of plasma normal magnetic field on interfaces;     stellarator symmetric
-    real(8), allocatable :: iVnc(:) !< cosine harmonics of vacuum normal magnetic field on interfaces; non-stellarator symmetric
-    real(8), allocatable :: iBnc(:) !< cosine harmonics of plasma normal magnetic field on interfaces; non-stellarator symmetric
+    real(8), allocatable :: iVns(:)
+    real(8), allocatable :: iBns(:)
+    real(8), allocatable :: iVnc(:)
+    real(8), allocatable :: iBnc(:)
 
-    real(8), allocatable :: lRbc(:) !< local workspace
-    real(8), allocatable :: lZbs(:) !< local workspace
-    real(8), allocatable :: lRbs(:) !< local workspace
-    real(8), allocatable :: lZbc(:) !< local workspace
+    real(8), allocatable :: lRbc(:)
+    real(8), allocatable :: lZbs(:)
+    real(8), allocatable :: lRbs(:)
+    real(8), allocatable :: lZbc(:)
 
     integer :: num_modes
     integer, allocatable :: mmRZRZ(:), nnRZRZ(:)
     real(8), allocatable :: allRZRZ(:, :, :)
 
-    integer :: Nt !< discrete resolution along \f$\theta\f$ of grid in real space
-    integer :: Nz !< discrete resolution along \f$\zeta\f$  of grid in real space
-    integer :: Ntz !< discrete resolution; Ntz=Nt*Nz shorthand
-    integer :: hNt !< discrete resolution; Ntz=Nt*Nz shorthand
-    integer :: hNz !< discrete resolution; Ntz=Nt*Nz shorthand
-    real(8) :: soNtz !< one / sqrt (one*Ntz); shorthand
+    integer :: Nt
+    integer :: Nz
+    integer :: Ntz
+    integer :: hNt
+    integer :: hNz
+    real(8) :: soNtz
 
-    real(8), allocatable :: Rij(:, :, :) !< real-space grid; R
-    real(8), allocatable :: Zij(:, :, :) !< real-space grid; Z
-    real(8), allocatable :: Xij(:, :, :) !< what is this?
-    real(8), allocatable :: Yij(:, :, :) !< what is this?
-    real(8), allocatable :: sg(:, :) !< real-space grid; jacobian and its derivatives
-    real(8), allocatable :: guvij(:, :, :, :) !< real-space grid; metric elements
-    real(8), allocatable :: gvuij(:, :, :) !< real-space grid; metric elements (?); 10 Dec 15;
-    real(8), allocatable :: guvijsave(:, :, :, :) !< what is this?
+    real(8), allocatable :: Rij(:, :, :)
+    real(8), allocatable :: Zij(:, :, :)
+    real(8), allocatable :: Xij(:, :, :)
+    real(8), allocatable :: Yij(:, :, :)
+    real(8), allocatable :: sg(:, :)
+    real(8), allocatable :: guvij(:, :, :, :)
+    real(8), allocatable :: gvuij(:, :, :)
+    real(8), allocatable :: guvijsave(:, :, :, :)
 
-    integer, allocatable :: ki(:, :) !< identification of Fourier modes
-    integer, allocatable :: kijs(:, :, :) !< identification of Fourier modes
-    integer, allocatable :: kija(:, :, :) !< identification of Fourier modes
+    integer, allocatable :: ki(:, :)
+    integer, allocatable :: kijs(:, :, :)
+    integer, allocatable :: kija(:, :, :)
 
-    integer, allocatable :: iotakkii(:) !< identification of Fourier modes
-    integer, allocatable :: iotaksub(:, :) !< identification of Fourier modes
-    integer, allocatable :: iotakadd(:, :) !< identification of Fourier modes
-    integer, allocatable :: iotaksgn(:, :) !< identification of Fourier modes
+    integer, allocatable :: iotakkii(:)
+    integer, allocatable :: iotaksub(:, :)
+    integer, allocatable :: iotakadd(:, :)
+    integer, allocatable :: iotaksgn(:, :)
 
-    real(8), allocatable :: efmn(:) !< Fourier harmonics; dummy workspace
-    real(8), allocatable :: ofmn(:) !< Fourier harmonics; dummy workspace
-    real(8), allocatable :: cfmn(:) !< Fourier harmonics; dummy workspace
-    real(8), allocatable :: sfmn(:) !< Fourier harmonics; dummy workspace
-    real(8), allocatable :: evmn(:) !< Fourier harmonics; dummy workspace
-    real(8), allocatable :: odmn(:) !< Fourier harmonics; dummy workspace
-    real(8), allocatable :: comn(:) !< Fourier harmonics; dummy workspace
-    real(8), allocatable :: simn(:) !< Fourier harmonics; dummy workspace
+    real(8), allocatable :: efmn(:)
+    real(8), allocatable :: ofmn(:)
+    real(8), allocatable :: cfmn(:)
+    real(8), allocatable :: sfmn(:)
+    real(8), allocatable :: evmn(:)
+    real(8), allocatable :: odmn(:)
+    real(8), allocatable :: comn(:)
+    real(8), allocatable :: simn(:)
 
-    real(8), allocatable :: ijreal(:) !< what is this ?
-    real(8), allocatable :: ijimag(:) !< what is this ?
-    real(8), allocatable :: jireal(:) !< what is this ?
-    real(8), allocatable :: jiimag(:) !< what is this ?
+    real(8), allocatable :: ijreal(:)
+    real(8), allocatable :: ijimag(:)
+    real(8), allocatable :: jireal(:)
+    real(8), allocatable :: jiimag(:)
 
-    real(8), allocatable :: jkreal(:) !< what is this ?
-    real(8), allocatable :: jkimag(:) !< what is this ?
-    real(8), allocatable :: kjreal(:) !< what is this ?
-    real(8), allocatable :: kjimag(:) !< what is this ?
+    real(8), allocatable :: jkreal(:)
+    real(8), allocatable :: jkimag(:)
+    real(8), allocatable :: kjreal(:)
+    real(8), allocatable :: kjimag(:)
 
-    real(8), allocatable :: Bsupumn(:, :, :) !< tangential field on interfaces; \f$\theta\f$-component; required for virtual casing construction of field; 11 Oct 12
-    real(8), allocatable :: Bsupvmn(:, :, :) !< tangential field on interfaces; \f$\zeta\f$ -component; required for virtual casing construction of field; 11 Oct 12
+    real(8), allocatable :: Bsupumn(:, :, :)
+    real(8), allocatable :: Bsupvmn(:, :, :)
 
-    real(8), allocatable :: goomne(:, :) !< described in preset()
-    real(8), allocatable :: goomno(:, :) !< described in preset()
-    real(8), allocatable :: gssmne(:, :) !< described in preset()
-    real(8), allocatable :: gssmno(:, :) !< described in preset()
-    real(8), allocatable :: gstmne(:, :) !< described in preset()
-    real(8), allocatable :: gstmno(:, :) !< described in preset()
-    real(8), allocatable :: gszmne(:, :) !< described in preset()
-    real(8), allocatable :: gszmno(:, :) !< described in preset()
-    real(8), allocatable :: gttmne(:, :) !< described in preset()
-    real(8), allocatable :: gttmno(:, :) !< described in preset()
-    real(8), allocatable :: gtzmne(:, :) !< described in preset()
-    real(8), allocatable :: gtzmno(:, :) !< described in preset()
-    real(8), allocatable :: gzzmne(:, :) !< described in preset()
-    real(8), allocatable :: gzzmno(:, :) !< described in preset()
+    real(8), allocatable :: goomne(:, :)
+    real(8), allocatable :: goomno(:, :)
+    real(8), allocatable :: gssmne(:, :)
+    real(8), allocatable :: gssmno(:, :)
+    real(8), allocatable :: gstmne(:, :)
+    real(8), allocatable :: gstmno(:, :)
+    real(8), allocatable :: gszmne(:, :)
+    real(8), allocatable :: gszmno(:, :)
+    real(8), allocatable :: gttmne(:, :)
+    real(8), allocatable :: gttmno(:, :)
+    real(8), allocatable :: gtzmne(:, :)
+    real(8), allocatable :: gtzmno(:, :)
+    real(8), allocatable :: gzzmne(:, :)
+    real(8), allocatable :: gzzmno(:, :)
 
-    real(8), allocatable :: DToocc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DToocs(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DToosc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DTooss(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TTsscc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TTsscs(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TTsssc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TTssss(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TDstcc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TDstcs(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TDstsc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TDstss(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TDszcc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TDszcs(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TDszsc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: TDszss(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDttcc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDttcs(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDttsc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDttss(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDtzcc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDtzcs(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDtzsc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDtzss(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDzzcc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDzzcs(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDzzsc(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
-    real(8), allocatable :: DDzzss(:, :, :, :) !< volume-integrated Chebychev-metrics; see matrix()
+    real(8), allocatable :: DToocc(:, :, :, :)
+    real(8), allocatable :: DToocs(:, :, :, :)
+    real(8), allocatable :: DToosc(:, :, :, :)
+    real(8), allocatable :: DTooss(:, :, :, :)
+    real(8), allocatable :: TTsscc(:, :, :, :)
+    real(8), allocatable :: TTsscs(:, :, :, :)
+    real(8), allocatable :: TTsssc(:, :, :, :)
+    real(8), allocatable :: TTssss(:, :, :, :)
+    real(8), allocatable :: TDstcc(:, :, :, :)
+    real(8), allocatable :: TDstcs(:, :, :, :)
+    real(8), allocatable :: TDstsc(:, :, :, :)
+    real(8), allocatable :: TDstss(:, :, :, :)
+    real(8), allocatable :: TDszcc(:, :, :, :)
+    real(8), allocatable :: TDszcs(:, :, :, :)
+    real(8), allocatable :: TDszsc(:, :, :, :)
+    real(8), allocatable :: TDszss(:, :, :, :)
+    real(8), allocatable :: DDttcc(:, :, :, :)
+    real(8), allocatable :: DDttcs(:, :, :, :)
+    real(8), allocatable :: DDttsc(:, :, :, :)
+    real(8), allocatable :: DDttss(:, :, :, :)
+    real(8), allocatable :: DDtzcc(:, :, :, :)
+    real(8), allocatable :: DDtzcs(:, :, :, :)
+    real(8), allocatable :: DDtzsc(:, :, :, :)
+    real(8), allocatable :: DDtzss(:, :, :, :)
+    real(8), allocatable :: DDzzcc(:, :, :, :)
+    real(8), allocatable :: DDzzcs(:, :, :, :)
+    real(8), allocatable :: DDzzsc(:, :, :, :)
+    real(8), allocatable :: DDzzss(:, :, :, :)
 
-    real(8), allocatable :: Tsc(:, :) !< what is this?
-    real(8), allocatable :: Tss(:, :) !< what is this?
-    real(8), allocatable :: Dtc(:, :) !< what is this?
-    real(8), allocatable :: Dts(:, :) !< what is this?
-    real(8), allocatable :: Dzc(:, :) !< what is this?
-    real(8), allocatable :: Dzs(:, :) !< what is this?
-    real(8), allocatable :: Ttc(:, :) !< what is this?
-    real(8), allocatable :: Tzc(:, :) !< what is this?
-    real(8), allocatable :: Tts(:, :) !< what is this?
-    real(8), allocatable :: Tzs(:, :) !< what is this?
+    real(8), allocatable :: Tsc(:, :)
+    real(8), allocatable :: Tss(:, :)
+    real(8), allocatable :: Dtc(:, :)
+    real(8), allocatable :: Dts(:, :)
+    real(8), allocatable :: Dzc(:, :)
+    real(8), allocatable :: Dzs(:, :)
+    real(8), allocatable :: Ttc(:, :)
+    real(8), allocatable :: Tzc(:, :)
+    real(8), allocatable :: Tts(:, :)
+    real(8), allocatable :: Tzs(:, :)
 
-    real(8), allocatable :: dtflux(:) !< \f$\delta \psi_{toroidal}\f$ in each annulus
-    real(8), allocatable :: dpflux(:) !< \f$\delta \psi_{poloidal}\f$ in each annulus
+    real(8), allocatable :: dtflux(:)
+    real(8), allocatable :: dpflux(:)
 
-    real(8), allocatable :: sweight(:) !< minimum poloidal length constraint weight
+    real(8), allocatable :: sweight(:)
 
-    integer, allocatable :: NAdof(:) !< degrees of freedom in Beltrami fields in each annulus
-    integer, allocatable :: Nfielddof(:) !< degrees of freedom in Beltrami fields in each annulus, field only, no Lagrange multipliers
+    integer, allocatable :: NAdof(:)
+    integer, allocatable :: Nfielddof(:)
 
-    type(subgrid), allocatable :: Ate(:, :, :) !< magnetic vector potential cosine Fourier harmonics;     stellarator-symmetric
-    type(subgrid), allocatable :: Aze(:, :, :) !< magnetic vector potential cosine Fourier harmonics;     stellarator-symmetric
-    type(subgrid), allocatable :: Ato(:, :, :) !< magnetic vector potential   sine Fourier harmonics; non-stellarator-symmetric
-    type(subgrid), allocatable :: Azo(:, :, :) !< magnetic vector potential   sine Fourier harmonics; non-stellarator-symmetric
+    type(subgrid), allocatable :: Ate(:, :, :)
+    type(subgrid), allocatable :: Aze(:, :, :)
+    type(subgrid), allocatable :: Ato(:, :, :)
+    type(subgrid), allocatable :: Azo(:, :, :)
 
-    integer, allocatable :: Lma(:, :) !< Lagrange multipliers (?)
-    integer, allocatable :: Lmb(:, :) !< Lagrange multipliers (?)
-    integer, allocatable :: Lmc(:, :) !< Lagrange multipliers (?)
-    integer, allocatable :: Lmd(:, :) !< Lagrange multipliers (?)
-    integer, allocatable :: Lme(:, :) !< Lagrange multipliers (?)
-    integer, allocatable :: Lmf(:, :) !< Lagrange multipliers (?)
-    integer, allocatable :: Lmg(:, :) !< Lagrange multipliers (?)
-    integer, allocatable :: Lmh(:, :) !< Lagrange multipliers (?)
+    integer, allocatable :: Lma(:, :)
+    integer, allocatable :: Lmb(:, :)
+    integer, allocatable :: Lmc(:, :)
+    integer, allocatable :: Lmd(:, :)
+    integer, allocatable :: Lme(:, :)
+    integer, allocatable :: Lmf(:, :)
+    integer, allocatable :: Lmg(:, :)
+    integer, allocatable :: Lmh(:, :)
 
-    real(8), allocatable :: Lmavalue(:, :) !< what is this?
-    real(8), allocatable :: Lmbvalue(:, :) !< what is this?
-    real(8), allocatable :: Lmcvalue(:, :) !< what is this?
-    real(8), allocatable :: Lmdvalue(:, :) !< what is this?
-    real(8), allocatable :: Lmevalue(:, :) !< what is this?
-    real(8), allocatable :: Lmfvalue(:, :) !< what is this?
-    real(8), allocatable :: Lmgvalue(:, :) !< what is this?
-    real(8), allocatable :: Lmhvalue(:, :) !< what is this?
+    real(8), allocatable :: Lmavalue(:, :)
+    real(8), allocatable :: Lmbvalue(:, :)
+    real(8), allocatable :: Lmcvalue(:, :)
+    real(8), allocatable :: Lmdvalue(:, :)
+    real(8), allocatable :: Lmevalue(:, :)
+    real(8), allocatable :: Lmfvalue(:, :)
+    real(8), allocatable :: Lmgvalue(:, :)
+    real(8), allocatable :: Lmhvalue(:, :)
 
-    integer, allocatable :: Fso(:, :) !< what is this?
-    integer, allocatable :: Fse(:, :) !< what is this?
+    integer, allocatable :: Fso(:, :)
+    integer, allocatable :: Fse(:, :)
 
-    logical :: Lcoordinatesingularity !< set by \c LREGION macro; true if inside the innermost volume
-    logical :: Lplasmaregion = .true. !< set by \c LREGION macro; true if inside the plasma region
-    logical :: Lvacuumregion = .false. !< set by \c LREGION macro; true if inside the vacuum region
-    logical :: Lsavedguvij !< flag used in matrix free
-    logical :: Localconstraint !< what is this?
+    logical :: Lcoordinatesingularity
+    logical :: Lplasmaregion = .true.
+    logical :: Lvacuumregion = .false.
+    logical :: Lsavedguvij
+    logical :: Localconstraint
 
     real(8), allocatable :: Remn_ext(:, :, :)
     real(8), allocatable :: Romn_ext(:, :, :)
@@ -409,148 +409,148 @@ module allglobal
 
     logical :: use_ext_mesh = .false.
 
-    real(8), allocatable :: dMA(:, :) !< energy and helicity matrices; quadratic forms
-    real(8), allocatable :: dMB(:, :) !< energy and helicity matrices; quadratic forms
-    real(8), allocatable :: dMD(:, :) !< energy and helicity matrices; quadratic forms
+    real(8), allocatable :: dMA(:, :)
+    real(8), allocatable :: dMB(:, :)
+    real(8), allocatable :: dMD(:, :)
 
-    real(8), allocatable :: dMAS(:) !< sparse version of dMA, data
-    real(8), allocatable :: dMDS(:) !< sparse version of dMD, data
-    integer, allocatable :: idMAS(:) !< sparse version of dMA and dMD, indices
-    integer, allocatable :: jdMAS(:) !< sparse version of dMA and dMD, indices
-    integer, allocatable :: NdMASmax(:) !< number of elements for sparse matrices
-    integer, allocatable :: NdMAS(:) !< number of elements for sparse matrices
+    real(8), allocatable :: dMAS(:)
+    real(8), allocatable :: dMDS(:)
+    integer, allocatable :: idMAS(:)
+    integer, allocatable :: jdMAS(:)
+    integer, allocatable :: NdMASmax(:)
+    integer, allocatable :: NdMAS(:)
 
-    real(8), allocatable :: dMG(:) !< what is this?
+    real(8), allocatable :: dMG(:)
 
-    real(8), allocatable :: AdotX(:) !< the matrix-vector product
-    real(8), allocatable :: DdotX(:) !< the matrix-vector product
+    real(8), allocatable :: AdotX(:)
+    real(8), allocatable :: DdotX(:)
 
-    real(8), allocatable :: solution(:, :) !< this is allocated in dforce; used in mp00ac and ma02aa; and is passed to packab
+    real(8), allocatable :: solution(:, :)
 
-    real(8), allocatable :: GMRESlastsolution(:, :, :) !< used to store the last solution for restarting GMRES
+    real(8), allocatable :: GMRESlastsolution(:, :, :)
 
-    real(8), allocatable :: MBpsi(:) !< matrix vector products
+    real(8), allocatable :: MBpsi(:)
 
-    real(8), allocatable :: BeltramiInverse(:, :) !< Beltrami inverse matrix
+    real(8), allocatable :: BeltramiInverse(:, :)
 
-    real(8), allocatable :: diotadxup(:, :, :) !< measured rotational transform on inner/outer interfaces for each volume;          d(transform)/dx; (see dforce)
-    real(8), allocatable :: dItGpdxtp(:, :, :) !< measured toroidal and poloidal current on inner/outer interfaces for each volume; d(Itor,Gpol)/dx; (see dforce)
+    real(8), allocatable :: diotadxup(:, :, :)
+    real(8), allocatable :: dItGpdxtp(:, :, :)
 
-    real(8), allocatable :: glambda(:, :, :, :) !< save initial guesses for iterative calculation of rotational-transform
+    real(8), allocatable :: glambda(:, :, :, :)
 
-    integer :: lmns !< number of independent degrees of freedom in angle transformation;
+    integer :: lmns
 
     real(8), allocatable :: dlambdaout(:, :, :)
 
-    real(8), allocatable :: Bemn(:, :, :) !< force vector;     stellarator-symmetric (?)
-    real(8), allocatable :: Iomn(:, :) !< force vector;     stellarator-symmetric (?)
-    real(8), allocatable :: Somn(:, :, :) !< force vector; non-stellarator-symmetric (?)
-    real(8), allocatable :: Pomn(:, :, :) !< force vector; non-stellarator-symmetric (?)
+    real(8), allocatable :: Bemn(:, :, :)
+    real(8), allocatable :: Iomn(:, :)
+    real(8), allocatable :: Somn(:, :, :)
+    real(8), allocatable :: Pomn(:, :, :)
 
-    real(8), allocatable :: Bomn(:, :, :) !< force vector;     stellarator-symmetric (?)
-    real(8), allocatable :: Iemn(:, :) !< force vector;     stellarator-symmetric (?)
-    real(8), allocatable :: Semn(:, :, :) !< force vector; non-stellarator-symmetric (?)
-    real(8), allocatable :: Pemn(:, :, :) !< force vector; non-stellarator-symmetric (?)
+    real(8), allocatable :: Bomn(:, :, :)
+    real(8), allocatable :: Iemn(:, :)
+    real(8), allocatable :: Semn(:, :, :)
+    real(8), allocatable :: Pemn(:, :, :)
 
-    real(8), allocatable :: BBe(:) !< force vector (?);     stellarator-symmetric (?)
-    real(8), allocatable :: IIo(:) !< force vector (?);     stellarator-symmetric (?)
-    real(8), allocatable :: BBo(:) !< force vector (?); non-stellarator-symmetric (?)
-    real(8), allocatable :: IIe(:) !< force vector (?); non-stellarator-symmetric (?)
+    real(8), allocatable :: BBe(:)
+    real(8), allocatable :: IIo(:)
+    real(8), allocatable :: BBo(:)
+    real(8), allocatable :: IIe(:)
 
-    real(8), allocatable :: Btemn(:, :, :) !< covariant \f$\theta\f$ cosine component of the tangential field on interfaces;     stellarator-symmetric
-    real(8), allocatable :: Bzemn(:, :, :) !< covariant \f$\zeta\f$  cosine component of the tangential field on interfaces;     stellarator-symmetric
-    real(8), allocatable :: Btomn(:, :, :) !< covariant \f$\theta\f$   sine component of the tangential field on interfaces; non-stellarator-symmetric
-    real(8), allocatable :: Bzomn(:, :, :) !< covariant \f$\zeta\f$    sine component of the tangential field on interfaces; non-stellarator-symmetric
+    real(8), allocatable :: Btemn(:, :, :)
+    real(8), allocatable :: Bzemn(:, :, :)
+    real(8), allocatable :: Btomn(:, :, :)
+    real(8), allocatable :: Bzomn(:, :, :)
 
-    real(8), allocatable :: Bloweremn(:, :) !< covariant field for Hessian computation
-    real(8), allocatable :: Bloweromn(:, :) !< covariant field for Hessian computation
+    real(8), allocatable :: Bloweremn(:, :)
+    real(8), allocatable :: Bloweromn(:, :)
 
-    integer :: LGdof !<       geometrical degrees of freedom associated with each interface
-    integer :: NGdof !< total geometrical degrees of freedom
+    integer :: LGdof
+    integer :: NGdof
 
-    real(8), allocatable :: dBBdRZ(:, :, :) !< derivative of magnetic field w.r.t. geometry (?)
-    real(8), allocatable :: dIIdRZ(:, :) !< derivative of spectral constraints w.r.t. geometry (?)
+    real(8), allocatable :: dBBdRZ(:, :, :)
+    real(8), allocatable :: dIIdRZ(:, :)
 
-    real(8), allocatable :: dFFdRZ(:, :, :, :, :) !< derivatives of B^2 at the interfaces wrt geometry
-    real(8), allocatable :: dBBdmp(:, :, :, :) !< derivatives of B^2 at the interfaces wrt mu and dpflux
+    real(8), allocatable :: dFFdRZ(:, :, :, :, :)
+    real(8), allocatable :: dBBdmp(:, :, :, :)
 
     real(8), allocatable :: freal_jac(:, :, :, :, :)
     real(8), allocatable :: freal_dBBdmp(:, :, :, :)
     integer :: dbbdmp_in_frealjac = 1
 
-    real(8), allocatable :: HdFFdRZ(:, :, :, :, :) !< derivatives of B^2 at the interfaces wrt geometry 2D Hessian;
+    real(8), allocatable :: HdFFdRZ(:, :, :, :, :)
 
-    real(8), allocatable :: denergydrr(:, :, :, :, :) !< derivatives of energy at the interfaces wrt geometry 3D Hessian;
-    real(8), allocatable :: denergydrz(:, :, :, :, :) !< derivatives of energy at the interfaces wrt geometry 3D Hessian;
-    real(8), allocatable :: denergydzr(:, :, :, :, :) !< derivatives of energy at the interfaces wrt geometry 3D Hessian;
-    real(8), allocatable :: denergydzz(:, :, :, :, :) !< derivatives of energy at the interfaces wrt geometry 3D Hessian;
+    real(8), allocatable :: denergydrr(:, :, :, :, :)
+    real(8), allocatable :: denergydrz(:, :, :, :, :)
+    real(8), allocatable :: denergydzr(:, :, :, :, :)
+    real(8), allocatable :: denergydzz(:, :, :, :, :)
 
-    real(8), allocatable :: dmupfdx(:, :, :, :, :) !< derivatives of mu and dpflux wrt geometry at constant interface transform
+    real(8), allocatable :: dmupfdx(:, :, :, :, :)
 
     real(8), allocatable :: freal_jac_full(:, :)
-    real(8), allocatable :: dessian(:, :) !< derivative of force gradient matrix (?)
+    real(8), allocatable :: dessian(:, :)
 
-    real(8), allocatable :: force_final(:) !< Final force on the interfaces [inface*mode]
+    real(8), allocatable :: force_final(:)
 
-    real(8), allocatable :: cosi(:, :) !< some precomputed cosines
-    real(8), allocatable :: sini(:, :) !< some precomputed sines
-    real(8), allocatable :: gteta(:) !< something related to \f$\sqrt g\f$ and \f$\theta\f$ ?
-    real(8), allocatable :: gzeta(:) !< something related to \f$\sqrt g\f$ and \f$\zeta\f$ ?
+    real(8), allocatable :: cosi(:, :)
+    real(8), allocatable :: sini(:, :)
+    real(8), allocatable :: gteta(:)
+    real(8), allocatable :: gzeta(:)
 
-    real(8), allocatable :: ajk(:) !< definition of coordinate axis
+    real(8), allocatable :: ajk(:)
 
-    real(8), allocatable :: dRadR(:, :, :, :) !< derivatives of coordinate axis
-    real(8), allocatable :: dRadZ(:, :, :, :) !< derivatives of coordinate axis
-    real(8), allocatable :: dZadR(:, :, :, :) !< derivatives of coordinate axis
-    real(8), allocatable :: dZadZ(:, :, :, :) !< derivatives of coordinate axis
+    real(8), allocatable :: dRadR(:, :, :, :)
+    real(8), allocatable :: dRadZ(:, :, :, :)
+    real(8), allocatable :: dZadR(:, :, :, :)
+    real(8), allocatable :: dZadZ(:, :, :, :)
 
-    real(8), allocatable :: dRodR(:, :, :) !< derivatives of coordinate axis
-    real(8), allocatable :: dRodZ(:, :, :) !< derivatives of coordinate axis
-    real(8), allocatable :: dZodR(:, :, :) !< derivatives of coordinate axis
-    real(8), allocatable :: dZodZ(:, :, :) !< derivatives of coordinate axis
+    real(8), allocatable :: dRodR(:, :, :)
+    real(8), allocatable :: dRodZ(:, :, :)
+    real(8), allocatable :: dZodR(:, :, :)
+    real(8), allocatable :: dZodZ(:, :, :)
 
-    integer, allocatable :: djkp(:, :) !< for calculating cylindrical volume
-    integer, allocatable :: djkm(:, :) !< for calculating cylindrical volume
+    integer, allocatable :: djkp(:, :)
+    integer, allocatable :: djkm(:, :)
 
-    real(8), allocatable :: lBBintegral(:) !< B.B integral
-    real(8), allocatable :: lABintegral(:) !< A.B integral
+    real(8), allocatable :: lBBintegral(:)
+    real(8), allocatable :: lABintegral(:)
 
-    real(8), allocatable :: vvolume(:) !< volume integral of \f$\sqrt g\f$; computed in volume
-    real(8) :: dvolume !< derivative of volume w.r.t. interface geometry
+    real(8), allocatable :: vvolume(:)
+    real(8) :: dvolume
 
-    integer :: ivol !< labels volume; some subroutines (called by NAG) are fixed argument list but require the volume label
+    integer :: ivol
 
-    real(8) :: gBzeta !< toroidal (contravariant) field; calculated in bfield; required to convert \f$\dot \theta\f$ to \f$B^\theta\f$, \f$\dot s\f$ to \f$B^s\f$
+    real(8) :: gBzeta
 
-    integer, allocatable :: Iquad(:) !< internal copy of Nquad
+    integer, allocatable :: Iquad(:)
 
-    real(8), allocatable :: gaussianweight(:, :) !<   weights for Gaussian quadrature
-    real(8), allocatable :: gaussianabscissae(:, :) !< abscissae for Gaussian quadrature
+    real(8), allocatable :: gaussianweight(:, :)
+    real(8), allocatable :: gaussianabscissae(:, :)
 
-    logical :: LBlinear !< controls selection of Beltrami field solver; depends on LBeltrami
-    logical :: LBnewton !< controls selection of Beltrami field solver; depends on LBeltrami
-    logical :: LBsequad !< controls selection of Beltrami field solver; depends on LBeltrami
+    logical :: LBlinear
+    logical :: LBnewton
+    logical :: LBsequad
 
-    real(8) :: oRZp(1:3) !< used in mg00aa() to determine \f$(s,\theta,\zeta)\f$ given \f$(R,Z,\varphi)\f$
+    real(8) :: oRZp(1:3)
 
-    type(derivative) :: dBdX !< \f${\rm d}\mathbf{B}/{\rm d}\mathbf{X}\f$ (?)
+    type(derivative) :: dBdX
 
-    integer :: globaljk !< labels position
-    real(8), allocatable :: Dxyz(:, :) !< computational boundary; position
-    real(8), allocatable :: Nxyz(:, :) !< computational boundary; normal
-    real(8), allocatable :: Jxyz(:, :) !< plasma        boundary; surface current
+    integer :: globaljk
+    real(8), allocatable :: Dxyz(:, :)
+    real(8), allocatable :: Nxyz(:, :)
+    real(8), allocatable :: Jxyz(:, :)
 
-    real(8) :: tetazeta(1:2) !< what is this?
+    real(8) :: tetazeta(1:2)
 
-    real(8) :: virtualcasingfactor = -one/(four*pi) !< this agrees with diagno
+    real(8) :: virtualcasingfactor = -one/(four*pi)
 
-    integer :: IBerror !< for computing error in magnetic field
+    integer :: IBerror
 
-    integer :: nfreeboundaryiterations !< number of free-boundary iterations already performed
+    integer :: nfreeboundaryiterations
 
-    integer, parameter :: Node = 2 !< best to make this global for consistency between calling and called routines
+    integer, parameter :: Node = 2
 
-    logical :: first_free_bound = .false. !< flag to indicate that this is the first free-boundary iteration
+    logical :: first_free_bound = .false.
 
 contains
 
@@ -569,38 +569,38 @@ contains
         integer :: ierr, astat, ios, nthreads, ithread
         real(8) :: cput, cpui, cpuo = 0
 
-        integer :: aderiv ! Derivative of A. -1: w.r.t geometrical degree of freedom
-        integer :: tderiv ! Derivative of Chebyshev polynomialc. 0: no derivatives
-        integer :: ii, & ! Loop index on Fourier harmonics
-                   ll, & ! Loop index on radial resolution
-                   mi, & ! Poloidal mode number
-                   lvol, & ! Volume number
-                   iocons ! inner (0) or outer (1) side of the volume
-        real(8) :: mfactor ! Regularization factor when LcoordinateSingularity
+        integer :: aderiv
+        integer :: tderiv
+        integer :: ii, &
+                   ll, &
+                   mi, &
+                   lvol, &
+                   iocons
+        real(8) :: mfactor
 
         efmn(1:mn) = zero; sfmn(1:mn) = zero; cfmn(1:mn) = zero; ofmn(1:mn) = zero
 
-        do ii = 1, mn ! loop over Fourier harmonics; 13 Sep 13;
+        do ii = 1, mn
 
             if (Lcoordinatesingularity) then
                 mi = im(ii)
-                do ll = mi, Lrad(lvol), 2 ! loop over Zernike polynomials; Lrad is the radial resolution; 01 Jul 19;
+                do ll = mi, Lrad(lvol), 2
                     ; ; efmn(ii) = efmn(ii) + Ate(lvol, aderiv, ii)%s(ll)*RTT(ll, mi, iocons, 1)*half
                     ; ; cfmn(ii) = cfmn(ii) + Aze(lvol, aderiv, ii)%s(ll)*RTT(ll, mi, iocons, 1)*half
                     if (NOTstellsym) then; ofmn(ii) = ofmn(ii) + Ato(lvol, aderiv, ii)%s(ll)*RTT(ll, mi, iocons, 1)*half
                         ; ; sfmn(ii) = sfmn(ii) + Azo(lvol, aderiv, ii)%s(ll)*RTT(ll, mi, iocons, 1)*half
                     end if
-                end do ! end of do ll; 20 Feb 13;
+                end do
             else
-                do ll = 0, Lrad(lvol) ! loop over Chebyshev polynomials; Lrad is the radial resolution;
-                    ; ; efmn(ii) = efmn(ii) + Ate(lvol, aderiv, ii)%s(ll)*TT(ll, iocons, 1) ! aderiv labels deriv. wrt mu, pflux;
+                do ll = 0, Lrad(lvol)
+                    ; ; efmn(ii) = efmn(ii) + Ate(lvol, aderiv, ii)%s(ll)*TT(ll, iocons, 1)
                     ; ; cfmn(ii) = cfmn(ii) + Aze(lvol, aderiv, ii)%s(ll)*TT(ll, iocons, 1)
                     if (NOTstellsym) then; ofmn(ii) = ofmn(ii) + Ato(lvol, aderiv, ii)%s(ll)*TT(ll, iocons, 1)
                         ; ; sfmn(ii) = sfmn(ii) + Azo(lvol, aderiv, ii)%s(ll)*TT(ll, iocons, 1)
                     end if
-                end do ! end of do ll; 20 Feb 13;
-            end if ! Lcoordinatesingularity; 01 Jul 19;
-        end do ! end of do ii; 20 Feb 13;
+                end do
+            end if
+        end do
 
     end subroutine build_vector_potential
 
@@ -632,7 +632,7 @@ contains
         use inputlist
 
 #ifdef IFORT
-        use ifport ! for fseek, ftell with Intel compiler
+        use ifport
 #endif
 
         use mpi
@@ -646,9 +646,9 @@ contains
         character(len=1000) :: line
 
         integer :: mm, nn, MNMAX
-        real(8), allocatable :: RZRZ(:, :) ! local array used for reading interface Fourier harmonics from file;
+        real(8), allocatable :: RZRZ(:, :)
 
-        inquire (file=trim(ext)//".sp", exist=Lspexist) ! check if file exists;
+        inquire (file=trim(ext)//".sp", exist=Lspexist)
         if (.not. Lspexist) then
             write (6, '("readin :      fatal : myid=",i3," ; .not.Lspexist ; the input file does not exist;")') myid
             call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
@@ -657,7 +657,7 @@ contains
 
         open (iunit, file=trim(ext)//".sp", status="old")
 
-        instat = 0 ! initially, no error
+        instat = 0
 
         if (Wreadin) then; cput = MPI_WTIME(); write (ounit, '("readin : ",f10.2," : reading physicslist     from ext.sp ;")') cput - cpus
         end if
@@ -762,8 +762,8 @@ contains
 #else
             call ftell(iunit, filepos)
 #endif
-            do ! will read in Fourier harmonics until the end of file is reached;
-                read (iunit, *, iostat=instat) mm, nn, RZRZ(1:4, 1:Nvol) !if change of angle applies, transformation assumes m>=0 and for m=0 only n>=0;
+            do
+                read (iunit, *, iostat=instat) mm, nn, RZRZ(1:4, 1:Nvol)
                 if (instat /= 0) exit
 
                 num_modes = num_modes + 1
@@ -788,11 +788,11 @@ contains
 
             deallocate (RZRZ, stat=astat)
 
-        end if ! Linitialize .le. 0
+        end if
 
         close (iunit)
 
-    end subroutine ! read_inputlists_from_file
+    end subroutine
 
     subroutine write_spec_namelist()
         use constants
@@ -808,7 +808,7 @@ contains
         character(LEN=100), parameter :: example = 'example.sp'
 
         if (myid == 0) then
-            inquire (file=trim(example), EXIST=exist) ! inquire if inputfile existed;
+            inquire (file=trim(example), EXIST=exist)
             if (exist) then
                 write (6, '("global :      fatal : myid=",i3," ; exist ; example input file example.sp already existed;")') myid
                 call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
@@ -843,7 +843,7 @@ contains
         integer :: vvol
         real(8) :: xx, toroidalflux, toroidalcurrent
 
-        Mvol = Nvol + Lfreebound ! this is just for screen output and initial check; true assignment of Mvol appears outside if( myid.eq.0 ) then ;
+        Mvol = Nvol + Lfreebound
 
         write (ounit, '("readin : ", 10x ," : ")')
 
@@ -934,10 +934,10 @@ contains
             stop "readin : abs(tflux(Nvol)).lt. vsmall : enclosed toroidal flux cannot be zero ;"
         end if
 
-        toroidalflux = tflux(Nvol) ! toroidal flux is a local variable; SRH: 27 Feb 18
+        toroidalflux = tflux(Nvol)
 
-        tflux(1:Mvol) = tflux(1:Mvol)/toroidalflux ! normalize toroidal flux
-        pflux(1:Mvol) = pflux(1:Mvol)/toroidalflux ! normalize poloidal flux
+        tflux(1:Mvol) = tflux(1:Mvol)/toroidalflux
+        pflux(1:Mvol) = pflux(1:Mvol)/toroidalflux
 
         if (tflux(1) < zero) then
             write (6, '("readin :      fatal : myid=",i3," ; tflux(1).lt.zero ; enclosed toroidal flux cannot be zero;")') myid
@@ -1078,7 +1078,7 @@ contains
 
         write (ounit, '("readin : ", 10x ," : ")')
 
-    end subroutine ! check_inputs
+    end subroutine
 
     subroutine broadcast_inputs
 
@@ -1218,7 +1218,7 @@ contains
         call MPI_BCAST(Wwrtend, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
         call MPI_BCAST(Wmacros, 1, MPI_LOGICAL, 0, MPI_COMM_SPEC, ierr)
 
-    end subroutine ! broadcast_inputs
+    end subroutine
 
     subroutine wrtend
 
@@ -1237,28 +1237,28 @@ contains
         integer :: ierr, astat, ios, nthreads, ithread
         real(8) :: cput, cpui, cpuo = 0
 
-        integer :: vvol !< iteration variable over all nested volumes
-        integer :: imn !< iteration variable for all Fourier harmonics
-        integer :: ii !< iteration variable for all Fourier harmonics
-        integer :: jj !< iteration variable
-        integer :: kk !< iteration variable
-        integer :: jk !< iteration variable
-        integer :: Lcurvature !< curvature flag (?)
-        integer :: mm !< current poloidal mode number
-        integer :: nn !< current toroidal mode number
+        integer :: vvol
+        integer :: imn
+        integer :: ii
+        integer :: jj
+        integer :: kk
+        integer :: jk
+        integer :: Lcurvature
+        integer :: mm
+        integer :: nn
 
-        real(8) :: lss !< (?)
-        real(8) :: teta !< (?)
-        real(8) :: zeta !< (?)
-        real(8) :: st(1:Node) !< (?)
-        real(8) :: Bst(1:Node) !< (?)
-        real(8) :: BR !< (?)
-        real(8) :: BZ !< (?)
-        real(8) :: BP !< (?)
+        real(8) :: lss
+        real(8) :: teta
+        real(8) :: zeta
+        real(8) :: st(1:Node)
+        real(8) :: Bst(1:Node)
+        real(8) :: BR
+        real(8) :: BZ
+        real(8) :: BP
 
         if (myid /= 0) return
 
-        open (iunit, file=trim(ext)//".sp.end", status="unknown") ! restart input file;
+        open (iunit, file=trim(ext)//".sp.end", status="unknown")
 
         write (iunit, '("&physicslist")')
         write (iunit, '(" Igeometry   = ",i9        )') Igeometry
@@ -1305,10 +1305,10 @@ contains
         write (iunit, '(" Ras         = ",99es23.15)') iRbs(1:Ntor + 1, 0)
         write (iunit, '(" Zac         = ",99es23.15)') iZbc(1:Ntor + 1, 0)
 
-        do mm = 0, Mpol ! will write out the plasma boundary harmonics;
+        do mm = 0, Mpol
             do nn = -Ntor, Ntor
 
-                if (mm == 0 .and. nn < 0) cycle ! these modes are always excluded; 13 Oct 12;
+                if (mm == 0 .and. nn < 0) cycle
 
                 select case (mm)
                 case (0:9)
@@ -1321,15 +1321,15 @@ contains
                     if (nn < 0 .and. nn >= -9) write (iunit, 1004) nn, mm, Rbc(nn, mm), nn, mm, Zbs(nn, mm), nn, mm, Rbs(nn, mm), nn, mm, Zbc(nn, mm)
                     if (nn >= 0 .and. nn <= 9) write (iunit, 1005) nn, mm, Rbc(nn, mm), nn, mm, Zbs(nn, mm), nn, mm, Rbs(nn, mm), nn, mm, Zbc(nn, mm)
                     if (nn > 9 .and. nn <= 99) write (iunit, 1004) nn, mm, Rbc(nn, mm), nn, mm, Zbs(nn, mm), nn, mm, Rbs(nn, mm), nn, mm, Zbc(nn, mm)
-                end select ! end of select case( mm );
+                end select
 
-            end do ! end of do nn;
-        end do ! end of do mm;
+            end do
+        end do
 
-        do mm = 0, Mpol ! will write out the computation domain harmonics; (only relevant in free-boundary case);
+        do mm = 0, Mpol
             do nn = -Ntor, Ntor
 
-                if (mm == 0 .and. nn < 0) cycle ! these modes are always excluded; 13 Oct 12;
+                if (mm == 0 .and. nn < 0) cycle
 
                 select case (mm)
                 case (0:9)
@@ -1342,15 +1342,15 @@ contains
                     if (nn < 0 .and. nn >= -9) write (iunit, 1014) nn, mm, Rwc(nn, mm), nn, mm, Zws(nn, mm), nn, mm, Rws(nn, mm), nn, mm, Zwc(nn, mm)
                     if (nn >= 0 .and. nn <= 9) write (iunit, 1015) nn, mm, Rwc(nn, mm), nn, mm, Zws(nn, mm), nn, mm, Rws(nn, mm), nn, mm, Zwc(nn, mm)
                     if (nn > 9 .and. nn <= 99) write (iunit, 1014) nn, mm, Rwc(nn, mm), nn, mm, Zws(nn, mm), nn, mm, Rws(nn, mm), nn, mm, Zwc(nn, mm)
-                end select ! end of select case( mm );
+                end select
 
-            end do ! end of do nn;
-        end do ! end of do mm;
+            end do
+        end do
 
-        do mm = 0, Mpol ! will write out the computation domain harmonics; (only relevant in free-boundary case);
+        do mm = 0, Mpol
             do nn = -Ntor, Ntor
 
-                if (mm == 0 .and. nn < 0) cycle ! these modes are always excluded; 13 Oct 12;
+                if (mm == 0 .and. nn < 0) cycle
 
                 select case (mm)
                 case (0:9)
@@ -1363,10 +1363,10 @@ contains
                     if (nn < 0 .and. nn >= -9) write (iunit, 1024) nn, mm, Vns(nn, mm), nn, mm, Bns(nn, mm), nn, mm, Vnc(nn, mm), nn, mm, Bnc(nn, mm)
                     if (nn >= 0 .and. nn <= 9) write (iunit, 1025) nn, mm, Vns(nn, mm), nn, mm, Bns(nn, mm), nn, mm, Vnc(nn, mm), nn, mm, Bnc(nn, mm)
                     if (nn > 9 .and. nn <= 99) write (iunit, 1024) nn, mm, Vns(nn, mm), nn, mm, Bns(nn, mm), nn, mm, Vnc(nn, mm), nn, mm, Bnc(nn, mm)
-                end select ! end of select case( mm );
+                end select
 
-            end do ! end of do nn;
-        end do ! end of do mm;
+            end do
+        end do
 
 1000    format("Rbc(", i3, ",", i1, ")", 2x, "=", es23.15, " Zbs(", i3, ",", i1, ")", 2x, "=", es23.15, " Rbs(", i3, ",", i1, ")", 2x, "=", es23.15, " Zbc(", i3, ",", i1, ")", 2x, "=", es23.15)
 1001    format("Rbc(", i2, ",", i1, ")", 3x, "=", es23.15, " Zbs(", i2, ",", i1, ")", 3x, "=", es23.15, " Rbs(", i2, ",", i1, ")", 3x, "=", es23.15, " Zbc(", i2, ",", i1, ")", 3x, "=", es23.15)
@@ -1497,7 +1497,7 @@ contains
 
         integer, intent(in) :: vvol
 
-        IsMyVolumeValue = -1 ! Error value - Problem with vvol / id
+        IsMyVolumeValue = -1
         if (myid /= modulo(vvol - 1, ncpu)) then
             IsMyVolumeValue = 0
         else
@@ -1521,7 +1521,7 @@ contains
 
 end module allglobal
 
-module fftw_interface ! JAB; 25 Jul 17
+module fftw_interface
 
     use, intrinsic :: iso_c_binding
 
@@ -1529,10 +1529,10 @@ module fftw_interface ! JAB; 25 Jul 17
 
     include 'fftw3.f03'
 
-    type(c_ptr) :: planf !< FFTW-related (?)
-    type(c_ptr) :: planb !< FFTW-related (?)
-    complex(c_double_complex), allocatable :: cplxin(:, :, :) !< FFTW-related (?)
-    complex(c_double_complex), allocatable :: cplxout(:, :, :) !< FFTW-related (?)
+    type(c_ptr) :: planf
+    type(c_ptr) :: planb
+    complex(c_double_complex), allocatable :: cplxin(:, :, :)
+    complex(c_double_complex), allocatable :: cplxout(:, :, :)
 
 end module fftw_interface
 

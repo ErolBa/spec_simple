@@ -14,10 +14,10 @@ subroutine metrix(lquad, lvol)
     use allglobal, only: myid, ncpu, cpus, &
                          dBdX, &
                          mn, im, in, mne, ime, ine, &
-                         Nt, Nz, Ntz, efmn, ofmn, cfmn, sfmn, & ! 10 Dec 15;
-                         ijreal, & ! workspace;
-                         sg, guvij, & ! calculated in coords;
-                         gvuij, & ! this is workspace: nowhere used outside of this routine;
+                         Nt, Nz, Ntz, efmn, ofmn, cfmn, sfmn, &
+                         ijreal, &
+                         sg, guvij, &
+                         gvuij, &
                          goomne, goomno, &
                          gssmne, gssmno, &
                          gstmne, gstmno, &

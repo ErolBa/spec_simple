@@ -27,28 +27,28 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
 
-    logical, intent(in) :: LComputeDerivatives ! indicates whether derivatives are to be calculated;
+    logical, intent(in) :: LComputeDerivatives
 
     integer, intent(in) :: Mvol, mn, ivol
     real(8) :: inRbc(1:mn, 0:Mvol), inZbs(1:mn, 0:Mvol), inRbs(1:mn, 0:Mvol), inZbc(1:mn, 0:Mvol)
     real(8) :: jRbc(1:mn, 0:Mvol), jZbs(1:mn, 0:Mvol), jRbs(1:mn, 0:Mvol), jZbc(1:mn, 0:Mvol)
-    real(8) :: tmpRbc(1:mn, 0:Mvol), tmpZbs(1:mn, 0:Mvol), tmpRbs(1:mn, 0:Mvol), tmpZbc(1:mn, 0:Mvol) ! use as temp matrices to store iRbc etc
+    real(8) :: tmpRbc(1:mn, 0:Mvol), tmpZbs(1:mn, 0:Mvol), tmpRbs(1:mn, 0:Mvol), tmpZbc(1:mn, 0:Mvol)
 
-    real(8) :: jacbase(1:Ntz), jacbasec(1:mn), jacbases(1:mn) ! the 2D Jacobian and its Fourier
-    real(8) :: junkc(1:mn), junks(1:mn) ! these are junk matrices used for fft
+    real(8) :: jacbase(1:Ntz), jacbasec(1:mn), jacbases(1:mn)
+    real(8) :: junkc(1:mn), junks(1:mn)
 
     integer :: jvol, ii, ifail, jj, id, issym, irz, imn
     integer :: idJc, idJs, idRc, idRs, idZc, idZs
 
     integer :: Lcurvature
 
-    integer :: Njac, idgetrf, idgetrs ! internal variables used in Jacobian method
-    real(8), allocatable :: jacrhs(:), djacrhs(:), jacmat(:, :), djacmat(:, :), solution(:), LU(:, :) ! internal matrices used in Jacobian method
-    integer, allocatable :: ipiv(:) ! internal matrices used in  Jacobian method
+    integer :: Njac, idgetrf, idgetrs
+    real(8), allocatable :: jacrhs(:), djacrhs(:), jacmat(:, :), djacmat(:, :), solution(:), LU(:, :)
+    integer, allocatable :: ipiv(:)
 
     write (*, *) "Calling rzaxis"
 
-    jvol = 0 ! this identifies the "surface" in which the poloidal averaged harmonics will be placed; 19 Jul 16;
+    jvol = 0
 
     Ntoraxis = min(Ntor, Ntoraxis)
 
@@ -59,7 +59,7 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
         inRbc(1:mn, jvol) = zero
         inRbs(1:mn, jvol) = zero
 
-        if (Igeometry == 1 .and. Lreflect == 1) then ! reflect upper and lower bound in slab, each take half the amplitude
+        if (Igeometry == 1 .and. Lreflect == 1) then
             inRbc(2:mn, 0) = -inRbc(2:mn, Mvol)
             if (NOTstellsym) then
                 inRbs(2:mn, 0) = -inRbs(2:mn, Mvol)
@@ -68,61 +68,61 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
 
     case (3)
 
-        if (Lrzaxis == 1) then ! use centroid method
+        if (Lrzaxis == 1) then
 
             call invfft(mn, im(1:mn), in(1:mn), im(1:mn)*inRbs(1:mn, ivol), -im(1:mn)*inRbc(1:mn, ivol), &
                         im(1:mn)*inZbs(1:mn, ivol), -im(1:mn)*inZbc(1:mn, ivol), &
-                        Nt, Nz, jkreal(1:Ntz), jkimag(1:Ntz)) ! R_\t, Z_\t; 03 Nov 16;
+                        Nt, Nz, jkreal(1:Ntz), jkimag(1:Ntz))
 
-            ijreal(1:Ntz) = sqrt(jkreal(1:Ntz)**2 + jkimag(1:Ntz)**2) ! dl ; 11 Aug 14;
+            ijreal(1:Ntz) = sqrt(jkreal(1:Ntz)**2 + jkimag(1:Ntz)**2)
             ijimag(1:Ntz) = zero
 
-            jireal(1:Ntz) = ijreal(1:Ntz) ! dl ; 19 Sep 16;
+            jireal(1:Ntz) = ijreal(1:Ntz)
 
             ifail = 0
             call tfft(Nt, Nz, ijreal(1:Ntz), ijimag(1:Ntz), &
-                      mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), ifail) ! Fourier harmonics of differential poloidal length; 11 Mar 16;
+                      mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), ifail)
 
-            efmn(1:mn) = efmn(1:mn)*ajk(1:mn) ! poloidal integration of length; only take m=0 harmonics; 11 Aug 14;
+            efmn(1:mn) = efmn(1:mn)*ajk(1:mn)
             ofmn(1:mn) = ofmn(1:mn)*ajk(1:mn)
             cfmn(1:mn) = zero
             sfmn(1:mn) = zero
 
-            call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), & ! map length = "integrated dl" back to real space; 19 Sep 16;
+            call invfft(mn, im(1:mn), in(1:mn), efmn(1:mn), ofmn(1:mn), cfmn(1:mn), sfmn(1:mn), &
                         Nt, Nz, ijreal(1:Ntz), ijimag(1:Ntz))
 
-            jiimag(1:Ntz) = ijreal(1:Ntz) !  L ; 19 Sep 16;
+            jiimag(1:Ntz) = ijreal(1:Ntz)
 
             call invfft(mn, im(1:mn), in(1:mn), inRbc(1:mn, ivol), inRbs(1:mn, ivol), &
                         inZbc(1:mn, ivol), inZbs(1:mn, ivol), &
-                        Nt, Nz, kjreal(1:Ntz), kjimag(1:Ntz)) ! R, Z; 03 Nov 16;
+                        Nt, Nz, kjreal(1:Ntz), kjimag(1:Ntz))
 
-            ijreal(1:Ntz) = kjreal(1:Ntz)*jireal(1:Ntz) ! R dl;
-            ijimag(1:Ntz) = kjimag(1:Ntz)*jireal(1:Ntz) ! Z dl;
+            ijreal(1:Ntz) = kjreal(1:Ntz)*jireal(1:Ntz)
+            ijimag(1:Ntz) = kjimag(1:Ntz)*jireal(1:Ntz)
 
             ifail = 0
             call tfft(Nt, Nz, ijreal(1:Ntz), ijimag(1:Ntz), &
-                      mn, im(1:mn), in(1:mn), evmn(1:mn), odmn(1:mn), comn(1:mn), simn(1:mn), ifail) ! Fourier harmonics of weighted R & Z; 11 Mar 16;
+                      mn, im(1:mn), in(1:mn), evmn(1:mn), odmn(1:mn), comn(1:mn), simn(1:mn), ifail)
 
-            evmn(1:mn) = evmn(1:mn)*ajk(1:mn) ! poloidal integration of R dl; 19 Sep 16;
+            evmn(1:mn) = evmn(1:mn)*ajk(1:mn)
             odmn(1:mn) = odmn(1:mn)*ajk(1:mn)
-            comn(1:mn) = comn(1:mn)*ajk(1:mn) ! poloidal integration of Z dl; 19 Sep 16;
+            comn(1:mn) = comn(1:mn)*ajk(1:mn)
             simn(1:mn) = simn(1:mn)*ajk(1:mn)
 
             call invfft(mn, im(1:mn), in(1:mn), evmn(1:mn), odmn(1:mn), comn(1:mn), simn(1:mn), &
                         Nt, Nz, ijreal(1:Ntz), ijimag(1:Ntz))
 
-            ijreal(1:Ntz) = ijreal(1:Ntz)/jiimag(1:Ntz) ! Ro; 19 Sep 16;
-            ijimag(1:Ntz) = ijimag(1:Ntz)/jiimag(1:Ntz) ! Zo; 19 Sep 16;
+            ijreal(1:Ntz) = ijreal(1:Ntz)/jiimag(1:Ntz)
+            ijimag(1:Ntz) = ijimag(1:Ntz)/jiimag(1:Ntz)
 
-            kjreal(1:Ntz) = kjreal(1:Ntz) - ijreal(1:Ntz) ! \Delta R = R_1 - R_0 ; 03 Nov 16;
-            kjimag(1:Ntz) = kjimag(1:Ntz) - ijimag(1:Ntz) ! \Delta R = Z_1 - Z_0 ; 03 Nov 16;
+            kjreal(1:Ntz) = kjreal(1:Ntz) - ijreal(1:Ntz)
+            kjimag(1:Ntz) = kjimag(1:Ntz) - ijimag(1:Ntz)
 
             ifail = 0
             call tfft(Nt, Nz, ijreal(1:Ntz), ijimag(1:Ntz), &
                       mn, im(1:mn), in(1:mn), inRbc(1:mn, jvol), inRbs(1:mn, jvol), inZbc(1:mn, jvol), inZbs(1:mn, jvol), ifail)
 
-        else if (Lrzaxis == 2) then ! use Jacobian m=1 harmonic elimination method
+        else if (Lrzaxis == 2) then
 
             tmpRbc = iRbc
             tmpZbs = iZbs
@@ -175,8 +175,8 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
             Lcurvature = 1
             dBdX%innout = 1
 
-            idJc = Ntoraxis + 1 ! rhs index for J cos n=0 term
-            idJs = Ntoraxis + 1 + 2*Ntoraxis + 1 ! rhs index for J sin n=0 term
+            idJc = Ntoraxis + 1
+            idJs = Ntoraxis + 1 + 2*Ntoraxis + 1
             idRc = 1
             idZs = Ntoraxis + 1
             idRs = 2*Ntoraxis + 1
@@ -184,7 +184,7 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
 
             call coords(1, one, Lcurvature, Ntz, mn)
 
-            jacbase = sg(1:Ntz, 0)/Rij(1:Ntz, 0, 0) ! extract the baseline 2D jacobian, note the definition here does not have the R factor
+            jacbase = sg(1:Ntz, 0)/Rij(1:Ntz, 0, 0)
 
             call tfft(Nt, Nz, jacbase, Rij, &
                       mn, im(1:mn), in(1:mn), jacbasec(1:mn), jacbases(1:mn), junkc(1:mn), junks(1:mn), ifail)
@@ -194,7 +194,7 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
             else
                 jacrhs(1:2*Ntoraxis + 1) = -jacbasec(2*(Ntor + 1) - Ntoraxis:2*(Ntor + 1) + Ntoraxis)
                 jacrhs(2*Ntoraxis + 2:Njac) = -jacbases(2*(Ntor + 1) - Ntoraxis:2*(Ntor + 1) + Ntoraxis)
-            end if !if (YESstellsym)
+            end if
 
             if (YESstellsym) then
 
@@ -205,22 +205,22 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
                             id = 2*(Ntor + 1) + ii - jj
                             jacmat(ii + Ntoraxis + 1, jj + 1) = jacmat(ii + Ntoraxis + 1, jj + 1) - jZbs(id, ivol)
                             jacmat(ii + Ntoraxis + 1, Ntoraxis + 1 + jj) = jacmat(ii + Ntoraxis + 1, Ntoraxis + 1 + jj) + jRbc(id, ivol)
-                        end if ! if (ii-jj .ge. -Ntor)
+                        end if
 
                         if (ii + jj <= Ntor) then
                             id = 2*(Ntor + 1) + ii + jj
                             jacmat(ii + Ntoraxis + 1, jj + 1) = jacmat(ii + Ntoraxis + 1, jj + 1) - jZbs(id, ivol)
                             jacmat(ii + Ntoraxis + 1, Ntoraxis + 1 + jj) = jacmat(ii + Ntoraxis + 1, Ntoraxis + 1 + jj) - jRbc(id, ivol)
-                        end if ! if (ii+jj .le. Ntor)
+                        end if
 
-                    end do ! jj
+                    end do
 
                     id = 2*(Ntor + 1) + ii
                     jacmat(ii + Ntoraxis + 1, 1) = -two*jZbs(id, ivol)
 
-                end do ! ii
+                end do
 
-            else ! for NOTstellsym
+            else
 
                 do ii = -Ntoraxis, Ntoraxis
                     do jj = 1, Ntoraxis
@@ -237,7 +237,7 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
                             jacmat(ii + idJs, jj + idRs) = jacmat(ii + idJs, jj + idRs) - jZbs(id, ivol)
                             jacmat(ii + idJs, jj + idZc) = jacmat(ii + idJs, jj + idZc) - jRbc(id, ivol)
 
-                        end if ! if (ii-jj .ge. -Ntor)
+                        end if
 
                         if (ii + jj <= Ntor) then
                             id = 2*(Ntor + 1) + ii + jj
@@ -251,9 +251,9 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
                             jacmat(ii + idJs, jj + idZs) = jacmat(ii + idJs, jj + idZs) - jRbs(id, ivol)
                             jacmat(ii + idJs, jj + idRs) = jacmat(ii + idJs, jj + idRs) + jZbs(id, ivol)
                             jacmat(ii + idJs, jj + idZc) = jacmat(ii + idJs, jj + idZc) - jRbc(id, ivol)
-                        end if ! if (ii+jj .le. Ntor)
+                        end if
 
-                    end do ! jj
+                    end do
 
                     id = 2*(Ntor + 1) + ii
                     jacmat(ii + idJc, idRc) = -two*jZbs(id, ivol)
@@ -261,16 +261,16 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
                     jacmat(ii + idJs, idRc) = +two*jZbc(id, ivol)
                     jacmat(ii + idJs, idZc) = -two*jRbc(id, ivol)
 
-                end do ! ii
+                end do
 
-            end if ! if (YESstellsym)
+            end if
 
-            jacmat = jacmat*half ! because we are using (1+s)/2 instead of s
+            jacmat = jacmat*half
 
             LU = jacmat
-            call DGETRF(Njac, Njac, LU, Njac, ipiv, idgetrf) ! LU factorization
+            call DGETRF(Njac, Njac, LU, Njac, ipiv, idgetrf)
             solution = jacrhs
-            call DGETRS('N', Njac, 1, LU, Njac, ipiv, solution, Njac, idgetrs) ! sovle linear equation
+            call DGETRS('N', Njac, 1, LU, Njac, ipiv, solution, Njac, idgetrs)
 
             if (idgetrf < 0 .or. idgetrs < 0) then
                 ; write (ounit, 1010) cput - cpus, myid, ivol, idgetrf, idgetrs, "input error ;     "
@@ -298,7 +298,7 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
             else
                 inRbs(2:Ntoraxis + 1, jvol) = inRbs(2:Ntoraxis + 1, ivol) - solution(idRs + 1:idRs + Ntoraxis)
                 inZbc(1:Ntoraxis + 1, jvol) = inZbc(1:Ntoraxis + 1, ivol) - solution(idZc:idZc + Ntoraxis)
-            end if ! YESstellsym
+            end if
 
             deallocate (jacrhs, stat=astat)
             deallocate (jacmat, stat=astat)
@@ -306,9 +306,9 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
             deallocate (solution, stat=astat)
             deallocate (ipiv, stat=astat)
 
-        end if ! end of forking based on Lrzaxis ; 10 Jan 20
+        end if
 
-    end select ! end of select case( Igeometry ) ; 08 Feb 16;
+    end select
 
 end subroutine rzaxis
 

@@ -67,13 +67,13 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
         call allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
         call intghs_workspace_init(vvol)
 
-        dBdX%L = .false. ! No need to take derivatives of matrices w.r.t geometry.
+        dBdX%L = .false.
 
         ideriv = 0; Lcurvature = 1
         call compute_guvijsave(Iquad(vvol), vvol, ideriv, Lcurvature)
         Lsavedguvij = .true.
 
-        call ma00aa(Iquad(vvol), mn, vvol, ll) ! compute volume integrals of metric elements;
+        call ma00aa(Iquad(vvol), mn, vvol, ll)
         call matrix(vvol, mn, ll)
 
         call ma02aa(vvol, NN)
@@ -89,19 +89,19 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
                 if ((Lcoordinatesingularity .and. iocons == 0) .or. (Lvacuumregion .and. iocons == 1)) cycle
 
                 ideriv = 0
-                call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons) !Compute field at interface for global constraint
+                call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons)
 
                 ideriv = 2
-                call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons) !Compute field at interface for global constraint, d w.r.t. pflux
+                call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons)
             end do
 
             if (Lvacuumregion) then
 
-                ideriv = 1 ! derivatives of Btheta w.r.t tflux
-                iocons = 0 ! Only need inner side of volume derivatives
+                ideriv = 1
+                iocons = 0
                 call lbpol(Mvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons)
 
-                iflag = 2 ! derivatives of poloidal linking current w.r.t geometry not required
+                iflag = 2
                 call curent(Mvol, mn, Nt, Nz, iflag, ldItGp(0:1, -1:2))
             end if
         end if

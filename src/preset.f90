@@ -46,7 +46,7 @@ subroutine preset
     allocate (beltramierror(1:Mvol, 1:9), stat=astat)
     beltramierror(1:Mvol, 1:9) = zero
 
-    mn = 1 + Ntor + Mpol*(2*Ntor + 1) ! Fourier resolution of interface geometry & vector potential;
+    mn = 1 + Ntor + Mpol*(2*Ntor + 1)
 
     if (allocated(im)) deallocate (im)
     allocate (im(1:mn), stat=astat)
@@ -55,7 +55,7 @@ subroutine preset
     allocate (in(1:mn), stat=astat)
     in(1:mn) = 0
 
-    call gi00ab(Mpol, Ntor, Nfp, mn, im(1:mn), in(1:mn)) ! this sets the im and in mode identification arrays;
+    call gi00ab(Mpol, Ntor, Nfp, mn, im(1:mn), in(1:mn))
 
     if (allocated(halfmm)) deallocate (halfmm)
     allocate (halfmm(1:mn), stat=astat)
@@ -70,9 +70,9 @@ subroutine preset
 
     end if
 
-    lMpol = 4*Mpol; lNtor = 4*Ntor ! extra-enhanced resolution for metrics;
+    lMpol = 4*Mpol; lNtor = 4*Ntor
 
-    mne = 1 + lNtor + lMpol*(2*lNtor + 1) ! resolution of metrics; enhanced resolution; see metrix;
+    mne = 1 + lNtor + lMpol*(2*lNtor + 1)
 
     if (allocated(ime)) deallocate (ime)
     allocate (ime(1:mne), stat=astat)
@@ -89,7 +89,7 @@ subroutine preset
     if (iNtor <= 0) sNtor = Ntor - iNtor
     if (Ntor == 0) sNtor = 0
 
-    mns = 1 + sNtor + sMpol*(2*sNtor + 1) ! resolution of straight-field line transformation on interfaces; see tr00ab; soon to be redundant;
+    mns = 1 + sNtor + sMpol*(2*sNtor + 1)
 
     if (allocated(ims)) deallocate (ims)
     allocate (ims(1:mns), stat=astat)
@@ -98,9 +98,9 @@ subroutine preset
     allocate (ins(1:mns), stat=astat)
     ins(1:mns) = 0
 
-    call gi00ab(sMpol, sNtor, Nfp, mns, ims(1:mns), ins(1:mns)) ! note that the field periodicity factor is included in ins;
+    call gi00ab(sMpol, sNtor, Nfp, mns, ims(1:mns), ins(1:mns))
 
-    if (Lcheck == 5) then; forcetol = 1.0e+12; nPpts = 0 ! will check Hessian using finite-differences;
+    if (Lcheck == 5) then; forcetol = 1.0e+12; nPpts = 0
     end if
 
     if (allocated(iRbc)) deallocate (iRbc)
@@ -152,9 +152,9 @@ subroutine preset
 
         if (mk == 0) ajk(kk) = pi2
 
-    end do ! end of do kk;
+    end do
 
-    if (myid == 0) then ! read plasma boundary & computational boundary; initialize interface geometry;
+    if (myid == 0) then
 
         if (Igeometry == 3 .and. Rbc(0, +1) + Rbc(0, -1) > zero .and. Zbs(0, +1) - Zbs(0, -1) > zero) then; Lchangeangle = .true.
         else; Lchangeangle = .false.
@@ -162,15 +162,15 @@ subroutine preset
 
         if (Lchangeangle) write (ounit, '("readin : " 10x " : CHANGING ANGLE ;")')
 
-        do ii = 1, mn; mm = im(ii); nn = in(ii)/Nfp ! set plasma boundary, computational boundary; 29 Apr 15;
+        do ii = 1, mn; mm = im(ii); nn = in(ii)/Nfp
 
-            if (Lchangeangle) then; jj = -1; kk = -nn ! change sign of poloidal angle;
+            if (Lchangeangle) then; jj = -1; kk = -nn
             else; jj = +1; kk = +nn
             end if
 
             if (mm == 0 .and. nn == 0) then
 
-                ; iRbc(ii, Nvol) = Rbc(nn, mm) ! plasma        boundary is ALWAYS given by namelist Rbc & Zbs;
+                ; iRbc(ii, Nvol) = Rbc(nn, mm)
                 ; iZbs(ii, Nvol) = zero
                 if (NOTstellsym) then
                     ; iRbs(ii, Nvol) = zero
@@ -180,9 +180,9 @@ subroutine preset
                     ; iZbc(ii, Nvol) = zero
                 end if
 
-            else ! if( mm.eq.0 .and. nn.eq.0 ) then ; matches
+            else
 
-                ; iRbc(ii, Nvol) = Rbc(kk, mm) + Rbc(-kk, -mm) ! plasma        boundary is ALWAYS given by namelist Rbc & Zbs;
+                ; iRbc(ii, Nvol) = Rbc(kk, mm) + Rbc(-kk, -mm)
                 ; iZbs(ii, Nvol) = (Zbs(kk, mm) - Zbs(-kk, -mm))*jj
                 if (NOTstellsym) then
                     ; iRbs(ii, Nvol) = (Rbs(kk, mm) - Rbs(-kk, -mm))*jj
@@ -192,61 +192,61 @@ subroutine preset
                     ; iZbc(ii, Nvol) = zero
                 end if
 
-            end if ! end of if( mm.eq.0 .and. nn.eq.0 ) ;
+            end if
 
-        end do ! end of do ii = 1, mn;
+        end do
 
-        select case (Linitialize) ! 24 Oct 12;
+        select case (Linitialize)
 
-        case (:0) ! Linitialize=0 ; initial guess for geometry of the interior surfaces is given in the input file;
+        case (:0)
 
-            if (Lchangeangle) then; jj = -1 ! change sign of poloidal angle; Loizu Nov 18;
+            if (Lchangeangle) then; jj = -1
             else; jj = +1
             end if
 
-            do idx_mode = 1, num_modes ! will read in Fourier harmonics until the end of file is reached;
+            do idx_mode = 1, num_modes
                 mm = mmRZRZ(idx_mode)
                 nn = nnRZRZ(idx_mode)
 
-                do ii = 1, mn; mi = im(ii); ni = in(ii) ! loop over harmonics within range;
+                do ii = 1, mn; mi = im(ii); ni = in(ii)
                     if (mm == 0 .and. mi == 0 .and. nn*Nfp == ni) then
-                        iRbc(ii, 1:Nvol - 1) = allRZRZ(1, 1:Nvol - 1, idx_mode) ! select relevant harmonics;
-                        iZbs(ii, 1:Nvol - 1) = allRZRZ(2, 1:Nvol - 1, idx_mode) ! select relevant harmonics;
+                        iRbc(ii, 1:Nvol - 1) = allRZRZ(1, 1:Nvol - 1, idx_mode)
+                        iZbs(ii, 1:Nvol - 1) = allRZRZ(2, 1:Nvol - 1, idx_mode)
                         if (NOTstellsym) then
-                            iRbs(ii, 1:Nvol - 1) = allRZRZ(3, 1:Nvol - 1, idx_mode) ! select relevant harmonics;
-                            iZbc(ii, 1:Nvol - 1) = allRZRZ(4, 1:Nvol - 1, idx_mode) ! select relevant harmonics;
+                            iRbs(ii, 1:Nvol - 1) = allRZRZ(3, 1:Nvol - 1, idx_mode)
+                            iZbc(ii, 1:Nvol - 1) = allRZRZ(4, 1:Nvol - 1, idx_mode)
                         else
-                            iRbs(ii, 1:Nvol - 1) = zero ! select relevant harmonics;
-                            iZbc(ii, 1:Nvol - 1) = zero ! select relevant harmonics;
+                            iRbs(ii, 1:Nvol - 1) = zero
+                            iZbc(ii, 1:Nvol - 1) = zero
                         end if
                     elseif (mm == mi .and. nn*Nfp == jj*ni) then
-                        iRbc(ii, 1:Nvol - 1) = allRZRZ(1, 1:Nvol - 1, idx_mode) ! select relevant harmonics;
-                        iZbs(ii, 1:Nvol - 1) = jj*allRZRZ(2, 1:Nvol - 1, idx_mode) ! select relevant harmonics;
+                        iRbc(ii, 1:Nvol - 1) = allRZRZ(1, 1:Nvol - 1, idx_mode)
+                        iZbs(ii, 1:Nvol - 1) = jj*allRZRZ(2, 1:Nvol - 1, idx_mode)
                         if (NOTstellsym) then
-                            iRbs(ii, 1:Nvol - 1) = jj*allRZRZ(3, 1:Nvol - 1, idx_mode) ! select relevant harmonics;
-                            iZbc(ii, 1:Nvol - 1) = allRZRZ(4, 1:Nvol - 1, idx_mode) ! select relevant harmonics;
+                            iRbs(ii, 1:Nvol - 1) = jj*allRZRZ(3, 1:Nvol - 1, idx_mode)
+                            iZbc(ii, 1:Nvol - 1) = allRZRZ(4, 1:Nvol - 1, idx_mode)
                         else
-                            iRbs(ii, 1:Nvol - 1) = zero ! select relevant harmonics;
-                            iZbc(ii, 1:Nvol - 1) = zero ! select relevant harmonics;
+                            iRbs(ii, 1:Nvol - 1) = zero
+                            iZbc(ii, 1:Nvol - 1) = zero
                         end if
                     end if
-                end do ! end of do ii;
+                end do
 
-            end do ! end of do;
+            end do
 
-        end select ! end select case( Linitialize );
+        end select
 
         if (Igeometry == 3) then
-            if (Rac(0) > zero) then ! user has supplied logically possible coordinate axis;
+            if (Rac(0) > zero) then
                 iRbc(1:Ntor + 1, 0) = Rac(0:Ntor)
                 iZbs(1:Ntor + 1, 0) = Zas(0:Ntor)
                 iRbs(1:Ntor + 1, 0) = Ras(0:Ntor)
                 iZbc(1:Ntor + 1, 0) = Zac(0:Ntor)
-            else ! see preset for poloidal-average specification of coordinate axis and geometrical initialization;
-            end if ! end of if( Igeometry.eq.3 ) then ;
+            else
+            end if
         end if
 
-    end if ! end of if myid.eq.0 loop; only the master will read the input file; all variables need to be broadcast;
+    end if
 
     call MPI_BCAST(iRbc(1:mn, 0:Mvol), (Mvol + 1)*mn, MPI_DOUBLE_PRECISION, 0, MPI_COMM_SPEC, ierr)
     if (Igeometry == 3) then
@@ -260,20 +260,20 @@ subroutine preset
     end if
 
     if (Igeometry == 1 .or. Igeometry == 2) then
-        ; iRbc(1:mn, 0) = zero ! innermost volume must be trivial; this is used in volume; innermost interface is coordinate axis;
+        ; iRbc(1:mn, 0) = zero
         if (NOTstellsym) then
-            iRbs(1:mn, 0) = zero ! innermost volume must be trivial; this is used in volume;
+            iRbs(1:mn, 0) = zero
         end if
     end if
 
     if (Igeometry == 3) then
-        iZbs(1, 0:Mvol) = zero ! Zbs_{m=0,n=0} is irrelevant;
+        iZbs(1, 0:Mvol) = zero
     end if
     if (NOTstellsym) then
-        iRbs(1, 0:Mvol) = zero ! Rbs_{m=0,n=0} is irrelevant;
+        iRbs(1, 0:Mvol) = zero
     end if
 
-    if (Igeometry == 1 .and. Lreflect == 1) then ! reflect upper and lower bound in slab, each take half the amplitude
+    if (Igeometry == 1 .and. Lreflect == 1) then
         iRbc(2:mn, Mvol) = iRbc(2:mn, Mvol)*half
         iRbc(2:mn, 0) = -iRbc(2:mn, Mvol)
         if (NOTstellsym) then
@@ -282,7 +282,7 @@ subroutine preset
         end if
     end if
 
-    Rscale = iRbc(1, Mvol) ! this will be used to normalize the geometrical degrees-of-freedom;
+    Rscale = iRbc(1, Mvol)
 
     if (myid == 0) write (ounit, '("readin : ", 10x ," : myid=",i3," ; Rscale=",es22.15," ;")') myid, Rscale
 
@@ -337,8 +337,8 @@ subroutine preset
     dpflux(1:Mvol) = zero
 
     select case (Igeometry)
-    case (1); dtflux(1) = tflux(1); dpflux(1) = pflux(1) ! Cartesian              ; this is the "inverse" operation defined in xspech; 09 Mar 17;
-    case (2:3); dtflux(1) = tflux(1); dpflux(1) = zero ! cylindrical or toroidal;
+    case (1); dtflux(1) = tflux(1); dpflux(1) = pflux(1)
+    case (2:3); dtflux(1) = tflux(1); dpflux(1) = zero
     end select
 
     dtflux(2:Mvol) = tflux(2:Mvol) - tflux(1:Mvol - 1)
@@ -360,7 +360,7 @@ subroutine preset
     if (allocated(sweight)) deallocate (sweight)
     allocate (sweight(1:Mvol), stat=astat)
     sweight(1:Mvol) = zero
-    do vvol = 1, Mvol; sweight(vvol) = upsilon*(vvol*one/Nvol)**wpoloidal ! 11 July 18;
+    do vvol = 1, Mvol; sweight(vvol) = upsilon*(vvol*one/Nvol)**wpoloidal
     end do
 
     if (allocated(TT)) deallocate (TT)
@@ -403,7 +403,7 @@ subroutine preset
             end if
         end if
 
-        do jj = 1, mn; mj = im(jj); nj = in(jj); mimj = mi + mj; ninj = ni + nj !   adding   ; 17 Dec 15;
+        do jj = 1, mn; mj = im(jj); nj = in(jj); mimj = mi + mj; ninj = ni + nj
 
             call getimn(lMpol, lNtor, Nfp, mimj, ninj, kk)
             if (kk > 0) then
@@ -411,7 +411,7 @@ subroutine preset
                 else; kija(ii, jj, 0:1) = (/kk, 2/)
                 end if
             end if
-            ; ; mimj = mi - mj; ninj = ni - nj ! subtracting; 17 Dec 15;
+            ; ; mimj = mi - mj; ninj = ni - nj
 
             if (mimj > 0 .or. (mimj == 0 .and. ninj >= 0)) then
                 call getimn(lMpol, lNtor, Nfp, mimj, ninj, kk)
@@ -423,15 +423,15 @@ subroutine preset
             else
                 call getimn(lMpol, lNtor, Nfp, -mimj, -ninj, kk)
                 if (kk > 0) then
-                    ; ; kijs(ii, jj, 0:1) = (/kk, -2/) ! only the sine modes need the sign factor; 17 Dec 15;
+                    ; ; kijs(ii, jj, 0:1) = (/kk, -2/)
                 end if
             end if
 
-        end do ! end of do jj; 29 Jan 13;
+        end do
 
-    end do ! end of do ii; 29 Jan 13;
+    end do
 
-    if (Igeometry == 2) then ! standard cylindrical; 04 Dec 14;
+    if (Igeometry == 2) then
 
         if (allocated(djkp)) deallocate (djkp)
         allocate (djkp(1:mn, 1:mn), stat=astat)
@@ -447,7 +447,7 @@ subroutine preset
             end do
         end do
 
-    end if ! end of if( Igeometry.eq.2 ) ; 04 Dec 14;
+    end if
 
     if (allocated(iotakkii)) deallocate (iotakkii)
     allocate (iotakkii(1:mn), stat=astat)
@@ -492,9 +492,9 @@ subroutine preset
             if (ii > 0) then; iotakadd(kk, jj) = ii
             end if
 
-        end do ! end of do jj; 29 Jan 13;
+        end do
 
-    end do ! end of do kk; 29 Jan 13;
+    end do
 
     if (allocated(IPDt)) deallocate (IPDt)
     allocate (IPDt(1:Mvol), stat=astat)
@@ -522,11 +522,11 @@ subroutine preset
 
         if (Nquad > 0) then; Iquad(vvol) = Nquad
         else
-            if (Lcoordinatesingularity) Iquad(vvol) = Mpol + 2*Lrad(vvol) - Nquad ! NEED TO REVISE REGULARIZATION FACTORS; 26 Feb 13;
+            if (Lcoordinatesingularity) Iquad(vvol) = Mpol + 2*Lrad(vvol) - Nquad
             if (.not. Lcoordinatesingularity) Iquad(vvol) = 2*Lrad(vvol) - Nquad
         end if
 
-    end do ! end of do vvol; 18 Feb 13;
+    end do
 
     maxIquad = maxval(Iquad(1:Mvol))
 
@@ -541,11 +541,11 @@ subroutine preset
 
         lquad = Iquad(vvol)
 
-        call gauleg(lquad, gaussianweight(1:lquad, vvol), gaussianabscissae(1:lquad, vvol), igauleg) ! JAB; 28 Jul 17
+        call gauleg(lquad, gaussianweight(1:lquad, vvol), gaussianabscissae(1:lquad, vvol), igauleg)
 
         if (myid == 0) then
             cput = MPI_WTIME()
-            select case (igauleg) !                                                  123456789012345
+            select case (igauleg)
             case (0); if (Wpreset) write (ounit, 1000) cput - cpus, vvol, igauleg, "success        ", gaussianabscissae(1:lquad, vvol)
             case (1); write (ounit, 1000) cput - cpus, vvol, igauleg, "failed         ", gaussianabscissae(1:lquad, vvol)
             case (2); write (ounit, 1000) cput - cpus, vvol, igauleg, "input error    ", gaussianabscissae(1:lquad, vvol)
@@ -562,7 +562,7 @@ subroutine preset
 1000    format("preset : ", f10.2, " : lvol=", i3, " ; igauleg=", i5, " ; ", a15, " ; abscissae ="99f09.05)
 1001    format("preset : ", 10x, " :      ", 3x, "           ", 5x, "   ", 15x, " ; weights   ="99f09.05)
 
-    end do ! end of do vvol;  7 Mar 13;
+    end do
 
     LBsequad = .false.
     LBnewton = .false.
@@ -606,9 +606,9 @@ subroutine preset
 
         if (mi == 0) then; mmpp(ii) = zero
         else; mmpp(ii) = mi**pcondense
-        end if ! end of if( mi.eq.0 ) ; 11 Aug 14;
+        end if
 
-    end do ! end of do ii; 08 Nov 13;
+    end do
 
     if (allocated(NAdof)) deallocate (NAdof)
     allocate (NAdof(1:Mvol), stat=astat)
@@ -696,40 +696,40 @@ subroutine preset
         end if
 
         if (Lcoordinatesingularity) then
-            zerdof = 0 ! count Zernike degree of freedom 30 Jun 19
-            do ii = 2, Mpol ! for m>1
+            zerdof = 0
+            do ii = 2, Mpol
                 do jj = ii, Lrad(vvol), 2
-                    zerdof = zerdof + 2*ntor + 1 ! plus and minus sign for n>1, unique for n==0
-                    if (NOTstellsym) zerdof = zerdof + 2*ntor + 1 ! plus and minus sign for n
+                    zerdof = zerdof + 2*ntor + 1
+                    if (NOTstellsym) zerdof = zerdof + 2*ntor + 1
                 end do
             end do
-            zerdof = zerdof*2 ! we have one for At and one for Az
+            zerdof = zerdof*2
 
-            do jj = 0, Lrad(vvol), 2 ! for m==0
-                zerdof = zerdof + ntor + 1 ! minus sign for n, Aze
-                if (jj >= 2) zerdof = zerdof + ntor + 1 ! minus sign for n, Ate, without l=0 due to recombination
+            do jj = 0, Lrad(vvol), 2
+                zerdof = zerdof + ntor + 1
+                if (jj >= 2) zerdof = zerdof + ntor + 1
 
                 if (NOTstellsym) then
-                    zerdof = zerdof + ntor ! sin component minus sign for n, Azo
-                    if (jj >= 2) zerdof = zerdof + ntor ! minus sign for n, Ato, without l=0 due to recombination
+                    zerdof = zerdof + ntor
+                    if (jj >= 2) zerdof = zerdof + ntor
                 end if
             end do
 
-            if (Mpol >= 1) then ! for m==1
+            if (Mpol >= 1) then
                 do jj = 1, Lrad(vvol), 2
-                    zerdof = zerdof + 2*ntor + 1 ! minus and plus sign for n, Aze
-                    if (jj >= 2) zerdof = zerdof + 2*ntor + 1 ! minus sign for n, Ate, without l=0 due to recombination
+                    zerdof = zerdof + 2*ntor + 1
+                    if (jj >= 2) zerdof = zerdof + 2*ntor + 1
 
                     if (NOTstellsym) then
-                        zerdof = zerdof + 2*ntor + 1 ! sin component minus and plus sign for n, Azo
-                        if (jj >= 2) zerdof = zerdof + 2*ntor + 1 ! minus and plus sign for n, Ato, without l=0 due to recombination
+                        zerdof = zerdof + 2*ntor + 1
+                        if (jj >= 2) zerdof = zerdof + 2*ntor + 1
                     end if
                 end do
             end if
 
             Nfielddof(vvol) = zerdof
             if (YESstellsym) NAdof(vvol) = zerdof + mn + Ntor + 1 + mn - 1 + 1 + 0
-            if (NOTstellsym) NAdof(vvol) = zerdof + mn + mn - 1 + Ntor + 1 + Ntor + mn - 1 + mn - 1 + 1 + 0 ! this is broken at the moment
+            if (NOTstellsym) NAdof(vvol) = zerdof + mn + mn - 1 + Ntor + 1 + Ntor + mn - 1 + mn - 1 + 1 + 0
 
             NAdof(vvol) = NAdof(vvol) - (ntor + 1)
             if (NOTstellsym) NAdof(vvol) = NAdof(vvol) - ntor
@@ -739,18 +739,18 @@ subroutine preset
                 if (NOTstellsym) NAdof(vvol) = NAdof(vvol) - (2*ntor + 1)
             end if
 
-        else ! .not.Lcoordinatesingularity;                                     a    c      b        d      e      f      g   h
+        else
             if (YESstellsym) NAdof(vvol) = 2*(mn)*(Lrad(vvol)) + mn - 1 + 1 + 1
             if (NOTstellsym) NAdof(vvol) = 2*(mn + mn - 1)*(Lrad(vvol)) + mn - 1 + mn - 1 + 1 + 1
 
             if (YESstellsym) Nfielddof(vvol) = 2*(mn)*(Lrad(vvol))
             if (NOTstellsym) Nfielddof(vvol) = 2*(mn + mn - 1)*(Lrad(vvol))
 
-        end if ! end of if( Lcoordinatesingularity );
+        end if
 
-        do ii = 1, mn ! loop over Fourier harmonics;
+        do ii = 1, mn
 
-            do ideriv = -2, 2 ! loop over derivatives; 14 Jan 13;
+            do ideriv = -2, 2
 
                 if (allocated(Ate(vvol, ideriv, ii)%s)) deallocate (Ate(vvol, ideriv, ii)%s)
                 allocate (Ate(vvol, ideriv, ii)%s(0:Lrad(vvol)), stat=astat)
@@ -765,7 +765,7 @@ subroutine preset
                 allocate (Azo(vvol, ideriv, ii)%s(0:Lrad(vvol)), stat=astat)
                 Azo(vvol, ideriv, ii)%s(0:Lrad(vvol)) = zero
 
-            end do ! end of do ideriv;
+            end do
 
             ; ideriv = 0
 
@@ -782,20 +782,20 @@ subroutine preset
             allocate (Azo(vvol, ideriv, ii)%i(0:Lrad(vvol)), stat=astat)
             Azo(vvol, ideriv, ii)%i(0:Lrad(vvol)) = 0
 
-        end do ! end of do ii;
+        end do
 
-        select case (Linitgues) ! for iterative solver of the Beltrami fields, an initial guess is required; 11 Mar 16;
+        select case (Linitgues)
         case (0); 
-        case (1); Ate(vvol, 0, 1)%s(0:1) = dtflux(vvol)*half ! this is an integrable approximation; NEEDS CHECKING; 26 Feb 13;
-            ; ; Aze(vvol, 0, 1)%s(0:1) = dpflux(vvol)*half ! this is an integrable approximation; NEEDS CHECKING; 26 Feb 13;
+        case (1); Ate(vvol, 0, 1)%s(0:1) = dtflux(vvol)*half
+            ; ; Aze(vvol, 0, 1)%s(0:1) = dpflux(vvol)*half
             if (Lcoordinatesingularity) then
                 ; ; Ate(vvol, 0, 1)%s(2) = dtflux(vvol)*half*half
             end if
-        case (2); ! will call ra00aa below to read initial vector potential from file;
-        case (3); ! the initial guess will be randomized, maximum is maxrndgues; 5 Mar 19;
-            do ii = 1, mn ! loop over Fourier harmonics;
+        case (2); 
+        case (3); 
+            do ii = 1, mn
 
-                do ideriv = -2, 2 ! loop over derivatives; 14 Jan 13;
+                do ideriv = -2, 2
 
                     call random_number(Ate(vvol, ideriv, ii)%s)
                     call random_number(Aze(vvol, ideriv, ii)%s)
@@ -808,13 +808,13 @@ subroutine preset
                         Azo(vvol, ideriv, ii)%s = Azo(vvol, ideriv, ii)%s*maxrndgues
                     end if
 
-                end do ! end of do ideriv;
+                end do
 
-            end do ! end of do ii;
+            end do
 
         end select
 
-        idof = 0 ! degree of freedom index; reset to 0 in each volume;
+        idof = 0
 
         if (Lcoordinatesingularity) then
 
@@ -823,39 +823,39 @@ subroutine preset
                 do ll = 0, Lrad(vvol)
                     if (ll >= mi .and. mod(mi + ll, 2) == 0) then
                     if (.not. ((ll == 0 .and. mi == 0) .or. (ll == 1 .and. mi == 1))) then
-                        ; idof = idof + 1; Ate(vvol, 0, ii)%i(ll) = idof ! Zernike 30 Jun 19
+                        ; idof = idof + 1; Ate(vvol, 0, ii)%i(ll) = idof
                     end if
                     ; ; idof = idof + 1; Aze(vvol, 0, ii)%i(ll) = idof
                     if (NOTstellsym .and. ii > 1) then
                         if (.not. ((ll == 0 .and. mi == 0) .or. (ll == 1 .and. mi == 1))) then
-                            ; idof = idof + 1; Ato(vvol, 0, ii)%i(ll) = idof ! Zernike 30 Jun 19
+                            ; idof = idof + 1; Ato(vvol, 0, ii)%i(ll) = idof
                         end if
                         ; ; idof = idof + 1; Azo(vvol, 0, ii)%i(ll) = idof
-                    end if ! NOTstellsym
-                    end if ! Zernike
-                end do ! end of do ll; 17 Jan 13;
+                    end if
+                    end if
+                end do
 
-            end do ! end of do ii
+            end do
 
             do ii = 1, mn; mi = im(ii); ni = in(ii)
                 if (mi /= 0 .and. mi /= 1) then; idof = idof + 1; Lma(vvol, ii) = idof
                 end if
-                if (mi == 0) then; idof = idof + 1; Lmb(vvol, ii) = idof ! 18 May 16;
+                if (mi == 0) then; idof = idof + 1; Lmb(vvol, ii) = idof
                 end if
                 if (ii > 1) then; idof = idof + 1; Lme(vvol, ii) = idof
                 end if
                 if (ii == 1) then; idof = idof + 1; Lmg(vvol, ii) = idof
                 end if
                 if (NOTstellsym) then
-                    if (mi /= 0 .and. mi /= 1) then; idof = idof + 1; Lmc(vvol, ii) = idof ! 18 May 16;
+                    if (mi /= 0 .and. mi /= 1) then; idof = idof + 1; Lmc(vvol, ii) = idof
                     end if
-                    if (ii > 1) then; idof = idof + 1; Lmf(vvol, ii) = idof ! 18 May 16;
+                    if (ii > 1) then; idof = idof + 1; Lmf(vvol, ii) = idof
                     end if
-                    if (ii > 1 .and. mi == 0) then; idof = idof + 1; Lmd(vvol, ii) = idof ! 18 May 16;
+                    if (ii > 1 .and. mi == 0) then; idof = idof + 1; Lmd(vvol, ii) = idof
                     end if
-                end if ! end of if( NOTstellsym ) ; 19 Jul 16;
+                end if
 
-            end do ! end of do ii; 25 Jan 13;
+            end do
 
             if (idof /= NAdof(vvol)) then
                 write (6, '("preset :      fatal : myid=",i3," ; idof.ne.NAdof(vvol) ; need to count Beltrami degrees-of-freedom more carefully  for coordinate singularity;")') myid
@@ -869,7 +869,7 @@ subroutine preset
                 stop "preset : (idof+1)**2.ge.HUGE(idof)) : NAdof too big, should be smaller than maximum of int32 type ;"
             end if
 
-        else ! .not.Lcoordinatesingularity;
+        else
 
             do ii = 1, mn
                 do ll = 1, Lrad(vvol); idof = idof + 1; Ate(vvol, 0, ii)%i(ll) = idof
@@ -877,7 +877,7 @@ subroutine preset
                     if (ii > 1 .and. NOTstellsym) then; idof = idof + 1; Ato(vvol, 0, ii)%i(ll) = idof
                         ; ; idof = idof + 1; Azo(vvol, 0, ii)%i(ll) = idof
                     end if
-                end do ! end of do ll; 08 Feb 16;
+                end do
             end do
 
             do ii = 1, mn
@@ -888,7 +888,7 @@ subroutine preset
                 if (ii == 1) then; idof = idof + 1; Lmg(vvol, ii) = idof
                     ; ; idof = idof + 1; Lmh(vvol, ii) = idof
                 end if
-            end do ! end of do ii; 25 Jan 13;
+            end do
 
             if (idof /= NAdof(vvol)) then
                 write (6, '("preset :      fatal : myid=",i3," ; idof.ne.NAdof(vvol) ; need to count degrees-of-freedom more carefully for new matrix;")') myid
@@ -902,7 +902,7 @@ subroutine preset
                 stop "preset : (idof+1)**2.ge.HUGE(idof)) : NAdof too big, should be smaller than maximum of int32 type ;"
             end if
 
-        end if ! end of if( Lcoordinatesingularity ) ;
+        end if
 
         if (idof /= NAdof(vvol)) then
             write (6, '("preset :      fatal : myid=",i3," ; idof.ne.NAdof(vvol) ; impossible logic;")') myid
@@ -918,28 +918,28 @@ subroutine preset
                     if (Ato(vvol, 0, ii)%i(jj) == 0) Azo(vvol, 0, ii)%s(jj) = zero
                     if (Azo(vvol, 0, ii)%i(jj) == 0) Azo(vvol, 0, ii)%s(jj) = zero
                 end if
-            end do !jj
-        end do !ii
+            end do
+        end do
 
-    end do ! end of do vvol = 1, Nvol loop;
+    end do
 
-    if (Linitgues == 2) then; call ra00aa('R') ! read initial guess for Beltrami field from file; 02 Jan 15;
+    if (Linitgues == 2) then; call ra00aa('R')
     end if
 
-    if (myid == 0) then ! 17 Oct 12;
+    if (myid == 0) then
         cput = MPI_WTIME()
         write (ounit, '("preset : ", 10x ," : ")')
         write (ounit, '("preset : ",f10.2," : Nquad="i4" ; mn="i5" ; NGdof="i6" ; NAdof="16(i6",")" ...")') cput - cpus, Nquad, mn, NGdof, NAdof(1:min(Mvol, 16))
     end if
 
-    Nt = max(Ndiscrete*4*Mpol, 1); Nz = max(Ndiscrete*4*Ntor, 1); Ntz = Nt*Nz; soNtz = one/sqrt(one*Ntz) ! exaggerated discrete resolution;
+    Nt = max(Ndiscrete*4*Mpol, 1); Nz = max(Ndiscrete*4*Ntor, 1); Ntz = Nt*Nz; soNtz = one/sqrt(one*Ntz)
 
     ; ; hNt = Nt/2
     if (Nz > 1) then; hNz = Nz/2
     else; hNz = 0
     end if
 
-    if (myid == 0) then ! 17 Oct 12;
+    if (myid == 0) then
         cput = MPI_WTIME()
         write (ounit, '("preset : ", 10x ," : ")')
         write (ounit, '("preset : ",f10.2," : Nt="i6" ; Nz="i6" ; Ntz="i9" ;")') cput - cpus, Nt, Nz, Ntz
@@ -1137,7 +1137,7 @@ subroutine preset
         stop "preset : Nt.eq.0 : illegal division ;"
     end if
 
-    do ii = 1, mn; mi = im(ii); ni = in(ii) ! loop over Fourier harmonics;
+    do ii = 1, mn; mi = im(ii); ni = in(ii)
 
         do kk = 0, Nz - 1; zeta = kk*pi2nfp/Nz
             do jj = 0, Nt - 1; teta = jj*pi2/Nt; jk = 1 + jj + kk*Nt; arg = mi*teta - ni*zeta
@@ -1148,21 +1148,21 @@ subroutine preset
             end do
         end do
 
-    end do ! end of do ii; 13 May 13;
+    end do
 
-    if (Igeometry == 3 .and. iRbc(1, 0) < small) then ! have not yet assigned coordinate axis; see global;readin for user-supplied Rac, Zas, etc. ; 19 Jul 16;
+    if (Igeometry == 3 .and. iRbc(1, 0) < small) then
 
         write (*, *) "Finding initial axis..."
         select case (Linitialize)
         case (:-1); vvol = Nvol + Linitialize
-        case (0); vvol = 1 ! this is really a dummy; no interpolation of interface geometry is required; packxi calls rzaxis with lvol=1; 19 Jul 16;
+        case (0); vvol = 1
         case (1); vvol = Nvol
         case (2); vvol = Mvol
         end select
 
-        call rzaxis(Mvol, mn, iRbc(1:mn, 0:Mvol), iZbs(1:mn, 0:Mvol), iRbs(1:mn, 0:Mvol), iZbc(1:mn, 0:Mvol), vvol, .false.) ! set coordinate axis; 19 Jul 16;
+        call rzaxis(Mvol, mn, iRbc(1:mn, 0:Mvol), iZbs(1:mn, 0:Mvol), iRbs(1:mn, 0:Mvol), iZbc(1:mn, 0:Mvol), vvol, .false.)
 
-    end if ! end of if( Igeometry.eq.3 ) then ; 19 Jul 16;
+    end if
 
     if (allocated(psifactor)) deallocate (psifactor)
     allocate (psifactor(1:mn, 1:Mvol), stat=astat)
@@ -1184,8 +1184,8 @@ subroutine preset
 
         do vvol = 1, Nvol
             do ii = 1, mn
-                if (im(ii) == 0) then; psifactor(ii, vvol) = tflux(vvol)**(+half) ! 28 Jan 15;
-                else; psifactor(ii, vvol) = tflux(vvol)**(halfmm(ii) - half) ! 28 Jan 15;
+                if (im(ii) == 0) then; psifactor(ii, vvol) = tflux(vvol)**(+half)
+                else; psifactor(ii, vvol) = tflux(vvol)**(halfmm(ii) - half)
                 end if
             end do
         end do
@@ -1194,10 +1194,10 @@ subroutine preset
 
         do vvol = 1, Nvol
             do ii = 1, mn
-                if (im(ii) == 0) then; psifactor(ii, vvol) = Rscale*tflux(vvol)**zero ! 08 Feb 16;
-                    ; inifactor(ii, vvol) = Rscale*tflux(vvol)**half ! 17 Dec 18;
-                else; psifactor(ii, vvol) = Rscale*tflux(vvol)**halfmm(ii) ! 29 Apr 15;
-                    ; inifactor(ii, vvol) = Rscale*tflux(vvol)**halfmm(ii) ! 17 Dec 18
+                if (im(ii) == 0) then; psifactor(ii, vvol) = Rscale*tflux(vvol)**zero
+                    ; inifactor(ii, vvol) = Rscale*tflux(vvol)**half
+                else; psifactor(ii, vvol) = Rscale*tflux(vvol)**halfmm(ii)
+                    ; inifactor(ii, vvol) = Rscale*tflux(vvol)**halfmm(ii)
                 end if
             end do
         end do
@@ -1212,20 +1212,20 @@ subroutine preset
 
     end select
 
-    if (Linitialize /= 0) then ! interpolate / extrapolate interior interface geometry; 19 Jul 16;
+    if (Linitialize /= 0) then
 
         select case (Igeometry)
 
-        case (1) ! Cartesian; 29 Apr 14;
+        case (1)
 
             do vvol = 1, Nvol
-                ; iRbc(1:mn, vvol) = iRbc(1:mn, Mvol)*tflux(vvol)/tflux(Mvol) ! 14 Apr 17;
+                ; iRbc(1:mn, vvol) = iRbc(1:mn, Mvol)*tflux(vvol)/tflux(Mvol)
                 if (NOTstellsym) then
-                    iRbs(2:mn, vvol) = iRbs(2:mn, Mvol)*tflux(vvol)/tflux(Mvol) ! 14 Apr 17;
+                    iRbs(2:mn, vvol) = iRbs(2:mn, Mvol)*tflux(vvol)/tflux(Mvol)
                 end if
             end do
 
-        case (2) ! cylindrical - standard; 20 Apr 13;
+        case (2)
 
             if (Linitialize /= 1) then
                 write (6, '("preset :      fatal : myid=",i3," ; Linitialize.ne.1 ; geometrical initialization under construction for cylindrical;")') myid
@@ -1240,7 +1240,7 @@ subroutine preset
                 end if
             end do
 
-        case (3) ! toroidal; 20 Apr 13;
+        case (3)
 
             if (Linitialize < 0) then
                 write (6, '("preset :      fatal : myid=",i3," ; Linitialize.lt.0 ; geometrical initialization under construction for toroidal;")') myid
@@ -1259,9 +1259,9 @@ subroutine preset
                 end if
             end do
 
-        end select ! matches select case( Igeometry ); 19 Jul 16;
+        end select
 
-    end if ! matches if( Linitialize.ne.0 ) then; 19 Jul 16;
+    end if
 
     if (allocated(Bsupumn)) deallocate (Bsupumn)
     allocate (Bsupumn(1:Nvol, 0:1, 1:mn), stat=astat)
@@ -1349,8 +1349,8 @@ subroutine preset
     allocate (lABintegral(1:Mvol), stat=astat)
     lABintegral(1:Mvol) = zero
 
-    if (YESstellsym) lmns = 1 + (mns - 1) ! number of independent degrees-of-freedom in angle transformation; 30 Jan 13;
-    if (NOTstellsym) lmns = 1 + (mns - 1) + (mns - 1) ! number of independent degrees-of-freedom in angle transformation; 30 Jan 13;
+    if (YESstellsym) lmns = 1 + (mns - 1)
+    if (NOTstellsym) lmns = 1 + (mns - 1) + (mns - 1)
 
     if (allocated(dlambdaout)) deallocate (dlambdaout)
     allocate (dlambdaout(1:lmns, 1:Mvol, 0:1), stat=astat)
