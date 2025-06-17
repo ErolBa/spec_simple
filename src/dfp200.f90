@@ -14,8 +14,6 @@ subroutine dfp200(LcomputeDerivatives, vvol)
                          Lconstraint, Lcheck, LHmatrix, &
                          Lextrap
 
-    use cputiming, only: Tdfp200
-
     use allglobal, only: ncpu, myid, cpus, &
                          Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, &
                          Mvol, &

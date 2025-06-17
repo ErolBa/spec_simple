@@ -11,8 +11,6 @@ subroutine ma02aa(lvol, NN)
                          Lconstraint, mu, helicity, &
                          mupftol, mupfits, Lrad, Lcheck
 
-    use cputiming
-
     use allglobal, only: ncpu, myid, cpus, &
                          Mvol, mn, im, in, &
                          LBlinear, LBnewton, LBsequad, &

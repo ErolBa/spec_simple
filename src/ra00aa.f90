@@ -9,8 +9,6 @@ subroutine ra00aa(writeorread)
 
     use inputlist, only: Wmacros, Wra00aa, Nfp, Mpol, Ntor, Lrad
 
-    use cputiming, only: Tra00aa
-
     use allglobal, only: myid, ncpu, cpus, ext, Mvol, mn, im, in, Ate, Aze, Ato, Azo
 
     implicit none

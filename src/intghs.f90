@@ -28,7 +28,7 @@ subroutine intghs_workspace_init(lvol)
     use constants, only: zero
     use inputlist, only: Mpol, Lrad, Wmacros, Wintghs
     use fileunits, only: ounit
-    use cputiming, only: Tintghs
+
     use allglobal, only: Ntz, mn, Iquad, myid, ncpu, cpus
     use intghs_module
 
@@ -93,7 +93,7 @@ subroutine intghs_workspace_destroy()
 
     use inputlist, only: Wmacros, Wintghs
     use fileunits, only: ounit
-    use cputiming, only: Tintghs
+
     use allglobal, only: myid, ncpu, cpus
     use intghs_module
 

@@ -9,8 +9,6 @@ subroutine bfield(zeta, st, Bst)
 
     use inputlist, only: Wmacros, Wbfield, Lrad, Mpol
 
-    use cputiming, only: Tbfield
-
     use allglobal, only: myid, ncpu, cpus, &
                          mn, im, in, halfmm, regumm, &
                          ivol, gBzeta, Ate, Aze, Ato, Azo, &

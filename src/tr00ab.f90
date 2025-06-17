@@ -10,8 +10,6 @@ subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota)
     use inputlist, only: Wmacros, Wtr00ab, Nvol, Lrad, Mpol, Ntor, &
                          Lsparse, Lsvdiota, imethod, iorder, iprecon, iotatol
 
-    use cputiming, only: Ttr00ab
-
     use allglobal, only: ncpu, cpus, myid, &
                          pi2nfp, &
                          Mvol, im, in, mns, ims, ins, &

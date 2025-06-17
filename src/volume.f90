@@ -9,8 +9,6 @@ subroutine volume(lvol, vflag)
 
     use inputlist, only: Wvolume, Igeometry, Nvol, pscale
 
-    use cputiming
-
     use allglobal, only: myid, cpus, &
                          YESstellsym, Mvol, &
                          Ntz, mn, im, in, iRbc, iZbs, iRbs, iZbc, &

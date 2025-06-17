@@ -9,8 +9,6 @@ subroutine packab(packorunpack, lvol, NN, solution, ideriv)
 
     use inputlist, only: Wpackab, Lrad
 
-    use cputiming, only: Tpackab
-
     use allglobal, only: myid, ncpu, cpus, &
                          mn, im, in, Ate, Aze, Ato, Azo, YESstellsym, NOTstellsym, &
                          TT, &

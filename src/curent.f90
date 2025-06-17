@@ -9,8 +9,6 @@ subroutine curent(lvol, mn, Nt, Nz, iflag, ldItGp)
 
     use inputlist, only: Wmacros, Wcurent, Lrad
 
-    use cputiming, only: Tcurent
-
     use allglobal, only: ncpu, cpus, myid, &
                          Mvol, im, in, mne, ime, ine, &
                          YESstellsym, NOTstellsym, &

@@ -7,8 +7,6 @@ subroutine ma00aa(lquad, mn, lvol, lrad)
 
     use inputlist, only: mpol, Wma00aa, Wmacros
 
-    use cputiming, only: Tma00aa
-
     use allglobal, only: myid, ncpu, cpus, &
                          Mvol, im, in, mne, &
                          YESstellsym, NOTstellsym, &

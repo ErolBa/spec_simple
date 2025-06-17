@@ -9,8 +9,6 @@ subroutine packxi(NGdof, position, Mvol, mn, iRbc, iZbs, iRbs, iZbc, packorunpac
 
     use inputlist, only: Wpackxi, Igeometry, Ntor, Nvol, Lfindzero
 
-    use cputiming, only: Tpackxi
-
     use allglobal, only: ncpu, myid, cpus, im, in, &
                          YESstellsym, NOTstellsym, &
                          ajk, Nt, Nz, Ntz, iRij, iZij, tRij, tZij, &

@@ -9,8 +9,6 @@ subroutine dforce(NGdof, position, force, LComputeDerivatives, LComputeAxis)
 
     use inputlist, only: Wmacros, Wdforce, Nvol, Ntor, Lrad, Igeometry, epsilon, Lconstraint, Lcheck, dRZ, Lextrap, mupftol, LHmatrix
 
-    use cputiming, only: Tdforce
-
     use allglobal, only: ncpu, myid, cpus, Mvol, NAdof, Iquad, &
                          iRbc, iZbs, iRbs, iZbc, &
                          ImagneticOK, Energy, ForceErr, YESstellsym, NOTstellsym, Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, mn, im, in, dpflux, dtflux, sweight, Bemn, Bomn, Iomn, Iemn, Somn, Semn, BBe, IIo, BBo, IIe, &

@@ -9,8 +9,6 @@ subroutine rzaxis(Mvol, mn, inRbc, inZbs, inRbs, inZbc, ivol, LcomputeDerivative
 
     use inputlist, only: Wrzaxis, Igeometry, Ntor, Lcheck, Wmacros, Lreflect, Ntoraxis, Lrzaxis
 
-    use cputiming, only: Trzaxis
-
     use allglobal, only: ncpu, myid, cpus, im, in, &
                          ajk, Nt, Nz, Ntz, &
                          Rij, Zij, sg, cosi, sini, &

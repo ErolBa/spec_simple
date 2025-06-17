@@ -7,8 +7,6 @@ subroutine allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
 
     use allglobal
 
-    use cputiming
-
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -51,8 +49,6 @@ subroutine deallocate_Beltrami_matrices(LcomputeDerivatives)
 
     use allglobal
 
-    use cputiming
-
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
     real(8) :: cput, cpui, cpuo = 0
@@ -81,8 +77,6 @@ subroutine allocate_geometry_matrices(vvol, LcomputeDerivatives)
     use inputlist, only: Wmemory, Wmacros, Mpol, Lrad
 
     use allglobal
-
-    use cputiming
 
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
@@ -253,8 +247,6 @@ subroutine deallocate_geometry_matrices(LcomputeDerivatives)
     use inputlist, only: Wmemory, Wmacros
 
     use allglobal
-
-    use cputiming
 
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread

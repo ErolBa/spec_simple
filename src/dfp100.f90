@@ -8,8 +8,6 @@ subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
     use inputlist, only: Wmacros, Wdfp100, Igeometry, Nvol, Lrad, Isurf, &
                          Lconstraint, curpol
 
-    use cputiming, only: Tdfp100
-
     use allglobal, only: ncpu, myid, cpus, &
                          ImagneticOK, NAdof, mn, &
                          Mvol, Iquad, &

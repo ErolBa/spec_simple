@@ -9,8 +9,6 @@ subroutine matrix(lvol, mn, lrad)
 
     use inputlist, only: Wmacros, Wmatrix, mpol
 
-    use cputiming, only: Tmatrix
-
     use allglobal, only: ncpu, myid, cpus, &
                          YESstellsym, NOTstellsym, &
                          im, in, &

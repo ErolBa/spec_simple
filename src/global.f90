@@ -67,66 +67,6 @@ contains
 
 end module fileunits
 
-module cputiming
-
-    real(8) :: Tmanual = 0.0, manualT = 0.0
-    real(8) :: Trzaxis = 0.0, rzaxisT = 0.0
-    real(8) :: Tpackxi = 0.0, packxiT = 0.0
-    real(8) :: Tvolume = 0.0, volumeT = 0.0
-    real(8) :: Tcoords = 0.0, coordsT = 0.0
-    real(8) :: Tbasefn = 0.0, basefnT = 0.0
-    real(8) :: Tmemory = 0.0, memoryT = 0.0
-    real(8) :: Tmetrix = 0.0, metrixT = 0.0
-    real(8) :: Tma00aa = 0.0, ma00aaT = 0.0
-    real(8) :: Tmatrix = 0.0, matrixT = 0.0
-    real(8) :: Tmp00ac = 0.0, mp00acT = 0.0
-    real(8) :: Tma02aa = 0.0, ma02aaT = 0.0
-    real(8) :: Tpackab = 0.0, packabT = 0.0
-    real(8) :: Ttr00ab = 0.0, tr00abT = 0.0
-    real(8) :: Tcurent = 0.0, curentT = 0.0
-    real(8) :: Tlforce = 0.0, lforceT = 0.0
-    real(8) :: Tforce_real = 0.0, force_realT = 0.0
-    real(8) :: Tforce_real_helper = 0.0, force_real_helperT = 0.0
-    real(8) :: Tforce_real_dforce = 0.0, force_real_dforceT = 0.0
-    real(8) :: Tforce_real_dfp200 = 0.0, force_real_dfp200T = 0.0
-    real(8) :: Tforce_real_lforce = 0.0, force_real_lforceT = 0.0
-    real(8) :: Tbcast_freal_jac = 0.0, bcast_freal_jacT = 0.0
-    real(8) :: Tget_jac = 0.0, get_jacT = 0.0
-    real(8) :: Tget_angle_constraint = 0.0, get_angle_constraintT = 0.0
-    real(8) :: Tangconst_dfp200 = 0.0, angconst_dfp200T = 0.0
-    real(8) :: Tintghs = 0.0, intghsT = 0.0
-    real(8) :: Tmtrxhs = 0.0, mtrxhsT = 0.0
-    real(8) :: Tlbpol = 0.0, lbpolT = 0.0
-    real(8) :: Tdfp100 = 0.0, dfp100T = 0.0
-    real(8) :: Tdfp200 = 0.0, dfp200T = 0.0
-    real(8) :: Tdforce = 0.0, dforceT = 0.0
-    real(8) :: Tjo00aa = 0.0, jo00aaT = 0.0
-    real(8) :: Tpp00aa = 0.0, pp00aaT = 0.0
-    real(8) :: Tpp00ab = 0.0, pp00abT = 0.0
-    real(8) :: Tbfield = 0.0, bfieldT = 0.0
-    real(8) :: Tstzxyz = 0.0, stzxyzT = 0.0
-    real(8) :: Thesian = 0.0, hesianT = 0.0
-    real(8) :: Tra00aa = 0.0, ra00aaT = 0.0
-    real(8) :: Tnumrec = 0.0, numrecT = 0.0
-    real(8) :: Tdcuhre = 0.0, dcuhreT = 0.0
-    real(8) :: Tminpack = 0.0, minpackT = 0.0
-    real(8) :: Tiqpack = 0.0, iqpackT = 0.0
-    real(8) :: Trksuite = 0.0, rksuiteT = 0.0
-    real(8) :: Ti1mach = 0.0, i1machT = 0.0
-    real(8) :: Td1mach = 0.0, d1machT = 0.0
-    real(8) :: Tilut = 0.0, ilutT = 0.0
-    real(8) :: Titers = 0.0, itersT = 0.0
-    real(8) :: Tsphdf5 = 0.0, sphdf5T = 0.0
-    real(8) :: Tpreset = 0.0, presetT = 0.0
-    real(8) :: Tglobal = 0.0, globalT = 0.0
-    real(8) :: Txspech = 0.0, xspechT = 0.0
-    real(8) :: Tinputlist = 0.0, inputlistT = 0.0
-
-    real(8) :: Treadin = 0.0
-    real(8) :: Twrtend = 0.0
-
-end module cputiming
-
 module typedefns
 
     type subgrid
@@ -559,8 +499,6 @@ contains
 
         use inputlist, only: Lrad, Wbuild_vector_potential, Wmacros
 
-        use cputiming
-
         implicit none
         integer :: ierr, astat, ios, nthreads, ithread
         real(8) :: cput, cpui, cpuo = 0
@@ -770,7 +708,6 @@ contains
         use constants
         use fileunits
         use inputlist
-        use cputiming, only: Treadin
 
         implicit none
         integer :: ierr, astat, ios, nthreads, ithread
@@ -1034,8 +971,6 @@ contains
         use numerical, only: machprec
 
         use fileunits, only: ounit, iunit
-
-        use cputiming, only: Twrtend
 
         use inputlist
 

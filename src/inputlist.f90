@@ -325,54 +325,7 @@ module inputlist
         scaling
 
     namelist /screenlist/ &
-        Wmanual, &
-        Wrzaxis, &
-        Wpackxi, &
-        Wvolume, &
-        Wcoords, &
-        Wbasefn, &
-        Wmemory, &
-        Wmetrix, &
-        Wma00aa, &
-        Wmatrix, &
-        Wmp00ac, &
-        Wma02aa, &
-        Wpackab, &
-        Wtr00ab, &
-        Wcurent, &
-        Wlforce, &
-        Wintghs, &
-        Wmtrxhs, &
-        Wlbpol, &
-        Wdfp100, &
-        Wdfp200, &
-        Wdforce, &
-        Wnewton, &
-        Wcasing, &
-        Wjo00aa, &
-        Wpp00aa, &
-        Wpp00ab, &
-        Wbfield, &
-        Wstzxyz, &
-        Whesian, &
-        Wra00aa, &
-        Wnumrec, &
-        Wdcuhre, &
-        Wminpack, &
-        Wiqpack, &
-        Wrksuite, &
-        Wi1mach, &
-        Wd1mach, &
-        Wilut, &
-        Witers, &
-        Wsphdf5, &
-        Wpreset, &
-        Wglobal, &
-        Wxspech, &
-        Wbuild_vector_potential, &
-        Wreadin, &
-        Wwrtend, &
-        Wmacros
+        Wmanual
 
 contains
 

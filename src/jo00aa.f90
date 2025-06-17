@@ -7,8 +7,6 @@ subroutine jo00aa(lvol, Ntz, lquad, mn)
 
     use inputlist, only: Wmacros, Wjo00aa, Nvol, Lrad, mu, mpol, Igeometry, Nfp, Lerrortype
 
-    use cputiming, only: Tjo00aa
-
     use allglobal, only: myid, cpus, ext, ivol, &
                          im, in, regumm, &
                          Mvol, &

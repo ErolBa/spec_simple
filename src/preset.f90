@@ -9,8 +9,6 @@ subroutine preset
 
     use inputlist
 
-    use cputiming, only: Tpreset
-
     use allglobal
 
     use fftw_interface

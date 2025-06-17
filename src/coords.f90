@@ -9,8 +9,6 @@ subroutine coords(lvol, lss, Lcurvature, Ntz, mn)
 
     use inputlist, only: Wcoords, Igeometry, Ntor, rpol, rtor
 
-    use cputiming, only: Tcoords
-
     use allglobal, only: myid, cpus, pi2nfp, &
                          Mvol, im, in, halfmm, &
                          iRbc, iZbs, iRbs, iZbc, &

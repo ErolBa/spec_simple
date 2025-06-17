@@ -9,8 +9,6 @@ subroutine metrix(lquad, lvol)
 
     use inputlist, only: Wmetrix
 
-    use cputiming, only: Tmetrix
-
     use allglobal, only: myid, ncpu, cpus, &
                          dBdX, &
                          mn, im, in, mne, ime, ine, &

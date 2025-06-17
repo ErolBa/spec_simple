@@ -12,7 +12,6 @@ subroutine xspech
                          ext
     use inputlist, only: initialize_inputs, Wxspech
     use fileunits, only: ounit
-    use cputiming, only: Txspech
 
     implicit none
     integer :: ierr, astat, ios, nthreads, ithread
@@ -164,8 +163,6 @@ subroutine spec
                          LHevalues, LHevectors, LHmatrix, Lperturbed, Lcheck, &
                          Lzerovac, &
                          mu, Isurf, Ivolume
-
-    use cputiming, only: Txspech
 
     use allglobal, only: wrtend, ncpu, myid, cpus, ext, &
                          Mvol, &

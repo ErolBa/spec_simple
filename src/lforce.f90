@@ -7,8 +7,6 @@ subroutine lforce(lvol, iocons, ideriv, Ntz, dBB, XX, YY, length, DDl, MMl, ifla
 
     use inputlist, only: Wlforce, Igeometry, Nvol, Lrad, gamma, pscale, adiabatic, Lcheck
 
-    use cputiming, only: Tlforce
-
     use allglobal, only: ncpu, myid, cpus, &
                          Lcoordinatesingularity, Mvol, &
                          iRbc, iZbs, iRbs, iZbc, &

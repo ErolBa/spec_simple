@@ -12,8 +12,6 @@ subroutine mp00ac(Ndof, Xdof, Fdof, Ddof, Ldfjac, iflag)
                          Lconstraint, mupftol, &
                          NiterGMRES, epsGMRES, LGMRESprec, epsILU
 
-    use cputiming, only: Tmp00ac
-
     use allglobal, only: myid, ncpu, cpus, ivol, &
                          YESstellsym, NOTstellsym, &
                          Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, &
