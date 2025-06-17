@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# This script enforces coding style guidelines for the SPEC code
+#
+# The guidelines are defined in the emacs-format-f90 file
+# Namely:
+#   - Indent everything with 2 spaces
+#   - Break lines longer than 132 characters
+#   - Use spaces instead of tabs
+#   - Downcase every Fortran keyword
+#   - Delete trailing whitespaces
+#
+
+process_files() {
+   while [ $# -ge 1 ]
+   do
+      if [ -d $1 ]
+      then
+         echo "Argument of process_files $1 cannot be a directory." 1>&2
+         exit 1
+      fi
+      # Check for existence of file:
+      ls $1 2> /dev/null | grep $1 > /dev/null
+      if [ $? != 0 ]
+      then
+         echo "format_spec_source_code: $1 not found." 1>&2
+         exit 1
+      fi
+      echo "Indenting $1 with emacs in batch mode"
+      emacs -Q -batch $1 -l ${PWD}/emacs-format-f90 -f emacs-format-function
+      echo
+      shift 1
+   done
+}
+
+
+PWD=$(pwd)
+
+if ! command -v emacs &> /dev/null
+then
+   echo "The code formatter needs a working install of emacs to work."
+   echo "Please make sure you have emacs installed on your machine with the f90-mode."
+   exit
+fi
+
+if [ $# -eq 0 ]
+then
+   echo "format_spec_source_sode requires at least one argument." 1>&2
+   echo "Usage: format_spec_source_code file(s)-to-indent" 1>&2
+   exit 1
+fi
+
+file_list=$@
+if [ -d $1 ]
+then
+   echo "Processing folder " $1
+   file_list=$(ls $1/*.F90)
+fi
+
+process_files $file_list
+
+exit 0

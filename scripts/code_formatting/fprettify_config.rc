@@ -1,0 +1,11 @@
+indent = 2
+line-length = 0
+whitespace = 3
+enable-decl = True
+whitespace-print = False
+whitespace-intrinsics = True # Try to get write out
+enable-replacements = True
+c-relations = True
+case = [1, 1, 1, 1]
+strip-comments = True
+disable-fypp = True
