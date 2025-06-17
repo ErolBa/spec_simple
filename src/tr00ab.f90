@@ -1,440 +1,407 @@
 
-subroutine tr00ab( lvol, mn, NN, Nt, Nz, iflag, ldiota ) ! construct straight-field line magnetic coordinates;
+subroutine tr00ab(lvol, mn, NN, Nt, Nz, iflag, ldiota) ! construct straight-field line magnetic coordinates;
 
+    use constants, only: zero, third, half, one, two, pi2, goldenmean
 
+    use numerical, only: vsmall, small, machprec, sqrtmachprec
 
-  use constants, only : zero, third, half, one, two, pi2, goldenmean
+    use fileunits, only: ounit
 
-  use numerical, only : vsmall, small, machprec, sqrtmachprec
+    use inputlist, only: Wmacros, Wtr00ab, Nvol, Lrad, Mpol, Ntor, &
+                         Lsparse, Lsvdiota, imethod, iorder, iprecon, iotatol
 
-  use fileunits, only : ounit
+    use cputiming, only: Ttr00ab
 
-  use inputlist, only : Wmacros, Wtr00ab, Nvol, Lrad, Mpol, Ntor, &
-                        Lsparse, Lsvdiota, imethod, iorder, iprecon, iotatol
+    use allglobal, only: ncpu, cpus, myid, MPI_COMM_SPEC, &
+                         pi2nfp, &
+                         Mvol, im, in, mns, ims, ins, &
+                         YESstellsym, NOTstellsym, &
+                         glambda, & ! global lambda: initial guesses will be saved; 21 Apr 13;
+                         Ntz, hNt, hNz, &
+                         iotakkii, iotaksub, iotakadd, iotaksgn, &
+                         Ate, Aze, Ato, Azo, TT, RTT, &
+                         Lcoordinatesingularity, Lvacuumregion, regumm, dlambdaout
 
-  use cputiming, only : Ttr00ab
+    use mpi
+    implicit none
+    integer :: ierr, astat, ios, nthreads, ithread
+    real(8) :: cput, cpui, cpuo = 0
 
-  use allglobal, only : ncpu, cpus, myid, MPI_COMM_SPEC, &
-                        pi2nfp, &
-                        Mvol, im, in, mns, ims, ins, &
-                        YESstellsym, NOTstellsym, &
-                        glambda, & ! global lambda: initial guesses will be saved; 21 Apr 13;
-                        Ntz, hNt, hNz, &
-                        iotakkii, iotaksub, iotakadd, iotaksgn, &
-                        Ate, Aze, Ato, Azo, TT, RTT, &
-                        Lcoordinatesingularity, Lvacuumregion, regumm, dlambdaout
+    integer, intent(in) :: lvol, mn, NN, Nt, Nz, iflag
 
+    real(8), intent(inout) :: ldiota(0:1, -1:2)
 
+    integer :: innout, ll, ii, jj, kk, jb, kb, mj, nj, ideriv, jderiv, id, MM, ielement, nelements, Lcurvature, idof, icon, mi, ni, imupf
 
-  use mpi
-  implicit none
-  INTEGER   :: ierr, astat, ios, nthreads, ithread
-  real(8)      :: cput, cpui, cpuo=0
+    real(8) :: lcpu, mfactor, lss, Dteta, Dzeta, rfac, tol, rnorm, omega, diotaerror !, sparsedenseerror
 
-  INTEGER, intent(in)  :: lvol, mn, NN, Nt, Nz, iflag
+    real(8) :: lAte(0:mn, -1:2), lAze(0:mn, -1:2), lAto(0:mn, -1:2), lAzo(0:mn, -1:2)
 
-  real(8), intent(inout)  :: ldiota(0:1,-1:2)
+    integer :: IA, if04aaf, idgesvx, ipiv(1:NN), iwork4(1:NN)
+    real(8), allocatable :: dmatrix(:, :, :), omatrix(:, :), FAA(:, :)
+    real(8) :: drhs(1:NN, -1:2), dlambda(1:NN, -1:2)
+    real(8) :: Rdgesvx(1:NN), Cdgesvx(1:NN), work4(1:4*NN), rcond, ferr(1), berr(1), ferr2(1:2), berr2(1:2)
+    character :: equed
 
-  INTEGER              :: innout, ll, ii, jj, kk, jb, kb, mj, nj, ideriv, jderiv, id, MM, ielement, nelements, Lcurvature, idof, icon, mi, ni, imupf
+    integer :: maxitn, reqdits, extralength, lrwork, integerwork(1:2*Nt*Nz + 2 + 1), if11def, if11zaf, if11xaf
+    integer :: IAA, if04atf, if04arf
+    integer :: Ndof, label(-3:Nt + 2, -3:Nz + 2), isym
 
-  real(8)                 :: lcpu, mfactor, lss, Dteta, Dzeta, rfac, tol, rnorm, omega, diotaerror!, sparsedenseerror
+    integer :: idgelsd, Lwork, Liwork, Irank, nlvl
+    real(8) :: sval(1:NN)
+    real(8), allocatable :: work(:)
 
-  real(8)                 :: lAte(0:mn,-1:2), lAze(0:mn,-1:2), lAto(0:mn,-1:2), lAzo(0:mn,-1:2)
+    real(8) :: Bsupt(1:Nt*Nz, -1:2), Bsupz(1:Nt*Nz, -1:2), tdot(1:Nt*Nz)
+    real(8) :: Bsubs(1:Nt*Nz, -1:2), Bsubt(1:Nt*Nz, -1:2), Bsubz(1:Nt*Nz, -1:2)
 
+    real(8) :: dotteta, dotzeta
 
+    real(8), allocatable :: rmatrix(:, :, :), rrhs(:, :), rlambda(:, :), wks1(:), wks2(:), AA(:, :)
 
-  INTEGER              :: IA, if04aaf, idgesvx, ipiv(1:NN), iwork4(1:NN)
-  real(8)  , allocatable  :: dmatrix(:,:,:), omatrix(:,:), FAA(:,:)
-  real(8)                 :: drhs(1:NN,-1:2), dlambda(1:NN,-1:2)
-  real(8)                 :: Rdgesvx(1:NN), Cdgesvx(1:NN), work4(1:4*NN), rcond, ferr(1), berr(1), ferr2(1:2), berr2(1:2)
-  CHARACTER            :: equed
+    integer :: inz(-1:2), lnz
+    integer, allocatable :: irow(:, :), jcol(:, :), istr(:), iwork(:)
+    real(8), allocatable :: smatrix(:, :), srhs(:, :), slambda(:, :), swork(:)
+    character :: duplicate*1, zeros*1, method*8, precon*1, trans*1, check*1 ! logical control of sparse routines; 20 Apr 13;
 
-  INTEGER              :: maxitn, reqdits, extralength, lrwork, integerwork(1:2*Nt*Nz+2+1), if11def, if11zaf, if11xaf
-  INTEGER              :: IAA, if04atf, if04arf
-  INTEGER              :: Ndof, label(-3:Nt+2,-3:Nz+2), isym
+    do innout = 0, 1 ! loop over inner and outer interfaces;
 
-  INTEGER              :: idgelsd, Lwork, Liwork, Irank, nlvl
-  real(8)                 :: sval(1:NN)
-  real(8)   , allocatable :: work(:)
+        if (Lcoordinatesingularity .and. innout == 0) cycle ! transform on coordinate    axis     is not required              ; 20 Apr 13;
+        if (Lvacuumregion .and. innout == 1) cycle ! transform on computational boundary is not required (not defined); 20 Apr 13;
 
-  real(8)                 ::                      Bsupt(1:Nt*Nz,-1:2), Bsupz(1:Nt*Nz,-1:2), tdot(1:Nt*Nz)
-  real(8)                 :: Bsubs(1:Nt*Nz,-1:2), Bsubt(1:Nt*Nz,-1:2), Bsubz(1:Nt*Nz,-1:2)
+        lAte(0:mn, -1:2) = zero ! radial derivatives of vector potential evaluated at interfaces; 20 Apr 13;
+        lAze(0:mn, -1:2) = zero
+        lAto(0:mn, -1:2) = zero
+        lAzo(0:mn, -1:2) = zero
 
-  real(8)                 :: dotteta, dotzeta
+        do ideriv = -1, 2; id = ideriv ! labels derivative of magnetic field wrt enclosed fluxes; 20 Apr 13;
 
-  real(8)   , allocatable :: rmatrix(:,:,:), rrhs(:,:), rlambda(:,:), wks1(:), wks2(:), AA(:,:)
+            if (iflag == 1 .and. ideriv /= 0) cycle ! derivatives of transform                                                        are not required; 20 Jun 14;
+            if (iflag == 2 .and. ideriv < 0) cycle ! derivatives of transform wrt geometry                                           is  not required; 20 Jun 14;
+            if (iflag == -1 .and. ideriv > 0) cycle ! derivatives of transform wrt helicity multiplier and differential poloidal flux are not required; 20 Jun 14;
 
-  INTEGER              :: inz(-1:2), lnz
-  INTEGER, allocatable :: irow(:,:), jcol(:,:), istr(:), iwork(:)
-  real(8)   , allocatable :: smatrix(:,:), srhs(:,:), slambda(:,:), swork(:)
-  CHARACTER            :: duplicate*1, zeros*1, method*8, precon*1, trans*1, check*1 ! logical control of sparse routines; 20 Apr 13;
+            do ii = 1, mn ! loop over Fourier harmonics; 20 Apr 13;
 
-  
+                mi = im(ii)
 
+                if (Lcoordinatesingularity) then
+                    do ll = mi, Lrad(lvol), 2 ! loop over Zernike polynomials; 01 Jul 19;
 
-  do innout = 0, 1 ! loop over inner and outer interfaces;
+                        ; lAte(ii, id) = lAte(ii, id) + Ate(lvol, id, ii)%s(ll)*RTT(ll, mi, innout, 1)*half
+                        ; lAze(ii, id) = lAze(ii, id) - Aze(lvol, id, ii)%s(ll)*RTT(ll, mi, innout, 1)*half
+                        if (NOTstellsym) then
+                            lAto(ii, id) = lAto(ii, id) + Ato(lvol, id, ii)%s(ll)*RTT(ll, mi, innout, 1)*half
+                            lAzo(ii, id) = lAzo(ii, id) - Azo(lvol, id, ii)%s(ll)*RTT(ll, mi, innout, 1)*half
+                        end if
 
+                    end do ! end of do ll; 30 Jan 13;
+                else
+                    do ll = 0, Lrad(lvol) ! loop over Chebyshev polynomials; 20 Apr 13;
 
+                        ; lAte(ii, id) = lAte(ii, id) + Ate(lvol, id, ii)%s(ll)*TT(ll, innout, 1) ! compute radial derivative of vector potential; 20 Apr 13;
+                        ; lAze(ii, id) = lAze(ii, id) - Aze(lvol, id, ii)%s(ll)*TT(ll, innout, 1)
+                        if (NOTstellsym) then
+                            lAto(ii, id) = lAto(ii, id) + Ato(lvol, id, ii)%s(ll)*TT(ll, innout, 1)
+                            lAzo(ii, id) = lAzo(ii, id) - Azo(lvol, id, ii)%s(ll)*TT(ll, innout, 1)
+                        end if
+
+                    end do ! end of do ll; 30 Jan 13;
+                end if ! Lcoordinatesingularity; 01 Jul 19;
+            end do ! end of do ii; 30 Jan 13; ! Fourier harmonics, and their derivatives, have been constructed; 20 Apr 13;
 
-   if( Lcoordinatesingularity .and. innout.eq.0 ) cycle ! transform on coordinate    axis     is not required              ; 20 Apr 13;
-   if( Lvacuumregion          .and. innout.eq.1 ) cycle ! transform on computational boundary is not required (not defined); 20 Apr 13;
+            if (Lsparse > 0) then ! will construct transformation to straight-field line angle in real space; 24 Apr 13;
+                call invfft(mn, im(1:mn), in(1:mn), lAte(1:mn, id), lAto(1:mn, id), lAze(1:mn, id), lAzo(1:mn, id), &
+                            Nt, Nz, Bsupz(1:Ntz, id), Bsupt(1:Ntz, id)) ! map to real space;
+            end if
+
+        end do ! end of do ideriv; 31 Jan 13;
+
+        if (Lsparse == 0 .or. Lsparse == 3) then
+            if (allocated(dmatrix)) deallocate (dmatrix)
+            allocate (dmatrix(1:NN, 1:NN, -1:2), stat=astat)
+            dmatrix(1:NN, 1:NN, -1:2) = zero
+            if (allocated(omatrix)) deallocate (omatrix)
+            allocate (omatrix(1:NN, 1:NN), stat=astat)
+            omatrix(1:NN, 1:NN) = zero
+            if (allocated(FAA)) deallocate (FAA)
+            allocate (FAA(1:NN, 1:NN), stat=astat)
+            FAA(1:NN, 1:NN) = zero
+        end if
+
+        if (Lsparse == 0 .or. Lsparse == 3) then ! Fourier transformation; 24 Apr 13;
+
+            drhs(1:NN, -1:2) = zero
+
+            dmatrix(1:NN, 1:NN, -1:2) = zero ! initialize summation; 30 Jan 13;
+
+            do ideriv = -1, 2
 
+                if (iflag == 1 .and. ideriv /= 0) cycle ! derivatives                                                        not required; 20 Jun 14;
+                if (iflag == 2 .and. ideriv < 0) cycle ! derivatives wrt helicity multiplier and differential poloidal flux are required; 20 Jun 14;
+                if (iflag == -1 .and. ideriv > 0) cycle ! derivative  wrt geometry                                               required; 20 Jun 14;
+                do kk = 1, mn
 
+                    ii = iotakkii(kk)
 
-   lAte(0:mn,-1:2) = zero ! radial derivatives of vector potential evaluated at interfaces; 20 Apr 13;
-   lAze(0:mn,-1:2) = zero
-   lAto(0:mn,-1:2) = zero
-   lAzo(0:mn,-1:2) = zero
+                    ; drhs(ii, ideriv) = +lAze(kk, ideriv)
+                    if (NOTstellsym .and. kk > 0) then
+                        drhs(ii + mns - 1, ideriv) = +lAzo(kk, ideriv)
+                    end if
 
-   do ideriv = -1, 2 ; id = ideriv ! labels derivative of magnetic field wrt enclosed fluxes; 20 Apr 13;
+                    ; dmatrix(ii, 1, ideriv) = lAte(kk, ideriv)
+                    if (NOTstellsym .and. kk > 0) then
+                        dmatrix(ii + mns - 1, 1, ideriv) = lAto(kk, ideriv)
+                    end if
 
-    if( iflag.eq. 1 .and. ideriv.ne.0 ) cycle ! derivatives of transform                                                        are not required; 20 Jun 14;
-    if( iflag.eq. 2 .and. ideriv.lt.0 ) cycle ! derivatives of transform wrt geometry                                           is  not required; 20 Jun 14;
-    if( iflag.eq.-1 .and. ideriv.gt.0 ) cycle ! derivatives of transform wrt helicity multiplier and differential poloidal flux are not required; 20 Jun 14;
+                    do jj = 2, mns; mj = ims(jj); nj = ins(jj) ! this seems to ignore the non-stellarator symmetric mode; 02 Sep 14;
 
-    do ii = 1, mn ! loop over Fourier harmonics; 20 Apr 13;
+                        ii = iotakadd(kk, jj)
 
-     mi = im(ii)
+                        if (ii < 1) cycle
 
-     if (Lcoordinatesingularity) then
-      do ll = mi, Lrad(lvol), 2 ! loop over Zernike polynomials; 01 Jul 19;
+                        dmatrix(ii, jj, ideriv) = dmatrix(ii, jj, ideriv) + (-mj*lAze(kk, ideriv) + nj*lAte(kk, ideriv))*half
+                        if (NOTstellsym) then
+                            if (ii + mns - 1 < 1 .or. ii + mns - 1 > NN .or. jj + mns - 1 < 1 .or. jj + mns - 1 > NN) then
+                                write (6, '("tr00ab :      fatal : myid=",i3," ; ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ; illegal subscript;")') myid
+                                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                                stop "tr00ab : ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN : illegal subscript ;"
+                            end if
+                            dmatrix(ii + mns - 1, jj, ideriv) = dmatrix(ii + mns - 1, jj, ideriv) + (-mj*lAzo(kk, ideriv) + nj*lAto(kk, ideriv))*half
+                            dmatrix(ii, jj + mns - 1, ideriv) = dmatrix(ii, jj + mns - 1, ideriv) - (+mj*lAzo(kk, ideriv) - nj*lAto(kk, ideriv))*half
+                            dmatrix(ii + mns - 1, jj + mns - 1, ideriv) = dmatrix(ii + mns - 1, jj + mns - 1, ideriv) + (+mj*lAze(kk, ideriv) - nj*lAte(kk, ideriv))*half
+                        end if
 
-        ;lAte(ii,id) = lAte(ii,id) + Ate(lvol,id,ii)%s(ll) * RTT(ll,mi,innout,1) * half
-        ;lAze(ii,id) = lAze(ii,id) - Aze(lvol,id,ii)%s(ll) * RTT(ll,mi,innout,1) * half
-        if( NOTstellsym ) then
-        lAto(ii,id) = lAto(ii,id) + Ato(lvol,id,ii)%s(ll) * RTT(ll,mi,innout,1) * half
-        lAzo(ii,id) = lAzo(ii,id) - Azo(lvol,id,ii)%s(ll) * RTT(ll,mi,innout,1) * half
-        endif
+                    end do ! end of do jj; 30 Jan 13;
 
-      enddo ! end of do ll; 30 Jan 13;
-     else
-      do ll = 0, Lrad(lvol) ! loop over Chebyshev polynomials; 20 Apr 13;
-
-        ;lAte(ii,id) = lAte(ii,id) + Ate(lvol,id,ii)%s(ll) * TT(ll,innout,1) ! compute radial derivative of vector potential; 20 Apr 13;
-        ;lAze(ii,id) = lAze(ii,id) - Aze(lvol,id,ii)%s(ll) * TT(ll,innout,1)
-        if( NOTstellsym ) then
-        lAto(ii,id) = lAto(ii,id) + Ato(lvol,id,ii)%s(ll) * TT(ll,innout,1)
-        lAzo(ii,id) = lAzo(ii,id) - Azo(lvol,id,ii)%s(ll) * TT(ll,innout,1)
-        endif
-
-      enddo ! end of do ll; 30 Jan 13;
-     end if ! Lcoordinatesingularity; 01 Jul 19;
-    enddo ! end of do ii; 30 Jan 13; ! Fourier harmonics, and their derivatives, have been constructed; 20 Apr 13;
+                    do jj = 2, mns; mj = ims(jj); nj = ins(jj)
 
-    if( Lsparse.gt.0 ) then ! will construct transformation to straight-field line angle in real space; 24 Apr 13;
-     call invfft( mn, im(1:mn), in(1:mn), lAte(1:mn,id), lAto(1:mn,id), lAze(1:mn,id), lAzo(1:mn,id), &
-                  Nt, Nz, Bsupz(1:Ntz,id), Bsupt(1:Ntz,id) ) ! map to real space;
-    endif
+                        ii = iotaksub(kk, jj)
 
-   enddo ! end of do ideriv; 31 Jan 13;
+                        if (ii < 1) cycle
 
+                        if (ii > NN .or. jj > NN) then
+                            write (6, '("tr00ab :      fatal : myid=",i3," ; ii.gt.NN .or. jj.gt.NN ; illegal subscript;")') myid
+                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                            stop "tr00ab : ii.gt.NN .or. jj.gt.NN : illegal subscript ;"
+                        end if
+                        dmatrix(ii, jj, ideriv) = dmatrix(ii, jj, ideriv) + (-mj*lAze(kk, ideriv) + nj*lAte(kk, ideriv))*half
+                        if (NOTstellsym) then
+                            if (ii + mns - 1 < 1 .or. ii + mns - 1 > NN .or. jj + mns - 1 < 1 .or. jj + mns - 1 > NN) then
+                                write (6, '("tr00ab :      fatal : myid=",i3," ; ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ; illegal subscript;")') myid
+                                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                                stop "tr00ab : ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN : illegal subscript ;"
+                            end if
+                            dmatrix(ii + mns - 1, jj, ideriv) = dmatrix(ii + mns - 1, jj, ideriv) + (-mj*lAzo(kk, ideriv) + nj*lAto(kk, ideriv))*half*iotaksgn(kk, jj)
+                            dmatrix(ii, jj + mns - 1, ideriv) = dmatrix(ii, jj + mns - 1, ideriv) + (+mj*lAzo(kk, ideriv) - nj*lAto(kk, ideriv))*half
+                            dmatrix(ii + mns - 1, jj + mns - 1, ideriv) = dmatrix(ii + mns - 1, jj + mns - 1, ideriv) - (+mj*lAze(kk, ideriv) - nj*lAte(kk, ideriv))*half*iotaksgn(kk, jj)
+                        end if
 
+                    end do ! end of do jj; 30 Jan 13;
 
+                end do ! end of do kk; 30 Jan 13;
+            end do ! end of ideriv; 30 Jan 13;
 
-   if( Lsparse.eq.0 .or. Lsparse.eq.3 ) then
-if( allocated( dmatrix ) ) deallocate( dmatrix )
-allocate( dmatrix(1:NN,1:NN,-1:2), stat=astat )
-dmatrix(1:NN,1:NN,-1:2) = zero
-if( allocated( omatrix ) ) deallocate( omatrix )
-allocate( omatrix(1:NN,1:NN), stat=astat )
-omatrix(1:NN,1:NN) = zero
-if( allocated( FAA ) ) deallocate( FAA )
-allocate( FAA(1:NN,1:NN), stat=astat )
-FAA(1:NN,1:NN) = zero
-   endif
+            call DCOPY(NN*NN, dmatrix(1, 1, 0), 1, omatrix(1, 1), 1) ! BLAS version 21 Jul 19
+
+            do jderiv = 0, 1
+
+                if (iflag == 1 .and. jderiv /= 0) cycle ! derivatives of rotational transform (wrt either enclosed-fluxes/currents/geometry) are not required;
+
+                select case (jderiv)
+                case (0); !             drhs(1:NN, 0) = drhs(1:NN, 0)
+                case (1); 
+                    if (iflag == 2) then; call DGEMV('N', NN, NN, -one, dmatrix(1, 1, 1), NN, dlambda(1, 0), 1, one, drhs(1, 1), 1) ! BLAS version 21 Jul 19
+                        ; ; call DGEMV('N', NN, NN, -one, dmatrix(1, 1, 2), NN, dlambda(1, 0), 1, one, drhs(1, 2), 1) ! BLAS version 21 Jul 19
+                    end if
+                    if (iflag == -1) then; call DGEMV('N', NN, NN, -one, dmatrix(1, 1, -1), NN, dlambda(1, 0), 1, one, drhs(1, -1), 1) ! BLAS version 21 Jul 19
+                    end if
+                case default
+                    if (.true.) then
+                        write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
+                        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                        stop "tr00ab : .true. : invalid jderiv ;"
+                    end if
+                end select
 
-   if( Lsparse.eq.0 .or. Lsparse.eq.3 ) then ! Fourier transformation; 24 Apr 13;
+                lcpu = MPI_WTIME() ! record time taken in dgesvx; 09 Nov 17;
 
-    drhs(1:NN,-1:2) = zero
+                select case (Lsvdiota)
 
-    dmatrix(1:NN,1:NN,-1:2) = zero ! initialize summation; 30 Jan 13;
+                case (0) ! Lsvdiota = 0; use linear solver to invert linear equations that define the straight fieldline angle; 01 Jul 14;
 
-    do ideriv = -1, 2
+                    if04aaf = 1
 
-     if( iflag.eq. 1 .and. ideriv.ne.0 ) cycle ! derivatives                                                        not required; 20 Jun 14;
-     if( iflag.eq. 2 .and. ideriv.lt.0 ) cycle ! derivatives wrt helicity multiplier and differential poloidal flux are required; 20 Jun 14;
-     if( iflag.eq.-1 .and. ideriv.gt.0 ) cycle ! derivative  wrt geometry                                               required; 20 Jun 14;
-     do kk = 1, mn
+                    select case (jderiv)
 
-      ii = iotakkii(kk)
+                    case (0) ! Lsvdiota = 0; jderiv = 0; 02 Sep 14;
 
-      ;drhs(ii      ,ideriv) = + lAze(kk,ideriv)
-      if( NOTstellsym .and. kk.gt.0 ) then
-       drhs(ii+mns-1,ideriv) = + lAzo(kk,ideriv)
-      endif
+                        MM = 1
 
-      ;dmatrix(ii      ,1,ideriv) = lAte(kk,ideriv)
-      if( NOTstellsym .and. kk.gt.0 ) then
-       dmatrix(ii+mns-1,1,ideriv) = lAto(kk,ideriv)
-      endif
+                        call dgesvx('N', 'N', NN, MM, dmatrix(1:NN, 1:NN, 0), NN, FAA(1:NN, 1:NN), NN, ipiv(1:NN), &
+                                    equed, Rdgesvx(1:NN), Cdgesvx(1:NN), drhs(1:NN, 0:0), NN, dlambda(1:NN, 0:0), &
+                                    NN, rcond, ferr, berr, work4(1:4*NN), iwork4(1:NN), idgesvx)
 
-      do jj = 2, mns ; mj = ims(jj) ; nj = ins(jj) ! this seems to ignore the non-stellarator symmetric mode; 02 Sep 14;
+                        ; ldiota(innout, 0) = dlambda(1, 0) ! return intent out; 21 Apr 13;
+                        ; dlambdaout(1:NN, lvol, innout) = dlambda(1:NN, 0)
 
-       ii = iotakadd(kk,jj)
+                    case (1) ! Lsvdiota = 0; jderiv = 1; 02 Sep 14;
+
+                        MM = 2
+                        if (iflag == -1) then; drhs(1:NN, 1) = drhs(1:NN, -1)
+                            ; ; drhs(1:NN, 2) = zero
+                        end if
 
-       if( ii.lt.1 ) cycle
+                        call DCOPY(NN*NN, omatrix(1, 1), 1, dmatrix(1, 1, 0), 1) ! BLAS version 21 Jul 19
 
-       dmatrix(ii      ,jj      ,ideriv) = dmatrix(ii      ,jj      ,ideriv) + ( - mj * lAze(kk,ideriv) + nj * lAte(kk,ideriv) ) * half
-       if( NOTstellsym) then
-if( ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ; illegal subscript;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN : illegal subscript ;"
-   endif
-        dmatrix(ii+mns-1,jj      ,ideriv) = dmatrix(ii+mns-1,jj      ,ideriv) + ( - mj * lAzo(kk,ideriv) + nj * lAto(kk,ideriv) ) * half
-        dmatrix(ii      ,jj+mns-1,ideriv) = dmatrix(ii      ,jj+mns-1,ideriv) - ( + mj * lAzo(kk,ideriv) - nj * lAto(kk,ideriv) ) * half
-        dmatrix(ii+mns-1,jj+mns-1,ideriv) = dmatrix(ii+mns-1,jj+mns-1,ideriv) + ( + mj * lAze(kk,ideriv) - nj * lAte(kk,ideriv) ) * half
-       endif
+                        call dgesvx('N', 'N', NN, MM, dmatrix(1:NN, 1:NN, 0), NN, FAA(1:NN, 1:NN), NN, ipiv(1:NN), &
+                                    equed, Rdgesvx(1:NN), Cdgesvx(1:NN), drhs(1:NN, 1:MM), NN, dlambda(1:NN, 1:MM), &
+                                    NN, rcond, ferr2(1:MM), berr2(1:MM), work4(1:4*NN), iwork4(1:NN), idgesvx)
 
-      enddo ! end of do jj; 30 Jan 13;
+                        if (iflag == 2) ldiota(innout, 1:2) = dlambda(1, 1:2) ! return intent out; 21 Apr 13;
+                        if (iflag == -1) ldiota(innout, -1) = dlambda(1, 1) ! return intent out; 21 Apr 13;
 
+                    case default
 
-      do jj = 2, mns ; mj = ims(jj) ; nj = ins(jj)
+                        if (.true.) then
+                            write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
+                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                            stop "tr00ab : .true. : invalid jderiv ;"
+                        end if
 
-       ii = iotaksub(kk,jj)
+                    end select ! end of select case jderiv; 02 Sep 14;
+
+                    cput = MPI_WTIME()
+
+                    select case (idgesvx) !12345678901234567
+                    case (0); if (Wtr00ab) write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput - lcpu, "solved Fourier ; ", dlambda(1, 0)
+                    case (1:); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput - lcpu, "singular ;       "
+                    case (:-1); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput - lcpu, "input error ;    "
+                    case default; 
+                        if (.true.) then
+                            write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; illegal ifail returned by dgesvx;")') myid
+                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                            stop "tr00ab : .true. : illegal ifail returned by dgesvx ;"
+                        end if
+                    end select
 
-       if( ii.lt.1 ) cycle
+                    if (idgesvx /= 0) then
+                        write (6, '("tr00ab :      fatal : myid=",i3," ; idgesvx.ne.0 ; failed to construct straight-fieldline angle using dgesvx;")') myid
+                        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                        stop "tr00ab : idgesvx.ne.0 : failed to construct straight-fieldline angle using dgesvx ;"
+                    end if
+
+                case (1) ! Lsvdiota = 1; use least-squares to invert linear equations that define the straight fieldline angle; 01 Jul 14;
 
-if( ii.gt.NN .or. jj.gt.NN ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; ii.gt.NN .or. jj.gt.NN ; illegal subscript;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : ii.gt.NN .or. jj.gt.NN : illegal subscript ;"
-   endif
-       dmatrix(ii      ,jj      ,ideriv) = dmatrix(ii      ,jj      ,ideriv) + ( - mj * lAze(kk,ideriv) + nj * lAte(kk,ideriv) ) * half
-       if( NOTstellsym) then
-if( ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN ; illegal subscript;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : ii+mns-1.lt.1 .or. ii+mns-1.gt.NN .or. jj+mns-1.lt.1 .or. jj+mns-1.gt.NN : illegal subscript ;"
-   endif
-        dmatrix(ii+mns-1,jj      ,ideriv) = dmatrix(ii+mns-1,jj      ,ideriv) + ( - mj * lAzo(kk,ideriv) + nj * lAto(kk,ideriv) ) * half * iotaksgn(kk,jj)
-        dmatrix(ii      ,jj+mns-1,ideriv) = dmatrix(ii      ,jj+mns-1,ideriv) + ( + mj * lAzo(kk,ideriv) - nj * lAto(kk,ideriv) ) * half
-        dmatrix(ii+mns-1,jj+mns-1,ideriv) = dmatrix(ii+mns-1,jj+mns-1,ideriv) - ( + mj * lAze(kk,ideriv) - nj * lAte(kk,ideriv) ) * half * iotaksgn(kk,jj)
-       endif
+                    nlvl = max(0, int(log(real(NN)/26)/log(2.0d0)) + 1)
+                    Lwork = (63 + 8*nlvl)*NN + 676
+                    Liwork = max(1, 11*NN + 3*nlvl*NN)
 
-      enddo ! end of do jj; 30 Jan 13;
+                    if (allocated(work)) deallocate (work)
+                    allocate (work(1:Lwork), stat=astat)
+                    work(1:Lwork) = zero
+                    if (allocated(iwork)) then
+                        deallocate (iwork, stat=astat)
+                    end if
+                    if (allocated(iwork)) deallocate (iwork)
+                    allocate (iwork(1:Liwork), stat=astat)
+                    iwork(1:Liwork) = zero
 
-     enddo ! end of do kk; 30 Jan 13;
-    enddo ! end of ideriv; 30 Jan 13;
+                    select case (jderiv)
 
+                    case (0) ! Lsvdiota = 1; jderiv = 0; 02 Sep 14;
 
+                        dlambda(1:NN, 0) = drhs(1:NN, 0) ! on entry, rhs; on exit, solution; 20 Jun 14;
 
-    call DCOPY(NN*NN, dmatrix(1,1,0), 1, omatrix(1,1), 1) ! BLAS version 21 Jul 19
+                        call dgelsd(NN, NN, 1, dmatrix(1:NN, 1:NN, 0), NN, dlambda(1:NN, 0), NN, sval(1:NN), rcond, Irank, &
+                                    work(1:Lwork), Lwork, iwork(1:Liwork), idgelsd)
 
-    do jderiv = 0, 1
+                        ldiota(innout, 0) = dlambda(1, 0)
+                        dlambdaout(1:NN, lvol, innout) = dlambda(1:NN, 0)
 
-     if( iflag.eq. 1 .and. jderiv.ne.0 ) cycle ! derivatives of rotational transform (wrt either enclosed-fluxes/currents/geometry) are not required;
+                    case (1) ! Lsvdiota = 1; jderiv = 1; 02 Sep 14;
 
-     select case( jderiv )
-     case( 0 ) ;!             drhs(1:NN, 0) = drhs(1:NN, 0)
-     case( 1 ) ;
-      if( iflag.eq. 2) then ; call DGEMV('N',NN,NN,-one,dmatrix(1,1, 1),NN,dlambda(1,0),1,one,drhs(1, 1),1)     ! BLAS version 21 Jul 19
-       ;                    ; call DGEMV('N',NN,NN,-one,dmatrix(1,1, 2),NN,dlambda(1,0),1,one,drhs(1, 2),1)     ! BLAS version 21 Jul 19
-      endif
-      if( iflag.eq.-1) then ; call DGEMV('N',NN,NN,-one,dmatrix(1,1,-1),NN,dlambda(1,0),1,one,drhs(1,-1),1)     ! BLAS version 21 Jul 19
-      endif
-     case default
-if( .true. ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : .true. : invalid jderiv ;"
-   endif
-     end select
+                        if (iflag == 2) then
+                            do imupf = 1, 2
+                                dmatrix(1:NN, 1:NN, 0) = omatrix(1:NN, 1:NN); dlambda(1:NN, imupf) = drhs(1:NN, imupf)
 
-     lcpu = MPI_WTIME() ! record time taken in dgesvx; 09 Nov 17;
+                                call dgelsd(NN, NN, 1, dmatrix(1:NN, 1:NN, 0), NN, dlambda(1:NN, imupf), NN, sval(1:NN), rcond, Irank, &
+                                            work(1:Lwork), Lwork, iwork(1:Liwork), idgelsd)
 
-     select case( Lsvdiota )
+                                ldiota(innout, imupf) = dlambda(1, imupf)
+                            end do
+                        elseif (iflag == -1) then
+                            do imupf = -1, -1
+                                dmatrix(1:NN, 1:NN, 0) = omatrix(1:NN, 1:NN); dlambda(1:NN, imupf) = drhs(1:NN, imupf)
 
-     case( 0 ) ! Lsvdiota = 0; use linear solver to invert linear equations that define the straight fieldline angle; 01 Jul 14;
+                                call dgelsd(NN, NN, 1, dmatrix(1:NN, 1:NN, 0), NN, dlambda(1:NN, imupf), NN, sval(1:NN), rcond, Irank, &
+                                            work(1:Lwork), Lwork, iwork(1:Liwork), idgelsd)
 
-      if04aaf = 1
+                                ldiota(innout, imupf) = dlambda(1, imupf)
+                            end do
+                        else
+                            if (.true.) then
+                                write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; invalid iflag;")') myid
+                                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                                stop "tr00ab : .true. : invalid iflag ;"
+                            end if
+                        end if
 
-      select case( jderiv )
+                    case default
 
-      case( 0 ) ! Lsvdiota = 0; jderiv = 0; 02 Sep 14;
+                        if (.true.) then
+                            write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
+                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                            stop "tr00ab : .true. : invalid jderiv ;"
+                        end if
 
-       MM = 1
+                    end select ! end of select case( jderiv) ; 02 Sep 14;
 
-       call dgesvx( 'N', 'N', NN, MM, dmatrix(1:NN,1:NN,0), NN, FAA(1:NN,1:NN), NN, ipiv(1:NN),  &
-                 equed, Rdgesvx(1:NN), Cdgesvx(1:NN), drhs(1:NN,0:0), NN, dlambda(1:NN,0:0),    &
-		 NN, rcond, ferr, berr, work4(1:4*NN), iwork4(1:NN), idgesvx )
+                    deallocate (work, stat=astat)
 
-       ;                 ldiota(innout,    0) = dlambda(1,  0) ! return intent out; 21 Apr 13;
-       ;                 dlambdaout(1:NN, lvol, innout) = dlambda(1:NN,0) 
+                    cput = MPI_WTIME()
 
-      case( 1 ) ! Lsvdiota = 0; jderiv = 1; 02 Sep 14;
+                    select case (idgelsd) !12345678901234567
+                    case (0); if (Wtr00ab) write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput - lcpu, "solved Fourier ; ", dlambda(1, 0)
+                    case (:-1); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput - lcpu, "input error ;    "
+                    case (1:); write (ounit, 1030) cput - cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput - lcpu, "QR failed ;      "
+                    case default
+                        if (.true.) then
+                            write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; illegal ifail returned by f04arf;")') myid
+                            call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                            stop "tr00ab : .true. : $illegal ifail returned by f04arf ;"
+                        end if
+                    end select
 
-       MM = 2
-       if( iflag.eq.-1 ) then ; drhs(1:NN, 1) = drhs(1:NN,-1)
-        ;                     ; drhs(1:NN, 2) = zero
-       endif
+                    if (idgelsd /= 0) then
+                        write (6, '("tr00ab :      fatal : myid=",i3," ; idgelsd.ne.0 ; failed to construct straight-fieldline angle using dgelsd;")') myid
+                        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                        stop "tr00ab : idgelsd.ne.0 : failed to construct straight-fieldline angle using dgelsd ;"
+                    end if
 
-       call DCOPY(NN*NN, omatrix(1,1), 1, dmatrix(1,1,0), 1) ! BLAS version 21 Jul 19
+                    dmatrix(1:NN, 1:NN, 0) = omatrix(1:NN, 1:NN) ! original "unperturbed" matrix; 30 Jan 13;
 
-       call dgesvx( 'N', 'N', NN, MM, dmatrix(1:NN,1:NN,0), NN, FAA(1:NN,1:NN), NN, ipiv(1:NN),    &
-                   equed, Rdgesvx(1:NN), Cdgesvx(1:NN), drhs(1:NN,1:MM), NN, dlambda(1:NN,1:MM),    &
-	           NN, rcond, ferr2(1:MM), berr2(1:MM), work4(1:4*NN), iwork4(1:NN), idgesvx )
+                case default
 
-       if( iflag.eq. 2 ) ldiota(innout, 1:2) = dlambda(1,1:2) ! return intent out; 21 Apr 13;
-       if( iflag.eq.-1 ) ldiota(innout,-1  ) = dlambda(1,  1) ! return intent out; 21 Apr 13;
+                    if (.true.) then
+                        write (6, '("tr00ab :      fatal : myid=",i3," ; .true. ; illegal Lsvdiota;")') myid
+                        call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                        stop "tr00ab : .true. : illegal Lsvdiota ;"
+                    end if
 
-      case default
+                end select ! end of select case( Lsvdiota ) ; 02 Sep 14;
 
-if( .true. ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : .true. : invalid jderiv ;"
-   endif
+1030            format("tr00ab : ", f10.2, " ; myid=", i3, " ; lvol=", i3, " ; innout="i2" ; jderiv="i2" ; "a7"="i2" ; time="f10.4" ; "a17, :" [d]iota="es17.09" ;")
 
-      end select ! end of select case jderiv; 02 Sep 14;
+            end do ! end of do jderiv; 31 Jan 13;
 
-      cput = MPI_WTIME()
+        end if ! end of if( Lsparse.eq.0 .or. Lsparse.eq.3 );
 
-      select case( idgesvx )                                                                                           !12345678901234567
-      case( 0   )    ; if( Wtr00ab ) write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput-lcpu, "solved Fourier ; ", dlambda(1,0)
-      case( 1:  )    ;               write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput-lcpu, "singular ;       "
-      case( :-1 )    ;               write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgesvx", idgesvx, cput-lcpu, "input error ;    "
-      case default ;               
-        if(.true.)  then
-          write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; illegal ifail returned by dgesvx;")') myid
-          call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-          stop "tr00ab : .true. : illegal ifail returned by dgesvx ;"
-         endif
-      end select
+        if (Lsparse == 0 .or. Lsparse == 3) then
+            deallocate (dmatrix, stat=astat)
+            deallocate (omatrix, stat=astat)
+            deallocate (FAA, stat=astat)
+        end if
 
-if( idgesvx.ne.0 ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; idgesvx.ne.0 ; failed to construct straight-fieldline angle using dgesvx;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : idgesvx.ne.0 : failed to construct straight-fieldline angle using dgesvx ;"
-   endif
-
-     case( 1 ) ! Lsvdiota = 1; use least-squares to invert linear equations that define the straight fieldline angle; 01 Jul 14;
-
-
-      nlvl   = max(0, int(log( real(NN)/26 )/log(2.0D0))+1)
-      Lwork  = (63+8*nlvl)*NN+676
-      Liwork = max(1,11*NN+3*nlvl*NN)
-
-if( allocated( work ) ) deallocate( work )
-allocate( work(1:Lwork), stat=astat )
-work(1:Lwork) = zero
-      if (allocated(iwork)) then
-        deallocate(iwork,stat=astat)
-      endif
-if( allocated( iwork ) ) deallocate( iwork )
-allocate( iwork(1:Liwork), stat=astat )
-iwork(1:Liwork) = zero
-
-      select case( jderiv )
-
-      case( 0 ) ! Lsvdiota = 1; jderiv = 0; 02 Sep 14;
-
-       dlambda(1:NN,0) = drhs(1:NN,0) ! on entry, rhs; on exit, solution; 20 Jun 14;
-
-       call dgelsd( NN, NN, 1, dmatrix(1:NN,1:NN,0), NN, dlambda(1:NN,0), NN, sval(1:NN), rcond, Irank, &
-                    work(1:Lwork), Lwork, iwork(1:Liwork), idgelsd )
-
-       ldiota(innout,0) = dlambda(1,0)
-       dlambdaout(1:NN, lvol, innout) = dlambda(1:NN,0) 
-
-      case( 1 ) ! Lsvdiota = 1; jderiv = 1; 02 Sep 14;
-
-       if(     iflag.eq. 2 ) then
-        do imupf = 1, 2
-         dmatrix(1:NN,1:NN,0) = omatrix(1:NN,1:NN) ; dlambda(1:NN,imupf) = drhs(1:NN,imupf)
-
-         call dgelsd( NN, NN, 1, dmatrix(1:NN,1:NN,0), NN, dlambda(1:NN,imupf), NN, sval(1:NN), rcond, Irank, &
-                      work(1:Lwork), Lwork, iwork(1:Liwork), idgelsd )
-
-         ldiota(innout,imupf) = dlambda(1,imupf)
-        enddo
-       elseif( iflag.eq.-1 ) then
-        do imupf = -1, -1
-         dmatrix(1:NN,1:NN,0) = omatrix(1:NN,1:NN) ; dlambda(1:NN,imupf) = drhs(1:NN,imupf)
-
-         call dgelsd( NN, NN, 1, dmatrix(1:NN,1:NN,0), NN, dlambda(1:NN,imupf), NN, sval(1:NN), rcond, Irank, &
-                      work(1:Lwork), Lwork, iwork(1:Liwork), idgelsd )
-
-         ldiota(innout,imupf) = dlambda(1,imupf)
-        enddo
-       else
-if( .true. ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; invalid iflag;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : .true. : invalid iflag ;"
-   endif
-       endif
-
-      case default
-
-if( .true. ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; invalid jderiv;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : .true. : invalid jderiv ;"
-   endif
-
-      end select ! end of select case( jderiv) ; 02 Sep 14;
-
-      deallocate(work,stat=astat)
-
-      cput = MPI_WTIME()
-
-      select case( idgelsd )                                                                                           !12345678901234567
-      case( 0   )    ; if( Wtr00ab)  write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput-lcpu, "solved Fourier ; ", dlambda(1,0)
-      case( :-1 )    ;               write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput-lcpu, "input error ;    "
-      case( 1:  )    ;               write(ounit,1030) cput-cpus, myid, lvol, innout, id, "idgelsd", idgelsd, cput-lcpu, "QR failed ;      "
-      case default
-        if( .true. ) then
-          write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; illegal ifail returned by f04arf;")') myid
-          call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-          stop "tr00ab : .true. : $illegal ifail returned by f04arf ;"
-         endif
-      end select
-
-if( idgelsd.ne.0 ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; idgelsd.ne.0 ; failed to construct straight-fieldline angle using dgelsd;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : idgelsd.ne.0 : failed to construct straight-fieldline angle using dgelsd ;"
-   endif
-
-      dmatrix(1:NN,1:NN, 0) = omatrix(1:NN,1:NN) ! original "unperturbed" matrix; 30 Jan 13;
-
-      case default
-
-if( .true. ) then
-     write(6,'("tr00ab :      fatal : myid=",i3," ; .true. ; illegal Lsvdiota;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "tr00ab : .true. : illegal Lsvdiota ;"
-   endif
-
-      end select ! end of select case( Lsvdiota ) ; 02 Sep 14;
-
-1030 format("tr00ab : ",f10.2," ; myid=",i3," ; lvol=",i3," ; innout="i2" ; jderiv="i2" ; "a7"="i2" ; time="f10.4" ; "a17,:" [d]iota="es17.09" ;")
-
-
-
-    enddo ! end of do jderiv; 31 Jan 13;
-
-   endif ! end of if( Lsparse.eq.0 .or. Lsparse.eq.3 );
-
-
-   if( Lsparse.eq.0 .or. Lsparse.eq.3 ) then
-     deallocate(dmatrix ,stat=astat)
-     deallocate(omatrix ,stat=astat)
-     deallocate(FAA ,stat=astat)
-   endif
-
-
-
-
-  enddo ! end of do innout; 29 Jan 13;
-
-
-
-
-
-
+    end do ! end of do innout; 29 Jan 13;
 
 end subroutine tr00ab
-
 

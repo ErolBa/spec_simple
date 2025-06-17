@@ -68,24 +68,24 @@ set(f_src_files
 
 preprocess_m4(srcs ${unprocessed_src_files})
 
-set(SPHDF5_FILE "${CMAKE_CURRENT_SOURCE_DIR}/sphdf5.f90")
-set(SPHDF5_AWK_FILE "${CMAKE_CURRENT_SOURCE_DIR}/msphdf5.f90")
-message(STATUS "sphdf5_FILE is ${SPHDF5_FILE}")
-if(AWK MATCHES ".+-NOTFOUND")
-    message(FATAL_ERROR "FATAL: awk (and mawk and gawk) could not be found (${AWK}).")
-else()
-    execute_process(
-        COMMAND /bin/sh -c "\"${AWK}\" -v file=sphdf5.f90  \
-             '{ gsub(\"__LINE__\", NR); gsub(\"__FILE__\",file); print }'  \
-             \"${SPHDF5_FILE}\"" 
-        RESULT_VARIABLE AWK_EXITCODE
-        OUTPUT_FILE "${SPHDF5_AWK_FILE}"
-        )
-    message(STATUS "Exit code from awk: ${AWK_EXITCODE}")
-endif()
-
-
-list(APPEND srcs "${sphdf5_src}")
+#set(SPHDF5_FILE "${CMAKE_CURRENT_SOURCE_DIR}/sphdf5.f90")
+#set(SPHDF5_AWK_FILE "${CMAKE_CURRENT_SOURCE_DIR}/msphdf5.f90")
+#message(STATUS "sphdf5_FILE is ${SPHDF5_FILE}")
+#if(AWK MATCHES ".+-NOTFOUND")
+#    message(FATAL_ERROR "FATAL: awk (and mawk and gawk) could not be found (${AWK}).")
+#else()
+#    execute_process(
+#        COMMAND /bin/sh -c "\"${AWK}\" -v file=sphdf5.f90  \
+#             '{ gsub(\"__LINE__\", NR); gsub(\"__FILE__\",file); print }'  \
+#             \"${SPHDF5_FILE}\"" 
+#        RESULT_VARIABLE AWK_EXITCODE
+#        OUTPUT_FILE "${SPHDF5_AWK_FILE}"
+#        )
+#    message(STATUS "Exit code from awk: ${AWK_EXITCODE}")
+#endif()
+#
+#
+#list(APPEND srcs "${sphdf5_src}")
 
 add_library(spec3p OBJECT ${f_src_files})
 target_compile_options(spec3p

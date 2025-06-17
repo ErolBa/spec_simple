@@ -1,166 +1,145 @@
 
-
-
-
-
-
-
-
-
-
 subroutine dfp100(Ndofgl, x, Fvec, LComputeDerivatives)
 
-  use constants, only : zero, half, one, two, pi2, pi, mu0
+    use constants, only: zero, half, one, two, pi2, pi, mu0
 
-  use fileunits, only : ounit
+    use fileunits, only: ounit
 
-  use inputlist, only : Wmacros, Wdfp100, Igeometry, Nvol, Lrad, Isurf, &
-                        Lconstraint, curpol
+    use inputlist, only: Wmacros, Wdfp100, Igeometry, Nvol, Lrad, Isurf, &
+                         Lconstraint, curpol
 
-  use cputiming, only : Tdfp100
+    use cputiming, only: Tdfp100
 
-  use allglobal, only : ncpu, myid, cpus, MPI_COMM_SPEC, &
-                        ImagneticOK, NAdof, mn, &
-                        Mvol, Iquad, &
-                        dBdX, &
-                        Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, Localconstraint, &
-                        IPDt, IPDtdPf, xoffset, dpflux, &
-                        IsMyVolume, IsMyVolumeValue, WhichCpuID, &
-                        IconstraintOK, &
-                        DToocc, DToocs, DToosc, DTooss, &
-                        TTsscc, TTsscs, TTsssc, TTssss, &
-                        TDstcc, TDstcs, TDstsc, TDstss, &
-                        TDszcc, TDszcs, TDszsc, TDszss, &
-                        DDttcc, DDttcs, DDttsc, DDttss, &
-                        DDtzcc, DDtzcs, DDtzsc, DDtzss, &
-                        DDzzcc, DDzzcs, DDzzsc, DDzzss, &
-                        dMA, dMB, dMD, dMG, MBpsi, solution, &
-                        Nt, Nz, Lsavedguvij, guvijsave, izbs
+    use allglobal, only: ncpu, myid, cpus, MPI_COMM_SPEC, &
+                         ImagneticOK, NAdof, mn, &
+                         Mvol, Iquad, &
+                         dBdX, &
+                         Lcoordinatesingularity, Lplasmaregion, Lvacuumregion, Localconstraint, &
+                         IPDt, IPDtdPf, xoffset, dpflux, &
+                         IsMyVolume, IsMyVolumeValue, WhichCpuID, &
+                         IconstraintOK, &
+                         DToocc, DToocs, DToosc, DTooss, &
+                         TTsscc, TTsscs, TTsssc, TTssss, &
+                         TDstcc, TDstcs, TDstsc, TDstss, &
+                         TDszcc, TDszcs, TDszsc, TDszss, &
+                         DDttcc, DDttcs, DDttsc, DDttss, &
+                         DDtzcc, DDtzcs, DDtzsc, DDtzss, &
+                         DDzzcc, DDzzcs, DDzzsc, DDzzss, &
+                         dMA, dMB, dMD, dMG, MBpsi, solution, &
+                         Nt, Nz, Lsavedguvij, guvijsave, izbs
 
-  use mpi
-  implicit none
-  INTEGER   :: ierr, astat, ios, nthreads, ithread
-  real(8)      :: cput, cpui, cpuo=0
+    use mpi
+    implicit none
+    integer :: ierr, astat, ios, nthreads, ithread
+    real(8) :: cput, cpui, cpuo = 0
 
-  INTEGER              :: vvol, Ndofgl, iflag, cpu_send_one, cpu_send_two, ll, NN, ideriv, iocons
-  INTEGER              :: status(MPI_STATUS_SIZE), request1, request2
-  real(8)                 :: Fvec(1:Ndofgl), x(1:Mvol-1), Bt00(1:Mvol, 0:1, -1:2), ldItGp(0:1, -1:2)
-  LOGICAL              :: LComputeDerivatives
-  INTEGER              :: deriv, Lcurvature
+    integer :: vvol, Ndofgl, iflag, cpu_send_one, cpu_send_two, ll, NN, ideriv, iocons
+    integer :: status(MPI_STATUS_SIZE), request1, request2
+    real(8) :: Fvec(1:Ndofgl), x(1:Mvol - 1), Bt00(1:Mvol, 0:1, -1:2), ldItGp(0:1, -1:2)
+    logical :: LComputeDerivatives
+    integer :: deriv, Lcurvature
 
+    dpflux(2:Mvol) = x - xoffset
 
+    do vvol = 1, Mvol
 
-  
+        if (Igeometry == 1 .or. vvol > 1) then; Lcoordinatesingularity = .false.
+        else; Lcoordinatesingularity = .true.
+        end if
+        ImagneticOK(vvol) = .false.
 
-  dpflux(2:Mvol) = x - xoffset
+        call IsMyVolume(vvol)
 
-  do vvol = 1, Mvol
+        if (IsMyVolumeValue == 0) then
+            cycle
+        else if (IsMyVolumeValue == -1) then
+            if (.true.) then
+                write (6, '("dfp100 :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
+                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                stop "dfp100 : .true. : Unassociated volume ;"
+            end if
+        end if
 
-    if( Igeometry.eq.1 .or. vvol.gt.1 ) then ; Lcoordinatesingularity = .false.
-  else                                   ; Lcoordinatesingularity = .true.
-  endif
-    ImagneticOK(vvol) = .false.
-    
+        NN = NAdof(vvol)
+        ll = Lrad(vvol)
 
-    call IsMyVolume(vvol)
+        call allocate_geometry_matrices(vvol, LcomputeDerivatives)
+        call allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
+        call intghs_workspace_init(vvol)
 
-    if( IsMyVolumeValue .EQ. 0 ) then
-      cycle
-    else if( IsMyVolumeValue .EQ. -1) then
-if( .true. ) then
-     write(6,'("dfp100 :      fatal : myid=",i3," ; .true. ; Unassociated volume;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "dfp100 : .true. : Unassociated volume ;"
-   endif
-    endif
+        dBdX%L = .false. ! No need to take derivatives of matrices w.r.t geometry.
 
-    NN = NAdof(vvol)
-    ll = Lrad(vvol)
+        ideriv = 0; Lcurvature = 1
+        call compute_guvijsave(Iquad(vvol), vvol, ideriv, Lcurvature)
+        Lsavedguvij = .true.
 
-    call allocate_geometry_matrices(vvol, LcomputeDerivatives)
-    call allocate_Beltrami_matrices(vvol, LcomputeDerivatives)
-    call intghs_workspace_init(vvol)
+        call ma00aa(Iquad(vvol), mn, vvol, ll) ! compute volume integrals of metric elements;
+        call matrix(vvol, mn, ll)
 
-    dBdX%L = .false. ! No need to take derivatives of matrices w.r.t geometry.
+        call ma02aa(vvol, NN)
 
-    ideriv = 0 ; Lcurvature = 1
-    call compute_guvijsave(Iquad(vvol), vvol, ideriv, Lcurvature)
-    Lsavedguvij = .true.
+        Lsavedguvij = .false.
 
-    call ma00aa( Iquad(vvol), mn, vvol, ll )  ! compute volume integrals of metric elements;
-    call matrix( vvol, mn, ll  )
+        call intghs_workspace_destroy()
+        call deallocate_Beltrami_matrices(LcomputeDerivatives)
+        call deallocate_geometry_matrices(LcomputeDerivatives)
 
-    call ma02aa( vvol, NN  )
+        if (Lconstraint == 3) then
+            do iocons = 0, 1
+                if ((Lcoordinatesingularity .and. iocons == 0) .or. (Lvacuumregion .and. iocons == 1)) cycle
 
-    Lsavedguvij = .false.
+                ideriv = 0
+                call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons) !Compute field at interface for global constraint
 
+                ideriv = 2
+                call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons) !Compute field at interface for global constraint, d w.r.t. pflux
+            end do
 
+            if (Lvacuumregion) then
 
-    call intghs_workspace_destroy()
-    call deallocate_Beltrami_matrices(LcomputeDerivatives)
-    call deallocate_geometry_matrices(LcomputeDerivatives)
+                ideriv = 1 ! derivatives of Btheta w.r.t tflux
+                iocons = 0 ! Only need inner side of volume derivatives
+                call lbpol(Mvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons)
 
-    if( Lconstraint.EQ.3 ) then
-      do iocons=0,1
-        if( ( Lcoordinatesingularity .and. iocons.eq.0 ) .or. ( Lvacuumregion .and. iocons.eq.1 ) ) cycle
+                iflag = 2 ! derivatives of poloidal linking current w.r.t geometry not required
+                call curent(Mvol, mn, Nt, Nz, iflag, ldItGp(0:1, -1:2))
+            end if
+        end if
+    end do
 
-        ideriv = 0
-        call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons ) !Compute field at interface for global constraint
+    if (.not. LocalConstraint) then
 
-        ideriv = 2
-        call lbpol(vvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons) !Compute field at interface for global constraint, d w.r.t. pflux
-      enddo
+        select case (Lconstraint)
 
-      if( Lvacuumregion ) then
+        case (3)
 
+            do vvol = 1, Mvol - 1
 
+                call WhichCpuID(vvol, cpu_send_one)
+                call WhichCpuID(vvol + 1, cpu_send_two)
 
-        ideriv=1 ! derivatives of Btheta w.r.t tflux
-        iocons=0 ! Only need inner side of volume derivatives
-        call lbpol(Mvol, Bt00(1:Mvol, 0:1, -1:2), ideriv, iocons )
+                call MPI_BCAST(Bt00(vvol, 1, 0), 1, MPI_DOUBLE_PRECISION, cpu_send_one, MPI_COMM_SPEC, ierr)
+                call MPI_BCAST(Bt00(vvol + 1, 0, 0), 1, MPI_DOUBLE_PRECISION, cpu_send_two, MPI_COMM_SPEC, ierr)
+                call MPI_BCAST(Bt00(vvol, 1, 2), 1, MPI_DOUBLE_PRECISION, cpu_send_one, MPI_COMM_SPEC, ierr)
+                call MPI_BCAST(Bt00(vvol + 1, 0, 2), 1, MPI_DOUBLE_PRECISION, cpu_send_two, MPI_COMM_SPEC, ierr)
 
-        iflag=2 ! derivatives of poloidal linking current w.r.t geometry not required
-        call curent(Mvol, mn, Nt, Nz, iflag, ldItGp(0:1,-1:2 ) )
-      endif
-    endif
-  enddo
+                IPDt(vvol) = pi2*(Bt00(vvol + 1, 0, 0) - Bt00(vvol, 1, 0))
 
+                IPDtdPf(vvol, vvol) = pi2*Bt00(vvol + 1, 0, 2)
+                if (vvol /= 1) IPDtdPf(vvol, vvol - 1) = -pi2*Bt00(vvol, 1, 2)
+            end do
 
-  if( .not.LocalConstraint ) then
+            if (myid == 0) then
+                Fvec(1:Mvol - 1) = IPDt(1:Mvol - 1) - Isurf(1:Mvol - 1)
+            end if
 
-    select case (Lconstraint)
-
-      case( 3 )
-
-        do vvol = 1, Mvol-1
-
-          call WhichCpuID(vvol  , cpu_send_one)
-          call WhichCpuID(vvol+1, cpu_send_two)
-
-call MPI_BCAST(Bt00(vvol  , 1, 0), 1, MPI_DOUBLE_PRECISION, cpu_send_one, MPI_COMM_SPEC, ierr)
-call MPI_BCAST(Bt00(vvol+1, 0, 0), 1, MPI_DOUBLE_PRECISION, cpu_send_two, MPI_COMM_SPEC, ierr)
-call MPI_BCAST(Bt00(vvol  , 1, 2), 1, MPI_DOUBLE_PRECISION, cpu_send_one, MPI_COMM_SPEC, ierr)
-call MPI_BCAST(Bt00(vvol+1, 0, 2), 1, MPI_DOUBLE_PRECISION, cpu_send_two, MPI_COMM_SPEC, ierr)
-
-          IPDt(vvol) = pi2 * (Bt00(vvol+1, 0, 0) - Bt00(vvol, 1, 0))
-
-          IPDtdPf(vvol,vvol) = pi2 * Bt00(vvol+1, 0, 2)
-          if (vvol .ne. 1) IPDtdPf(vvol,vvol-1) = -pi2 * Bt00(vvol, 1, 2)
-        enddo
-
-        if( myid.EQ.0 ) then
-            Fvec(1:Mvol-1) = IPDt(1:Mvol-1) - Isurf(1:Mvol-1)
-        endif
-
-      case default
-if( .true. ) then
-     write(6,'("dfp100 :      fatal : myid=",i3," ; .true. ; Unaccepted value for Lconstraint;")') myid
-     call MPI_ABORT( MPI_COMM_SPEC, 1, ierr )
-     stop "dfp100 : .true. : Unaccepted value for Lconstraint ;"
-   endif
-    end select
-  endif
-
-
+        case default
+            if (.true.) then
+                write (6, '("dfp100 :      fatal : myid=",i3," ; .true. ; Unaccepted value for Lconstraint;")') myid
+                call MPI_ABORT(MPI_COMM_SPEC, 1, ierr)
+                stop "dfp100 : .true. : Unaccepted value for Lconstraint ;"
+            end if
+        end select
+    end if
 
 end subroutine dfp100

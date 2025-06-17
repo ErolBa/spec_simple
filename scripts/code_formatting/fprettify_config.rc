@@ -1,6 +1,6 @@
-indent = 2
+indent = 4
 line-length = 0
-whitespace = 3
+whitespace = 2
 enable-decl = True
 whitespace-print = False
 whitespace-intrinsics = True # Try to get write out

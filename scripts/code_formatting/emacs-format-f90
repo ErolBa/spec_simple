@@ -10,7 +10,7 @@
        f90-type-indent 2
         f90-program-indent 2
         f90-continuation-indent 4
-        fill-column 120
+        fill-column 240
         )
 
   ;; Indent whole file (not activated for the moment)
